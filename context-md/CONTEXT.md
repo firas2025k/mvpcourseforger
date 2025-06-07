@@ -1,0 +1,110 @@
+ SaaS LMS MVP – Project Context
+
+## 📌 Overview
+
+This project is a SaaS-based Learning Management System (LMS) MVP . It supports **prompt-based course creation via Gemini API**, and **Stripe-powered subscription tiers** with enforced course limits (Free: 1 course, Paid: more).
+
+## 🧱 Tech Stack
+
+- **Frontend:** Next.js 14 (App Router, TypeScript, Tailwind CSS and shadcnui
+- **Backend/DB:** Supabase (PostgreSQL, Supabase Auth, Realtime)
+- **AI:** Gemini API (for automatic course generation)
+- **Payments:** Stripe (subscription model)
+- **Hosting:** Vercel (for seamless deployment)
+
+---
+
+## ✨ MVP Features (Single Role)
+
+- ✅ **Authentication:** Email and Google SSO via Supabase Auth
+- 🧠 **AI Course Generation:** Prompt-based course creation using Gemini API
+- 🗃️ **Course Management:** Create, publish, archive courses
+- 📚 **Learning Interface:** Dashboard with progress tracking and quizzes
+- 📊 **Admin Dashboard:** Basic analytics for users with active subscriptions
+- 💳 **Payments Integration:** Stripe checkout with course limits enforced
+  - Free Plan → 1 course
+  - Paid Plans → Multiple courses
+- 👤 **Profile & Settings:** User can manage their personal data and preferences
+
+## **Core Pages:**
+   - Landing Page
+   - User Dashboard
+   - Course Creation (AI Prompt Input → Gemini API)
+   - Course Management
+   - Course Viewer (Learning UI)
+   - Admin Dashboard (Analytics View)
+   - Payment/Upgrade Page
+   - Profile & Settings Page
+
+## Current folder structure 
+.
+├── README.md
+├── app
+│   ├── auth
+│   │   ├── confirm
+│   │   │   └── route.ts
+│   │   ├── error
+│   │   │   └── page.tsx
+│   │   ├── forgot-password
+│   │   │   └── page.tsx
+│   │   ├── login
+│   │   │   └── page.tsx
+│   │   ├── sign-up
+│   │   │   └── page.tsx
+│   │   ├── sign-up-success
+│   │   │   └── page.tsx
+│   │   └── update-password
+│   │       └── page.tsx
+│   ├── dashboard
+│   │   ├── layout.tsx
+│   │   └── page.tsx
+│   ├── favicon.ico
+│   ├── globals.css
+│   ├── layout.tsx
+│   ├── opengraph-image.png
+│   ├── page.tsx
+│   └── twitter-image.png
+├── components
+│   ├── auth-button.tsx
+│   ├── deploy-button.tsx
+│   ├── env-var-warning.tsx
+│   ├── forgot-password-form.tsx
+│   ├── hero.tsx
+│   ├── login-form.tsx
+│   ├── logout-button.tsx
+│   ├── next-logo.tsx
+│   ├── sign-up-form.tsx
+│   ├── supabase-logo.tsx
+│   ├── theme-switcher.tsx
+│   ├── ui
+│   │   ├── badge.tsx
+│   │   ├── button.tsx
+│   │   ├── card.tsx
+│   │   ├── checkbox.tsx
+│   │   ├── dropdown-menu.tsx
+│   │   ├── input.tsx
+│   │   └── label.tsx
+│   └── update-password-form.tsx
+├── components.json
+├── context-md
+│   └── CONTEXT.md
+├── eslint.config.mjs
+├── lib
+│   ├── supabase
+│   │   ├── client.ts
+│   │   ├── middleware.ts
+│   │   └── server.ts
+│   └── utils.ts
+├── middleware.ts
+├── next-env.d.ts
+├── next.config.ts
+├── package-lock.json
+├── package.json
+├── postcss.config.mjs
+├── tailwind.config.ts
+└── tsconfig.json
+
+## Important notes
+- this setup has a template landing page ,supabase auth already implemented and a protected route (dashboard) for authentiticated users
+- when creating components,please put theme in a fodler related to the page it relates to
+for example if you are creating a component for the dashboard page,please put it in a dashboard folder in the components folder 
