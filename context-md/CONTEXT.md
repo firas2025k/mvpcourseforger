@@ -70,6 +70,8 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 │   ├── env-var-warning.tsx
 │   ├── forgot-password-form.tsx
 │   ├── hero.tsx
+│   ├── landing
+│   │   └── Footer.tsx
 │   ├── login-form.tsx
 │   ├── logout-button.tsx
 │   ├── next-logo.tsx
@@ -103,6 +105,7 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 ├── postcss.config.mjs
 ├── tailwind.config.ts
 └── tsconfig.json
+
 
 ## Important notes
 - this setup has a template landing page ,supabase auth already implemented and a protected route (dashboard) for authentiticated users
