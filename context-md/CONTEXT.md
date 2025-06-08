@@ -115,3 +115,7 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 - when creating components,please put theme in a fodler related to the page it relates to
 for example if you are creating a component for the dashboard page,please put it in a dashboard folder in the components folder and for shared components like navbars and side bars etc.. put them in a shared folder in the components folder
 - for styling,please use tailwindcss and shadcnui
+- TypeScript types/interfaces should be put in the types folder
+- for hooks,please put them in the hooks folder
+- for lib,please put them in the lib folder
+

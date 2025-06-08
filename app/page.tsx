@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import Link from "next/link";
 import { CheckCircle, Zap, BookOpen, BarChart2, Lightbulb, Star, Users, Shield } from 'lucide-react'; // Example icons
 import { AuthButton } from "@/components/auth/auth-button";
+import { Navbar } from "@/components/landing/Navbar";
 
 export default function LandingPage() {
   const features = [
@@ -90,23 +91,7 @@ export default function LandingPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-white to-purple-50 dark:from-gray-900 dark:to-purple-900/30 text-gray-800 dark:text-gray-200">
-      {/* Navbar */}
-      <nav className="w-full sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700/50 h-16 shadow-sm">
-        <div className="max-w-6xl mx-auto flex justify-between items-center p-3 px-5 text-sm h-full">
-          <Link href="/" className="font-bold text-xl text-purple-600 dark:text-purple-400">
-            CourseForger
-          </Link>
-          <div className="hidden md:flex gap-6 items-center">
-            <Link href="#features" className="hover:text-purple-600 dark:hover:text-purple-400 transition-colors">Features</Link>
-            <Link href="#pricing" className="hover:text-purple-600 dark:hover:text-purple-400 transition-colors">Pricing</Link>
-            {/* <Link href="#contact" className="hover:text-purple-600 dark:hover:text-purple-400 transition-colors">Contact</Link> */}
-          </div>
-          <div className="flex items-center gap-3">
-            <AuthButton />
-            <ThemeSwitcher />
-          </div>
-        </div>
-      </nav>
+      <Navbar />
 
       {/* Hero Section */}
       <main className="flex-1">
