@@ -56,6 +56,9 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 │   │   └── update-password
 │   │       └── page.tsx
 │   ├── dashboard
+│   │   ├── courses
+│   │   │   └── new
+│   │   │       └── page.tsx
 │   │   ├── layout.tsx
 │   │   └── page.tsx
 │   ├── favicon.ico
@@ -74,8 +77,10 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 │   │   ├── sign-up-form.tsx
 │   │   └── update-password-form.tsx
 │   ├── dashboard
+│   │   └── DashboardLayout.tsx
 │   ├── landing
-│   │   └── Footer.tsx
+│   │   ├── Footer.tsx
+│   │   └── Navbar.tsx
 │   ├── next-logo.tsx
 │   ├── shared
 │   ├── supabase-logo.tsx
@@ -88,10 +93,15 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 │       ├── dropdown-menu.tsx
 │       ├── input.tsx
 │       ├── label.tsx
-│       └── progress.tsx
+│       ├── progress.tsx
+│       ├── select.tsx
+│       ├── sheet.tsx
+│       └── textarea.tsx
 ├── components.json
 ├── context-md
-│   └── CONTEXT.md
+│   ├── CONTEXT.md
+│   ├── USER_FLOW.md
+│   └── database.md
 ├── eslint.config.mjs
 ├── hooks
 ├── lib
@@ -106,9 +116,13 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 ├── package-lock.json
 ├── package.json
 ├── postcss.config.mjs
+├── supabase
+│   └── migrations
+│       └── 0000_init_schema.sql
 ├── tailwind.config.ts
 ├── tsconfig.json
 └── types
+
 
 ## Important notes
 - this setup has a template landing page ,supabase auth already implemented and a protected route (dashboard) for authentiticated users
