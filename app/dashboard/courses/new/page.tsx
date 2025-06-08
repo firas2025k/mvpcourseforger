@@ -20,12 +20,41 @@ export default function CreateCoursePage() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
-    // TODO: Implement course creation logic
-    console.log('Form submitted:', { prompt, numChapters, numLessonsPerChapter, difficulty });
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setIsLoading(false);
-    // router.push('/dashboard/courses'); // Redirect after creation (optional)
+    try {
+      const response = await fetch('/api/generate-course', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt,
+          chapters: Number(numChapters),
+          lessons_per_chapter: Number(numLessonsPerChapter),
+          difficulty,
+        }),
+      });
+
+      setIsLoading(false);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Error generating course:', errorData);
+        alert(`Failed to generate course: ${errorData.error || response.statusText}`);
+        return;
+      }
+
+      const courseData = await response.json();
+      console.log('Generated Course Data:', courseData);
+      alert('Course outline generated successfully! Check the console for the data.');
+      // TODO: Handle the successful response (e.g., navigate to a new page, display data, save to DB)
+      // For now, we'll just log it and show an alert.
+      // Example: router.push(`/dashboard/courses/edit/${courseData.id}`); 
+
+    } catch (error) {
+      setIsLoading(false);
+      console.error('Error submitting form:', error);
+      alert('An unexpected error occurred. Please try again.');
+    }
   };
 
   return (

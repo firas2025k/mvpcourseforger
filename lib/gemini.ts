@@ -10,7 +10,7 @@ const genAI = new GoogleGenerativeAI(apiKey);
 
 // Basic model configuration - you can customize this further
 const model = genAI.getGenerativeModel({
-  model: "gemini-1.5-flash-latest", // Or your preferred model
+  model: "gemini-2.0-flash", // Or your preferred model
 });
 
 // Default generation configuration - can be overridden per request
@@ -19,7 +19,7 @@ const generationConfig = {
   topP: 0.95,
   topK: 64,
   maxOutputTokens: 8192,
-  responseMimeType: "text/plain", // Or "application/json" if you expect JSON output
+  responseMimeType: "application/json", // Expect JSON output for course structure
 };
 
 // Safety settings - adjust as needed for your use case
