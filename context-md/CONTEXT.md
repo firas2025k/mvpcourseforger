@@ -65,32 +65,35 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 │   ├── page.tsx
 │   └── twitter-image.png
 ├── components
-│   ├── auth-button.tsx
-│   ├── deploy-button.tsx
-│   ├── env-var-warning.tsx
-│   ├── forgot-password-form.tsx
-│   ├── hero.tsx
+│   ├── auth
+│   │   ├── AuthPageLayout.tsx
+│   │   ├── auth-button.tsx
+│   │   ├── forgot-password-form.tsx
+│   │   ├── login-form.tsx
+│   │   ├── logout-button.tsx
+│   │   ├── sign-up-form.tsx
+│   │   └── update-password-form.tsx
+│   ├── dashboard
 │   ├── landing
 │   │   └── Footer.tsx
-│   ├── login-form.tsx
-│   ├── logout-button.tsx
 │   ├── next-logo.tsx
-│   ├── sign-up-form.tsx
+│   ├── shared
 │   ├── supabase-logo.tsx
 │   ├── theme-switcher.tsx
-│   ├── ui
-│   │   ├── badge.tsx
-│   │   ├── button.tsx
-│   │   ├── card.tsx
-│   │   ├── checkbox.tsx
-│   │   ├── dropdown-menu.tsx
-│   │   ├── input.tsx
-│   │   └── label.tsx
-│   └── update-password-form.tsx
+│   └── ui
+│       ├── badge.tsx
+│       ├── button.tsx
+│       ├── card.tsx
+│       ├── checkbox.tsx
+│       ├── dropdown-menu.tsx
+│       ├── input.tsx
+│       ├── label.tsx
+│       └── progress.tsx
 ├── components.json
 ├── context-md
 │   └── CONTEXT.md
 ├── eslint.config.mjs
+├── hooks
 ├── lib
 │   ├── supabase
 │   │   ├── client.ts
@@ -104,10 +107,11 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 ├── package.json
 ├── postcss.config.mjs
 ├── tailwind.config.ts
-└── tsconfig.json
-
+├── tsconfig.json
+└── types
 
 ## Important notes
 - this setup has a template landing page ,supabase auth already implemented and a protected route (dashboard) for authentiticated users
 - when creating components,please put theme in a fodler related to the page it relates to
-for example if you are creating a component for the dashboard page,please put it in a dashboard folder in the components folder 
+for example if you are creating a component for the dashboard page,please put it in a dashboard folder in the components folder and for shared components like navbars and side bars etc.. put them in a shared folder in the components folder
+- for styling,please use tailwindcss and shadcnui

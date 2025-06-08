@@ -1,10 +1,10 @@
-import { AuthButton } from "@/components/auth-button";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { Footer } from "@/components/landing/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import Link from "next/link";
 import { CheckCircle, Zap, BookOpen, BarChart2, Lightbulb, Star, Users, Shield } from 'lucide-react'; // Example icons
+import { AuthButton } from "@/components/auth/auth-button";
 
 export default function LandingPage() {
   const features = [
