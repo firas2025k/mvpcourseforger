@@ -5,17 +5,19 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
+import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 export default function CreateCoursePage() {
   const [prompt, setPrompt] = useState('');
   const [numChapters, setNumChapters] = useState<number | string>(5);
   const [numLessonsPerChapter, setNumLessonsPerChapter] = useState<number | string>(5);
-  const [difficulty, setDifficulty] = useState('beginner');
+  const [difficulty, setDifficulty] = useState<'beginner' | 'intermediate' | 'advanced'>('beginner');
   const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -45,10 +47,10 @@ export default function CreateCoursePage() {
 
       const courseData = await response.json();
       console.log('Generated Course Data:', courseData);
-      alert('Course outline generated successfully! Check the console for the data.');
-      // TODO: Handle the successful response (e.g., navigate to a new page, display data, save to DB)
-      // For now, we'll just log it and show an alert.
-      // Example: router.push(`/dashboard/courses/edit/${courseData.id}`); 
+      // Store data in sessionStorage to pass to the preview page
+      sessionStorage.setItem('generatedCourseData', JSON.stringify(courseData));
+      // Redirect to the preview page
+      router.push('/dashboard/courses/preview'); 
 
     } catch (error) {
       setIsLoading(false);
@@ -123,7 +125,7 @@ export default function CreateCoursePage() {
 
             <div className="space-y-2">
               <Label htmlFor="difficulty">Difficulty Level</Label>
-              <Select value={difficulty} onValueChange={setDifficulty} required>
+              <Select value={difficulty} onValueChange={(value) => setDifficulty(value as 'beginner' | 'intermediate' | 'advanced')} required>
                 <SelectTrigger id="difficulty">
                   <SelectValue placeholder="Select difficulty" />
                 </SelectTrigger>

@@ -40,6 +40,9 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 .
 ├── README.md
 ├── app
+│   ├── api
+│   │   └── generate-course
+│   │       └── route.ts
 │   ├── auth
 │   │   ├── confirm
 │   │   │   └── route.ts
@@ -86,6 +89,7 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 │   ├── supabase-logo.tsx
 │   ├── theme-switcher.tsx
 │   └── ui
+│       ├── accordion.tsx
 │       ├── badge.tsx
 │       ├── button.tsx
 │       ├── card.tsx
@@ -95,16 +99,19 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 │       ├── label.tsx
 │       ├── progress.tsx
 │       ├── select.tsx
+│       ├── separator.tsx
 │       ├── sheet.tsx
 │       └── textarea.tsx
 ├── components.json
 ├── context-md
 │   ├── CONTEXT.md
 │   ├── USER_FLOW.md
+│   ├── course-gen-context.md
 │   └── database.md
 ├── eslint.config.mjs
 ├── hooks
 ├── lib
+│   ├── gemini.ts
 │   ├── supabase
 │   │   ├── client.ts
 │   │   ├── middleware.ts
@@ -122,7 +129,6 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 ├── tailwind.config.ts
 ├── tsconfig.json
 └── types
-
 
 ## Important notes
 - this setup has a template landing page ,supabase auth already implemented and a protected route (dashboard) for authentiticated users
