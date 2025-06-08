@@ -86,7 +86,7 @@ Please return a JSON object with the following structure:
   ]
 }
 Ensure the number of chapters and lessons per chapter matches the input.
-Provide detailed content for each lesson and relevant quiz questions.
+Provide detailed content for each lesson and relevant quiz questions. Ensure that the 'content' for each lesson is comprehensive, detailed, and at least a few paragraphs long, suitable for a learning module.
 `;
 
     const chatSession = model.startChat({
