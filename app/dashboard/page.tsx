@@ -34,7 +34,7 @@ export default async function DashboardPage() {
   // Fetch active subscription and plan details
   let activeSubscription: any = null;
   let planName = "Free Plan"; // Default plan name
-  let courseLimit = 1; // Default course limit for Free plan (adjust if different)
+  let courseLimit = 1; // Default course limit, especially for Free Plan or if profile fetch fails
   let hasActivePaidSubscription = false;
 
   const { data: subscriptionData, error: subscriptionError } = await supabase
@@ -56,25 +56,35 @@ export default async function DashboardPage() {
     // Proceed with default plan details, or handle error as preferred
   }
 
-  if (subscriptionData && subscriptionData.plans) {
+  if (subscriptionData && subscriptionData.plans) { // User has an active paid subscription
     activeSubscription = subscriptionData;
     planName = subscriptionData.plans.name;
     courseLimit = subscriptionData.plans.course_limit;
     if (subscriptionData.stripe_subscription_id) {
       hasActivePaidSubscription = true;
     }
-  } else {
-    // Check if user has a profile to get their default course limit if on free tier
+  } else { // User does NOT have an active paid subscription, so they are on Free tier
     const { data: profileData, error: profileError } = await supabase
       .from('profiles')
       .select('course_limit')
       .eq('id', user.id)
       .single();
+
     if (profileData && !profileError) {
-        courseLimit = profileData.course_limit; // This would be the default from their profile
-    } else if (profileError) {
-        console.error('Error fetching profile for default course limit:', profileError.message);
+      // Profile exists, use its course_limit.
+      courseLimit = profileData.course_limit;
+      // Safeguard: If it's the Free Plan and profile somehow has limit < 1, set to 1.
+      // This handles misconfiguration in new user profile creation for the free tier.
+      if (planName === "Free Plan" && courseLimit < 1) {
+        console.warn(`User ${user.id} on Free Plan has profile course_limit of ${profileData.course_limit}. Overriding to 1. Please check 'handle_new_user' SQL trigger to set a proper default (e.g., 1).`);
+        courseLimit = 1;
+      }
+    } else if (profileError && profileError.code !== 'PGRST116') { // PGRST116: 'single' row not found (expected for new users if trigger hasn't run or profile deleted)
+      console.error(`Error fetching profile for user ${user.id}:`, profileError.message);
+      // courseLimit remains the initial default (1) if profile fetch fails for other reasons.
     }
+    // If profileData is null (no profile row, e.g. PGRST116) and no other error, 
+    // courseLimit remains the initial default (1), which is suitable for a new Free Plan user.
   }
 
   // 1. Fetch basic course data for the user
@@ -227,11 +237,19 @@ export default async function DashboardPage() {
             <LayoutGrid className="mr-3 h-6 w-6 text-purple-600" /> My Courses
           </h2>
           {/* This button should always be visible */}
-          <Button asChild variant="default" className="bg-purple-600 hover:bg-purple-700 text-white">
-            <Link href="/dashboard/courses/new">
-              <PlusCircle className="mr-2 h-4 w-4" /> Create New Course
-            </Link>
-          </Button>
+          {totalCourses < userPlan.courseLimit ? (
+            <Button asChild variant="default" className="bg-purple-600 hover:bg-purple-700 text-white">
+              <Link href="/dashboard/courses/new">
+                <PlusCircle className="mr-2 h-4 w-4" /> Create New Course
+              </Link>
+            </Button>
+          ) : (
+            <Button asChild variant="default" className="bg-orange-500 hover:bg-orange-600 text-white">
+              <Link href="/pricing">
+                <Crown className="mr-2 h-4 w-4" /> Upgrade to Create More
+              </Link>
+            </Button>
+          )}
         </div>
         
         {courses.length > 0 ? (
@@ -249,11 +267,19 @@ export default async function DashboardPage() {
                 It looks like you haven't created any courses. Get started by creating your first one.
               </p>
               {/* This button is only visible when no courses exist */}
-              <Button asChild size="lg" className="mt-4 bg-purple-600 hover:bg-purple-700 text-white">
-                <Link href="/dashboard/courses/new">
-                  <PlusCircle className="mr-2 h-5 w-5" /> Create Your First Course
-                </Link>
-              </Button>
+              {userPlan.courseLimit > 0 ? (
+                <Button asChild size="lg" className="mt-4 bg-purple-600 hover:bg-purple-700 text-white">
+                  <Link href="/dashboard/courses/new">
+                    <PlusCircle className="mr-2 h-5 w-5" /> Create Your First Course
+                  </Link>
+                </Button>
+              ) : (
+                <Button asChild size="lg" className="mt-4 bg-orange-500 hover:bg-orange-600 text-white">
+                  <Link href="/pricing">
+                    <Crown className="mr-2 h-5 w-5" /> Upgrade to Create Courses
+                  </Link>
+                </Button>
+              )}
             </CardContent>
           </Card>
         )}

@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers'; // Added for Supabase SSR client
+import { createServerClient, type CookieOptions } from '@supabase/ssr'; // Added for Supabase SSR client and CookieOptions
 import { model, generationConfig, safetySettings } from '@/lib/gemini';
 
 // Define an interface for the expected request body
@@ -48,7 +50,75 @@ interface GeneratedCoursePayload {
 }
 
 export async function POST(request: NextRequest) {
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          const cookieStore = cookies();
+          return cookieStore.get(name)?.value;
+        },
+        set(name: string, value: string, options: CookieOptions) {
+          const cookieStore = cookies();
+          cookieStore.set(name, value, options);
+        },
+        remove(name: string, options: CookieOptions) {
+          const cookieStore = cookies();
+          cookieStore.set(name, '', options);
+        },
+      },
+    }
+  );
+
   try {
+    // 1. Authenticate user
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // 2. Fetch user's course limit and current course count
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('course_limit')
+      .eq('id', user.id)
+      .single();
+
+    if (profileError || !profile) {
+      console.error('Error fetching profile or profile not found:', profileError?.message);
+      return NextResponse.json({ error: 'Could not retrieve user profile.' }, { status: 500 });
+    }
+
+    let effectiveCourseLimit = profile.course_limit;
+
+    // Backend safeguard for Free Plan: if profile.course_limit is < 1, enforce a minimum of 1.
+    // This assumes a user with profile.course_limit < 1 and no active paid subscription is on a Free tier that should get 1 course.
+    // A more robust check might involve verifying no active paid subscription exists.
+    if (effectiveCourseLimit < 1) {
+      // TODO: Add a check here to confirm the user doesn't have an active paid subscription 
+      // if you have plans where course_limit could legitimately be 0.
+      // For now, we assume course_limit < 1 implies a Free tier needing this override.
+      console.warn(`User ${user.id} has profile.course_limit: ${profile.course_limit} in DB. API applying effective limit of 1 for Free Plan check.`);
+      effectiveCourseLimit = 1;
+    }
+
+    const { count: courseCount, error: countError } = await supabase
+      .from('courses')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id);
+
+    if (countError) {
+      console.error('Error fetching course count:', countError.message);
+      return NextResponse.json({ error: 'Could not retrieve course count.' }, { status: 500 });
+    }
+
+    // 3. Check limit against effectiveCourseLimit
+    if (courseCount !== null && courseCount >= effectiveCourseLimit) {
+      return NextResponse.json({ error: 'Course limit reached. Please upgrade your plan to create more courses.' }, { status: 403 });
+    }
+
+    // 4. Proceed with course generation if limit not reached
     const body = await request.json() as GenerateCourseRequestBody;
     const { prompt: userPrompt, chapters, lessons_per_chapter, difficulty } = body;
 
@@ -99,6 +169,8 @@ Please return a JSON object with the following structure:
 }
 Ensure the number of chapters and lessons per chapter matches the input.
 Provide detailed content for each lesson and relevant quiz questions. Ensure that the 'content' for each lesson is comprehensive, detailed, and at least a few paragraphs long, suitable for a learning module.
+
+IMPORTANT: All string values within the JSON structure, especially the 'title', 'content', 'question', 'choices' (if strings), and 'answer' fields, MUST be properly escaped to be valid JSON strings. For example, newline characters must be represented as "\n", double quotes as "\"", backslashes as "\\", etc. This is critical if the content includes code snippets or special characters.
 `;
 
     const chatSession = model.startChat({

@@ -93,6 +93,7 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 │   ├── dashboard
 │   │   ├── CourseCard.tsx
 │   │   ├── DashboardLayout.tsx
+│   │   ├── ManageSubscriptionButton.tsx
 │   │   └── courses
 │   │       └── CourseLayoutClient.tsx
 │   ├── landing
