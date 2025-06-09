@@ -9,14 +9,14 @@ interface GenerateCourseRequestBody {
   difficulty: 'beginner' | 'intermediate' | 'advanced';
 }
 
-// Define an interface for the expected JSON output from Gemini (based on course-gen-context.md)
+// Interfaces for AI-generated content structure
 interface QuizQuestion {
   question: string;
   choices: string[];
   answer: string;
 }
 
-interface Lesson {
+interface AiLesson {
   title: string;
   content: string;
   quiz: {
@@ -24,15 +24,27 @@ interface Lesson {
   };
 }
 
-interface Chapter {
+interface AiChapter {
   title: string;
-  lessons: Lesson[];
+  lessons: AiLesson[];
 }
 
-interface CourseStructure {
+// Interface for the direct JSON output expected from Gemini
+// Based on the prompt, Gemini is asked to return title, difficulty, and chapters.
+interface GeminiJsonOutput {
   title: string;
-  difficulty: 'beginner' | 'intermediate' | 'advanced';
-  chapters: Chapter[];
+  difficulty: 'beginner' | 'intermediate' | 'advanced'; // Gemini should echo this back
+  chapters: AiChapter[];
+}
+
+// Interface for the full payload returned by this API endpoint
+// This includes original user inputs and the AI-generated course content.
+interface GeneratedCoursePayload {
+  originalPrompt: string;
+  originalChapterCount: number;
+  originalLessonsPerChapter: number;
+  difficulty: 'beginner' | 'intermediate' | 'advanced'; // This is the original user input
+  aiGeneratedCourse: GeminiJsonOutput; // This is the structured content from Gemini
 }
 
 export async function POST(request: NextRequest) {
@@ -100,18 +112,28 @@ Provide detailed content for each lesson and relevant quiz questions. Ensure tha
     
     // Attempt to parse the JSON response from Gemini
     // Gemini might sometimes return plain text even if JSON is requested, or the JSON might be wrapped in markdown ```json ... ```
-    let courseData: CourseStructure;
+    
+    let responsePayload: GeneratedCoursePayload;
     try {
       // Clean potential markdown code block fences
       const cleanedResponseText = responseText.replace(/^```json\n|\n```$/g, '');
-      courseData = JSON.parse(cleanedResponseText) as CourseStructure;
+      const aiGeneratedOutput = JSON.parse(cleanedResponseText) as GeminiJsonOutput;
+
+      // Construct the final payload to return to the client
+      responsePayload = {
+        originalPrompt: userPrompt,
+        originalChapterCount: chapters,
+        originalLessonsPerChapter: lessons_per_chapter,
+        difficulty: difficulty, // The original difficulty submitted by the user
+        aiGeneratedCourse: aiGeneratedOutput // The full structure returned by Gemini
+      };
+      return NextResponse.json(responsePayload, { status: 200 }); // Return on success
     } catch (parseError) {
       console.error('Error parsing Gemini JSON response:', parseError);
       console.error('Raw Gemini response text:', responseText); // Log the raw response for debugging
       return NextResponse.json({ error: 'Failed to parse course data from AI response. The response was not valid JSON.', rawResponse: responseText }, { status: 500 });
     }
-
-    return NextResponse.json(courseData, { status: 200 });
+    // If execution reaches here, it means an error occurred before or after parsing, handled by the outer catch.
 
   } catch (error) {
     console.error('Error in /api/generate-course:', error);
