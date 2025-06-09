@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
-import { redirect } from 'next/navigation';
+import { redirect, notFound } from 'next/navigation';
 import { CoursePageProps, FullCourseData, Chapter, Lesson, Quiz } from '@/types/course';
 import { Button } from '@/components/ui/button';
 import { BookOpen } from 'lucide-react';
@@ -34,13 +34,13 @@ async function getCourseData(courseId: string, userId: string): Promise<FullCour
 
   // Ensure lessons within chapters and quizzes within lessons are sorted if not guaranteed by DB
   // Also, ensure that the structure matches FullCourseData by providing empty arrays if relations are null
-  const processedChapters = (chaptersData || []).map(ch => {
-      console.log(`Processing chapter: ID=${ch.id}, OrderIndex=${ch.order_index}, Type=${typeof ch.order_index}, Title=${ch.title}`); // Diagnostic log
+  const processedChapters = (chaptersData || [] as Chapter[]).map((ch: Chapter) => {
+      
       return {
     ...ch,
-    lessons: (ch.lessons || []).map(l => ({
+    lessons: (ch.lessons || [] as Lesson[]).map((l: Lesson) => ({
         ...l,
-        quizzes: (l.quizzes || []).map(q => {
+        quizzes: (l.quizzes || [] as Quiz[]).map((q: Quiz & { wrong_answers?: string[], correct_answer: string }) => {
           const wrongAnswers = Array.isArray(q.wrong_answers) ? q.wrong_answers : [];
           let allOptions = [q.correct_answer, ...wrongAnswers].filter(opt => typeof opt === 'string'); // Ensure all are strings
           
@@ -57,7 +57,7 @@ async function getCourseData(courseId: string, userId: string): Promise<FullCour
           };
         }).sort((a,b) => a.id.localeCompare(b.id))
     })).sort((a,b) => a.lesson_number - b.lesson_number)
-  };}).sort((a,b) => a.order_index - b.order_index);
+  };}).sort((a: Chapter, b: Chapter) => (a.order_index || 0) - (b.order_index || 0));
 
   const fullCourseData: FullCourseData = {
     ...course,
@@ -67,20 +67,22 @@ async function getCourseData(courseId: string, userId: string): Promise<FullCour
   return fullCourseData;
 }
 
-export default async function CourseDisplayPage({ params }: CoursePageProps) {
-  // Defensive check for params and params.courseId
-  if (!params || typeof params.courseId !== 'string') {
-    console.error("CourseDisplayPage: Critical error - params or params.courseId is invalid. Params:", params);
-    redirect('/dashboard?error=invalid_course_params');
-    return null; // Ensure function exits after redirect
+export default async function CourseDisplayPage(props: CoursePageProps) {
+  // 1. Validate courseId immediately
+  const courseId = props.params.courseId;
+  if (typeof courseId !== 'string') {
+    console.error("CourseDisplayPage: Critical error - courseId is not a string or is missing. Received:", courseId);
+    notFound(); // Use notFound for invalid resource identifier
+    // notFound() does not require a 'return null;' as it throws an error that Next.js handles.
   }
-  const { courseId } = params;
+
+  // 2. Then, proceed with async operations
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect('/auth/login');
-    return null; // Ensure function exits after redirect
+    redirect('/auth/login'); // For auth failure, redirect is appropriate
+    return null; 
   }
 
   const courseData = await getCourseData(courseId, user.id);
