@@ -7,6 +7,8 @@ import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/componen
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
 import { ChevronLeft, ChevronRight, BookOpen, HelpCircle } from 'lucide-react';
 
 interface CourseLayoutClientProps {
@@ -17,6 +19,7 @@ export default function CourseLayoutClient({ courseData }: CourseLayoutClientPro
   const [selectedChapterId, setSelectedChapterId] = useState<string | null>(null);
   const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
   const [accordionDefaultValue, setAccordionDefaultValue] = useState<string | undefined>(undefined);
+  const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (courseData?.chapters && courseData.chapters.length > 0) {
@@ -65,7 +68,10 @@ export default function CourseLayoutClient({ courseData }: CourseLayoutClientPro
               {courseData.chapters?.map((chapter) => (
                 <AccordionItem value={`chapter-${chapter.id}`} key={chapter.id}>
                   <AccordionTrigger className="text-md font-medium hover:no-underline px-2 py-3">
-                    Chapter {chapter.chapter_number}: {chapter.title}
+                    {(() => {
+                      const cleanedTitle = chapter.title.replace(/^Chapter\s*\d*:\s*/i, '');
+                      return `Chapter ${chapter.order_index}: ${cleanedTitle}`;
+                    })()}
                   </AccordionTrigger>
                   <AccordionContent>
                     <ul className="space-y-0.5 pt-1 pb-2">
@@ -75,6 +81,13 @@ export default function CourseLayoutClient({ courseData }: CourseLayoutClientPro
                             variant={lesson.id === selectedLessonId ? "secondary" : "ghost"}
                             className={`w-full p-2 h-auto justify-start text-sm rounded-md text-left ${lesson.id === selectedLessonId ? 'font-semibold text-primary' : 'text-muted-foreground hover:text-primary hover:bg-muted/50'}`}
                             onClick={() => handleLessonClick(chapter.id, lesson.id)}
+                            // Reset selected answers when lesson changes if quizzes are part of the lesson
+                            // This depends on whether you want answers to persist across lesson navigation
+                            // For now, let's assume answers are reset if a new lesson with quizzes is selected.
+                            // If selectedLesson?.quizzes && selectedLesson.quizzes.length > 0 {
+                            //   setSelectedAnswers({}); 
+                            // }
+                            // Simpler: selected answers are tied to quizId, so they persist unless explicitly cleared.
                           >
                             {lesson.lesson_number}. {lesson.title}
                           </Button>
@@ -114,17 +127,23 @@ export default function CourseLayoutClient({ courseData }: CourseLayoutClientPro
                       {selectedLesson.quizzes.map((quiz) => (
                         <div key={quiz.id} className="p-4 border rounded-lg shadow-sm bg-card">
                           <p className="font-medium mb-3 text-card-foreground">{quiz.question}</p>
-                          {/* TODO: Implement proper quiz options rendering (e.g., using RadioGroup) */}
-                          <div className="space-y-2 mb-3">
+                          <RadioGroup
+                            value={selectedAnswers[quiz.id] || ""}
+                            onValueChange={(value) => {
+                              setSelectedAnswers(prev => ({ ...prev, [quiz.id]: value }));
+                            }}
+                            className="space-y-2 mb-3"
+                          >
                             {Array.isArray(quiz.options) && quiz.options.map((option, index) => (
-                                <div key={index} className="flex items-center space-x-2 p-2 border rounded-md text-sm">
-                                    {/* Placeholder for radio button */}
-                                    <span className="w-4 h-4 border border-muted-foreground rounded-full mr-2"></span> 
-                                    <span>{option}</span>
-                                </div>
+                              <div key={`${quiz.id}-option-${index}`} className="flex items-center space-x-3 p-2 border rounded-md hover:bg-muted/50 transition-colors">
+                                <RadioGroupItem value={option} id={`${quiz.id}-option-${index}`} />
+                                <Label htmlFor={`${quiz.id}-option-${index}`} className="font-normal cursor-pointer flex-1">
+                                  {option}
+                                </Label>
+                              </div>
                             ))}
-                          </div>
-                          <p className="text-sm text-green-600 dark:text-green-500">Correct Answer: {quiz.correct_answer}</p>
+                          </RadioGroup>
+                          {/* Correct answer display removed. Feedback can be added after submission. */}
                         </div>
                       ))}
                     </div>

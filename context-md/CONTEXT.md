@@ -148,6 +148,7 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
     └── course.ts
 
 
+
 ## Important notes
 - this setup has a template landing page ,supabase auth already implemented and a protected route (dashboard) for authentiticated users
 - when creating components,please put theme in a fodler related to the page it relates to

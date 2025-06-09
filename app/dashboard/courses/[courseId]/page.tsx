@@ -34,16 +34,30 @@ async function getCourseData(courseId: string, userId: string): Promise<FullCour
 
   // Ensure lessons within chapters and quizzes within lessons are sorted if not guaranteed by DB
   // Also, ensure that the structure matches FullCourseData by providing empty arrays if relations are null
-  const processedChapters = (chaptersData || []).map(ch => ({
+  const processedChapters = (chaptersData || []).map(ch => {
+      console.log(`Processing chapter: ID=${ch.id}, OrderIndex=${ch.order_index}, Type=${typeof ch.order_index}, Title=${ch.title}`); // Diagnostic log
+      return {
     ...ch,
     lessons: (ch.lessons || []).map(l => ({
         ...l,
-        quizzes: (l.quizzes || []).map(q => ({
-          ...q,
-          options: Array.isArray(q.options) ? q.options : [] // Ensure options is an array
-        })).sort((a,b) => a.id.localeCompare(b.id))
+        quizzes: (l.quizzes || []).map(q => {
+          const wrongAnswers = Array.isArray(q.wrong_answers) ? q.wrong_answers : [];
+          let allOptions = [q.correct_answer, ...wrongAnswers].filter(opt => typeof opt === 'string'); // Ensure all are strings
+          
+          // Shuffle options (Fisher-Yates shuffle)
+          for (let i = allOptions.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [allOptions[i], allOptions[j]] = [allOptions[j], allOptions[i]];
+          }
+          
+          return {
+            ...q,
+            options: allOptions,
+            // correct_answer is already part of ...q
+          };
+        }).sort((a,b) => a.id.localeCompare(b.id))
     })).sort((a,b) => a.lesson_number - b.lesson_number)
-  })).sort((a,b) => a.chapter_number - b.chapter_number);
+  };}).sort((a,b) => a.order_index - b.order_index);
 
   const fullCourseData: FullCourseData = {
     ...course,

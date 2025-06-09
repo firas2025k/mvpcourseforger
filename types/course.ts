@@ -25,7 +25,7 @@ export interface Chapter {
   id: string;
   course_id: string;
   title: string;
-  chapter_number: number;
+  order_index: number;
   lessons?: Lesson[]; // Lessons will be attached here
 }
 
