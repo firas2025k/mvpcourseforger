@@ -12,6 +12,9 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
 import { ChevronLeft, ChevronRight, BookOpen, HelpCircle, CheckCircle, XCircle } from 'lucide-react'; // Added CheckCircle, XCircle
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeHighlight from 'rehype-highlight';
 
 interface CourseLayoutClientProps {
   courseData: FullCourseData;
@@ -276,10 +279,11 @@ export default function CourseLayoutClient({ courseData }: CourseLayoutClientPro
                     Mark lesson as complete
                   </Label>
                 </div>
-                <div 
-                  className="prose dark:prose-invert max-w-none mb-8" 
-                  dangerouslySetInnerHTML={{ __html: selectedLesson.content || '<p>No content available for this lesson.</p>' }} 
-                />
+                <div className="prose dark:prose-invert max-w-none mb-8">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
+                    {selectedLesson.content || '*No content available for this lesson.*'}
+                  </ReactMarkdown>
+                </div>
                 
                 {selectedLesson.quizzes && selectedLesson.quizzes.length > 0 && (
                   <section className="mt-10 pt-6 border-t">
