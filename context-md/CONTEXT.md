@@ -43,6 +43,8 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 │   │   └── stripe
 │   │       ├── create-checkout-session
 │   │       │   └── route.ts
+│   │       ├── create-portal-session
+│   │       │   └── route.ts
 │   │       └── webhook
 │   │           └── route.ts
 │   ├── auth
@@ -129,6 +131,8 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 │   ├── course-gen-context.md
 │   ├── database.md
 │   ├── errors.md
+│   ├── query.md
+│   ├── results.md
 │   └── saas-context.md
 ├── eslint.config.mjs
 ├── hooks
@@ -154,6 +158,7 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 └── types
     ├── course.ts
     └── index.ts
+
 
 
 

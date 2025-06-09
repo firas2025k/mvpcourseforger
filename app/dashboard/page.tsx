@@ -21,13 +21,60 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import CourseCard, { type CourseForCard } from '@/components/dashboard/CourseCard';
+import ManageSubscriptionButton from '@/components/dashboard/ManageSubscriptionButton';
 
 export default async function DashboardPage() {
   const supabase = await createClient();
 
-  const { data: { user }, error } = await supabase.auth.getUser();
-  if (error || !user) {
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) {
     redirect("/auth/login");
+  }
+
+  // Fetch active subscription and plan details
+  let activeSubscription: any = null;
+  let planName = "Free Plan"; // Default plan name
+  let courseLimit = 1; // Default course limit for Free plan (adjust if different)
+  let hasActivePaidSubscription = false;
+
+  const { data: subscriptionData, error: subscriptionError } = await supabase
+    .from('subscriptions')
+    .select(`
+      is_active,
+      stripe_subscription_id,
+      plans (
+        name,
+        course_limit
+      )
+    `)
+    .eq('user_id', user.id)
+    .eq('is_active', true)
+    .maybeSingle(); // Use maybeSingle as user might not have an active subscription
+
+  if (subscriptionError) {
+    console.error('Error fetching subscription:', subscriptionError.message);
+    // Proceed with default plan details, or handle error as preferred
+  }
+
+  if (subscriptionData && subscriptionData.plans) {
+    activeSubscription = subscriptionData;
+    planName = subscriptionData.plans.name;
+    courseLimit = subscriptionData.plans.course_limit;
+    if (subscriptionData.stripe_subscription_id) {
+      hasActivePaidSubscription = true;
+    }
+  } else {
+    // Check if user has a profile to get their default course limit if on free tier
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('course_limit')
+      .eq('id', user.id)
+      .single();
+    if (profileData && !profileError) {
+        courseLimit = profileData.course_limit; // This would be the default from their profile
+    } else if (profileError) {
+        console.error('Error fetching profile for default course limit:', profileError.message);
+    }
   }
 
   // 1. Fetch basic course data for the user
@@ -112,9 +159,9 @@ export default async function DashboardPage() {
     : 0;
   const activeCourses = courses.length; // Assuming all fetched are active for now
   const userPlan = {
-    name: "Free Plan", // TODO: Fetch actual user plan
-    courseLimit: 1, // TODO: Fetch actual limit
-    coursesCreated: courses.length, 
+    name: planName,
+    coursesCreated: totalCourses,
+    courseLimit: courseLimit,
   };
 
   return (
@@ -163,9 +210,12 @@ export default async function DashboardPage() {
           <CardContent>
             <div className="text-lg font-bold">{userPlan.name}</div>
             <p className="text-xs text-muted-foreground">
-               {userPlan.coursesCreated}/{userPlan.courseLimit} courses created (placeholder)
+              {userPlan.name !== 'Free Plan' ? 
+                `${userPlan.courseLimit} course${userPlan.courseLimit === 1 ? '' : 's'} limit` :
+                `${userPlan.coursesCreated}/${userPlan.courseLimit} courses created` // Or a different message for free plan
+              }
             </p>
-            {/* <Button variant="outline" size="sm" className="mt-2">Upgrade</Button> */}
+            {hasActivePaidSubscription && <ManageSubscriptionButton />}
           </CardContent>
         </Card>
       </section>
