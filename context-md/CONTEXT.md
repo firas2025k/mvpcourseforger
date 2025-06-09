@@ -34,6 +34,9 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 │   │   ├── course
 │   │   │   └── [courseId]
 │   │   │       └── route.ts
+│   │   ├── course-details
+│   │   │   └── [courseId]
+│   │   │       └── route.ts
 │   │   ├── generate-course
 │   │   │   └── route.ts
 │   │   ├── lesson-progress
@@ -159,7 +162,6 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 └── types
     ├── course.ts
     └── index.ts
-
 
 
 

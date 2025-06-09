@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress'; // Placeholder for progress
-import { BookOpen, Trash2 } from 'lucide-react';
+import { BookOpen, Trash2, FileDown, Loader2 } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,9 +25,31 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import html2pdf from 'html2pdf.js';
 
 // Define the expected shape of a course object for this component
 // Ideally, this would come from a shared types/index.ts file
+
+interface Lesson {
+  id: string;
+  title: string;
+  content: string; // Full lesson content for PDF
+  order_index: number; // Renamed from lesson_number to match DB
+  // quizzes: Quiz[]; // Quizzes removed
+}
+
+interface Chapter {
+  id: string;
+  title: string;
+  order_index: number; // Renamed from chapter_number
+  lessons: Lesson[];
+}
+
+interface CourseDetail extends CourseForCard { // Extends base card info
+  description?: string | null; // Full description if available
+  chapters: Chapter[];
+}
+
 export interface CourseForCard {
   id: string;
   title: string;
@@ -46,6 +68,7 @@ export default function CourseCard({ course }: CourseCardProps) {
   const router = useRouter();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
   const description = course.prompt 
     ? (course.prompt.length > 100 ? course.prompt.substring(0, 97) + '...' : course.prompt)
     : 'No description available.';
@@ -73,6 +96,58 @@ export default function CourseCard({ course }: CourseCardProps) {
       // TODO: Add an error toast notification here
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const handleExportToPdf = async () => {
+    setIsExportingPdf(true);
+    try {
+      const response = await fetch(`/api/course-details/${course.id}`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to fetch course details for PDF export.');
+      }
+      const courseDetails: CourseDetail = await response.json();
+
+      let htmlContent = `<style>body { color: black; } h1, h2, h3, h4, h5, h6 { color: black; } p { color: black; } div { color: black; } li { color: black; }</style><h1>${courseDetails.title}</h1>`;
+      if (courseDetails.description) {
+         htmlContent += `<p>${courseDetails.description.replace(/\n/g, '<br />')}</p>`;
+      } else if(courseDetails.prompt) {
+         htmlContent += `<p>${courseDetails.prompt.replace(/\n/g, '<br />')}</p>`;
+      }
+      htmlContent += '<hr />'
+
+      courseDetails.chapters.forEach(chapter => {
+        htmlContent += `<h2>Chapter ${chapter.order_index}: ${chapter.title}</h2>`;
+        chapter.lessons.forEach(lesson => {
+          htmlContent += `<h3>Lesson ${lesson.order_index}: ${lesson.title}</h3>`;
+          const formattedContent = lesson.content ? lesson.content.replace(/\n/g, '<br />') : 'No content available.';
+          htmlContent += `<div>${formattedContent}</div>`;
+          // Quiz generation removed
+          htmlContent += '<hr style="margin-top: 1em; margin-bottom: 1em;" />';
+        });
+      });
+
+      const element = document.createElement('div');
+      element.innerHTML = htmlContent;
+      // Sanitize title for filename
+      const safeTitle = course.title.replace(/[^a-z0-9_\-\s]/gi, '_').replace(/\s+/g, '_');
+
+      const opt = {
+        margin:       0.5, // inches
+        filename:     `${safeTitle}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, logging: false, useCORS: true, letterRendering: true },
+        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+      };
+
+      html2pdf().from(element).set(opt).save();
+
+    } catch (error) {
+      console.error('Error exporting to PDF:', error);
+      alert(`Failed to export to PDF: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      setIsExportingPdf(false);
     }
   };
 
@@ -124,10 +199,20 @@ export default function CourseCard({ course }: CourseCardProps) {
         </div>
       </CardContent>
       <CardFooter>
-        <Button asChild className="w-full bg-purple-600 hover:bg-purple-700 text-white">
-          {/* Link to a dynamic course page - this page needs to be created later */}
-          <Link href={`/dashboard/courses/${course.id}`}>View Course</Link>
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-2 w-full">
+          <Button asChild className="flex-1 bg-purple-600 hover:bg-purple-700 text-white">
+            <Link href={`/dashboard/courses/${course.id}`}>View Course</Link>
+          </Button>
+          <Button 
+            variant="outline" 
+            className="flex-1"
+            onClick={handleExportToPdf} 
+            disabled={isExportingPdf}
+          >
+            {isExportingPdf ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileDown className="mr-2 h-4 w-4" />} 
+            {isExportingPdf ? 'Exporting...' : 'Export PDF'}
+          </Button>
+        </div>
       </CardFooter>
     </Card>
   );

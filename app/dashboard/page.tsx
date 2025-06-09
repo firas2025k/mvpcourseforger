@@ -8,7 +8,9 @@ import {
   Crown,
   PlusCircle,
   LayoutGrid, // For grid icon
-  AlertTriangle // For no courses message
+  AlertTriangle, // For no courses message
+  FileDown, // For PDF export icon
+  Loader2 // For loading state
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -22,6 +24,32 @@ import {
 } from "@/components/ui/card";
 import CourseCard, { type CourseForCard } from '@/components/dashboard/CourseCard';
 import ManageSubscriptionButton from '@/components/dashboard/ManageSubscriptionButton';
+
+interface Lesson {
+  id: string;
+  title: string;
+  content: string;
+  lesson_number: number;
+  quizzes: Quiz[];
+}
+
+interface Quiz {
+  id: string;
+  question: string;
+  choices: string[];
+  correct_answer: string;
+}
+
+interface Chapter {
+  id: string;
+  title: string;
+  chapter_number: number;
+  lessons: Lesson[];
+}
+
+interface CourseDetail extends Course {
+  chapters: Chapter[];
+}
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -255,7 +283,10 @@ export default async function DashboardPage() {
         {courses.length > 0 ? (
           <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {courses.map((course) => (
-              <CourseCard key={course.id} course={course} />
+              <CourseCard key={course.id} course={course}>
+                <div className="flex items-center justify-between">
+                </div>
+              </CourseCard>
             ))}
           </div>
         ) : (
