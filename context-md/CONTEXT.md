@@ -62,6 +62,8 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 │   │       └── page.tsx
 │   ├── dashboard
 │   │   ├── courses
+│   │   │   ├── [courseId]
+│   │   │   │   └── page.tsx
 │   │   │   ├── new
 │   │   │   │   └── page.tsx
 │   │   │   └── preview
@@ -84,7 +86,10 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 │   │   ├── sign-up-form.tsx
 │   │   └── update-password-form.tsx
 │   ├── dashboard
-│   │   └── DashboardLayout.tsx
+│   │   ├── CourseCard.tsx
+│   │   ├── DashboardLayout.tsx
+│   │   └── courses
+│   │       └── CourseLayoutClient.tsx
 │   ├── landing
 │   │   ├── Footer.tsx
 │   │   └── Navbar.tsx
@@ -94,18 +99,25 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 │   ├── theme-switcher.tsx
 │   └── ui
 │       ├── accordion.tsx
+│       ├── avatar.tsx
 │       ├── badge.tsx
 │       ├── button.tsx
 │       ├── card.tsx
 │       ├── checkbox.tsx
+│       ├── dialog.tsx
 │       ├── dropdown-menu.tsx
 │       ├── input.tsx
 │       ├── label.tsx
 │       ├── progress.tsx
+│       ├── radio-group.tsx
+│       ├── resizable.tsx
+│       ├── scroll-area.tsx
 │       ├── select.tsx
 │       ├── separator.tsx
 │       ├── sheet.tsx
-│       └── textarea.tsx
+│       ├── tabs.tsx
+│       ├── textarea.tsx
+│       └── tooltip.tsx
 ├── components.json
 ├── context-md
 │   ├── CONTEXT.md
@@ -133,13 +145,14 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 ├── tailwind.config.ts
 ├── tsconfig.json
 └── types
+    └── course.ts
 
 
 ## Important notes
 - this setup has a template landing page ,supabase auth already implemented and a protected route (dashboard) for authentiticated users
 - when creating components,please put theme in a fodler related to the page it relates to
 for example if you are creating a component for the dashboard page,please put it in a dashboard folder in the components folder and for shared components like navbars and side bars etc.. put them in a shared folder in the components folder
-- for styling,please use tailwindcss and shadcnui
+- for styling,please use tailwindcss and shadcn/ui
 - TypeScript types/interfaces should be put in the types folder
 - for hooks,please put them in the hooks folder
 - for lib,please put them in the lib folder
