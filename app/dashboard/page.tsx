@@ -20,7 +20,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import CourseCard, { CourseForCard } from '@/components/dashboard/CourseCard';
+import CourseCard, { type CourseForCard } from '@/components/dashboard/CourseCard';
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -30,23 +30,86 @@ export default async function DashboardPage() {
     redirect("/auth/login");
   }
 
-  // Fetch user's courses
-  const { data: coursesData, error: coursesError } = await supabase
+  // 1. Fetch basic course data for the user
+  const { data: rawCoursesData, error: coursesError } = await supabase
     .from('courses')
-    .select('id, title, prompt') // Select fields needed for CourseForCard
+    .select('id, title, prompt')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false });
 
   if (coursesError) {
-    console.error('Error fetching courses:', coursesError);
-    // Handle error appropriately, maybe show an error message
+    console.error('Error fetching courses:', coursesError.message); 
+    // courses will be an empty array if rawCoursesData is null due to error
+  }
+  
+  const userCourses = rawCoursesData || [];
+  let courses: CourseForCard[] = [];
+  const totalLessonsByCourse: Record<string, number> = {};
+  const completedLessonsByCourse: Record<string, number> = {};
+
+  if (userCourses.length > 0) {
+    const courseIds = userCourses.map(c => c.id);
+
+    // 2. Fetch all lessons for these courses to count total lessons per course
+    const { data: lessonsInCoursesData, error: lessonsError } = await supabase
+      .from('lessons')
+      .select('id, chapters!inner(course_id)') // We need course_id to group lessons
+      .in('chapters.course_id', courseIds);
+
+    if (lessonsError) {
+      console.error('Error fetching lessons for courses:', lessonsError.message);
+    } else if (lessonsInCoursesData) {
+      for (const lesson of lessonsInCoursesData) {
+        const courseId = lesson.chapters?.course_id;
+        if (courseId) {
+          totalLessonsByCourse[courseId] = (totalLessonsByCourse[courseId] || 0) + 1;
+        }
+      }
+    }
+
+    // 3. Fetch user's completed lessons for these courses
+    const { data: userProgressData, error: progressError } = await supabase
+      .from('progress')
+      .select('lesson_id, lessons!inner(id, chapters!inner(course_id))')
+      .eq('user_id', user.id)
+      .eq('is_completed', true)
+      .in('lessons.chapters.course_id', courseIds); // Only fetch progress for the user's courses
+
+    if (progressError) {
+      console.error('Error fetching user progress:', progressError.message);
+    } else if (userProgressData) {
+      for (const progressItem of userProgressData) {
+        const courseId = progressItem.lessons?.chapters?.course_id;
+        if (courseId) {
+          completedLessonsByCourse[courseId] = (completedLessonsByCourse[courseId] || 0) + 1;
+        }
+      }
+    }
+    
+    // 4. Combine data to form CourseForCard objects
+    courses = userCourses.map(course => {
+      const totalLessons = totalLessonsByCourse[course.id] || 0;
+      const completedLessons = completedLessonsByCourse[course.id] || 0;
+      const progress = totalLessons > 0 ? (completedLessons / totalLessons) * 100 : 0;
+      return {
+        id: course.id,
+        title: course.title,
+        prompt: course.prompt,
+        totalLessons,
+        completedLessons,
+        progress,
+      };
+    });
+  } else {
+    // No courses found for the user, courses array will remain empty
+    console.log('No courses found for user:', user.id);
   }
 
-  const courses: CourseForCard[] = coursesData || [];
-
-  // Placeholder data for stats - can be refined later
   const totalCourses = courses.length;
-  const averageProgress = 0; // TODO: Calculate this based on actual progress
+  const coursesWithLessons = courses.filter(c => c.totalLessons > 0);
+  const averageProgress = coursesWithLessons.length > 0 
+    ? Math.round(coursesWithLessons.reduce((sum, course) => sum + course.progress, 0) / coursesWithLessons.length)
+    : 0;
   const activeCourses = courses.length; // Assuming all fetched are active for now
   const userPlan = {
     name: "Free Plan", // TODO: Fetch actual user plan
@@ -88,7 +151,7 @@ export default async function DashboardPage() {
           <CardContent>
             <div className="text-2xl font-bold">{averageProgress}%</div>
             <p className="text-xs text-muted-foreground">
-              across all active courses (placeholder)
+              across all courses with lessons
             </p>
           </CardContent>
         </Card>

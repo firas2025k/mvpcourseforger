@@ -37,6 +37,7 @@ export default function CourseLayoutClient({ courseData }: CourseLayoutClientPro
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
   const [quizFeedback, setQuizFeedback] = useState<Record<string, QuizFeedback | null>>({}); // State for quiz feedback
   const [lessonCompletionStatus, setLessonCompletionStatus] = useState<Record<string, boolean>>({});
+  const [isLoadingProgress, setIsLoadingProgress] = useState(true);
 
   useEffect(() => {
     // Reset feedback and selected answers when the selected lesson changes
@@ -56,6 +57,28 @@ export default function CourseLayoutClient({ courseData }: CourseLayoutClientPro
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [courseData]); // Run once on mount or when courseData changes
+
+  useEffect(() => {
+    const fetchLessonProgress = async () => {
+      if (!courseData?.id) return;
+      setIsLoadingProgress(true);
+      try {
+        const response = await fetch(`/api/lesson-progress?courseId=${courseData.id}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch lesson progress');
+        }
+        const progressData: Record<string, boolean> = await response.json();
+        setLessonCompletionStatus(progressData);
+      } catch (error) {
+        console.error("Error fetching lesson progress:", error);
+        // Optionally, set some error state to display to the user
+      } finally {
+        setIsLoadingProgress(false);
+      }
+    };
+
+    fetchLessonProgress();
+  }, [courseData?.id]);
 
   const handleLessonClick = (chapterId: string, lessonId: string) => {
     if (selectedLessonId !== lessonId || selectedChapterId !== chapterId) {
@@ -116,12 +139,44 @@ export default function CourseLayoutClient({ courseData }: CourseLayoutClientPro
     }
   };
 
-  const handleToggleLessonComplete = (lessonId: string) => {
+  const handleToggleLessonComplete = async (lessonId: string) => {
+    const currentStatus = !!lessonCompletionStatus[lessonId];
+    const newStatus = !currentStatus;
+
+    // Optimistic update
     setLessonCompletionStatus(prev => ({
       ...prev,
-      [lessonId]: !prev[lessonId]
+      [lessonId]: newStatus
     }));
-    // In a real app, you'd also call an API here to save the status to the backend.
+
+    try {
+      const response = await fetch('/api/lesson-progress', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ lessonId, isCompleted: newStatus, courseId: courseData.id }),
+      });
+
+      if (!response.ok) {
+        // Revert optimistic update on failure
+        setLessonCompletionStatus(prev => ({
+          ...prev,
+          [lessonId]: currentStatus 
+        }));
+        console.error('Failed to update lesson progress:', await response.text());
+        // Optionally, show an error to the user
+      }
+      // Success: local state is already updated optimistically
+    } catch (error) {
+      // Revert optimistic update on network error
+      setLessonCompletionStatus(prev => ({
+        ...prev,
+        [lessonId]: currentStatus
+      }));
+      console.error('Error updating lesson progress:', error);
+      // Optionally, show an error to the user
+    }
   };
 
   const totalLessons = useMemo(() => {
@@ -215,6 +270,7 @@ export default function CourseLayoutClient({ courseData }: CourseLayoutClientPro
                     id={`complete-${selectedLesson.id}`}
                     checked={!!lessonCompletionStatus[selectedLesson.id]}
                     onCheckedChange={() => handleToggleLessonComplete(selectedLesson.id)}
+                    disabled={isLoadingProgress} // Disable while initially loading progress
                   />
                   <Label htmlFor={`complete-${selectedLesson.id}`} className="text-sm font-medium text-muted-foreground cursor-pointer">
                     Mark lesson as complete

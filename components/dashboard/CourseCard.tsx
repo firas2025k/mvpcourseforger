@@ -17,6 +17,9 @@ export interface CourseForCard {
   id: string;
   title: string;
   prompt: string | null; // Using prompt as description for now
+  progress: number; // Percentage, 0-100
+  totalLessons: number;
+  completedLessons: number;
   // Add other relevant fields like difficulty, image_url if available and needed for card
 }
 
@@ -29,8 +32,8 @@ export default function CourseCard({ course }: CourseCardProps) {
     ? (course.prompt.length > 100 ? course.prompt.substring(0, 97) + '...' : course.prompt)
     : 'No description available.';
 
-  // Placeholder progress value
-  const progressValue = 0; // Later, this would come from user's progress data
+  const progressValue = Math.round(course.progress);
+  const lessonsProgressText = `${course.completedLessons} / ${course.totalLessons} lessons`;
 
   return (
     <Card className="flex flex-col h-full shadow-lg hover:shadow-xl transition-shadow duration-300">
@@ -47,7 +50,7 @@ export default function CourseCard({ course }: CourseCardProps) {
         {/* Progress Bar Placeholder */}
         <div className="mb-2">
           <div className="flex justify-between text-xs text-muted-foreground mb-1">
-            <span>Progress</span>
+            <span>{lessonsProgressText}</span>
             <span>{progressValue}%</span>
           </div>
           <Progress value={progressValue} className="h-2" />

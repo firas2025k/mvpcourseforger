@@ -43,6 +43,8 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 │   ├── api
 │   │   ├── generate-course
 │   │   │   └── route.ts
+│   │   ├── lesson-progress
+│   │   │   └── route.ts
 │   │   └── save-course
 │   │       └── route.ts
 │   ├── auth
