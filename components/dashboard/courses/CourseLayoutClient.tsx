@@ -279,7 +279,7 @@ export default function CourseLayoutClient({ courseData }: CourseLayoutClientPro
                     Mark lesson as complete
                   </Label>
                 </div>
-                <div className="prose dark:prose-invert max-w-none mb-8">
+                <div className="prose dark:prose-invert max-w-none mb-8 prose-p:my-6">
                   <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
                     {selectedLesson.content || '*No content available for this lesson.*'}
                   </ReactMarkdown>

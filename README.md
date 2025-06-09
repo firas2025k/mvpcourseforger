@@ -1,23 +1,136 @@
-<a href="https://demo-nextjs-with-supabase.vercel.app/">
-  <img alt="Next.js and Supabase Starter Kit - the fastest way to build apps with Next.js and Supabase" src="https://demo-nextjs-with-supabase.vercel.app/opengraph-image.png">
-  <h1 align="center">Next.js and Supabase Starter Kit</h1>
-</a>
+# CourseForger - AI-Powered Learning Management System
 
-<p align="center">
- The fastest way to build apps with Next.js and Supabase
-</p>
-
-<p align="center">
-  <a href="#features"><strong>Features</strong></a> ·
-  <a href="#demo"><strong>Demo</strong></a> ·
-  <a href="#deploy-to-vercel"><strong>Deploy to Vercel</strong></a> ·
-  <a href="#clone-and-run-locally"><strong>Clone and run locally</strong></a> ·
-  <a href="#feedback-and-issues"><strong>Feedback and issues</strong></a>
-  <a href="#more-supabase-examples"><strong>More Examples</strong></a>
-</p>
-<br/>
+CourseForger is a modern Learning Management System (LMS) built with Next.js and Supabase, designed to empower creators to easily generate and manage online courses. It leverages AI for content generation assistance and provides a seamless experience for both course creators and learners.
 
 ## Features
+
+*   **AI-Assisted Course Generation:** (Potentially using `@google/generative-ai`) Quickly scaffold course structures, lesson content, and quizzes.
+*   **Rich Content Formatting:** Lessons are rendered from Markdown, supporting rich text, code blocks with syntax highlighting, lists, and more for an engaging learning experience.
+*   **Subscription Management:** Integrated with Stripe for handling user subscriptions and plan-based access to features.
+    *   Multiple Tiers (e.g., Free, Pro, Ultimate) with varying course creation limits.
+    *   Secure checkout and customer portal for managing subscriptions.
+*   **Course Creation Limits:**
+    *   Enforces limits on the number of courses a user can create based on their subscription plan.
+    *   Tracks lifetime course creations to prevent abuse of free tier limits.
+*   **User Authentication & Profiles:** Secure user registration and login powered by Supabase Auth. User profiles store relevant information and preferences.
+*   **Interactive Course Navigation:**
+    *   Resizable side panel for easy navigation through chapters and lessons.
+    *   Progress tracking for lessons and overall course completion.
+    *   Interactive quizzes within lessons with instant feedback.
+*   **Dashboard:**
+    *   Overview of user statistics (total courses, progress).
+    *   Easy access to create new courses and manage existing ones.
+    *   Displays current subscription plan and course creation allowance.
+*   **Settings Page:**
+    *   View user account information (email).
+    *   Manage subscription via Stripe customer portal.
+    *   Account deletion with data removal and subscription cancellation.
+*   **PDF Export:** Export course content (or parts of it) to PDF (using `html2pdf.js`).
+*   **Responsive Design:** Built with Tailwind CSS for a consistent experience across devices.
+
+## Tech Stack
+
+*   **Framework:** [Next.js](https://nextjs.org/) (App Router)
+*   **Backend & Database:** [Supabase](https://supabase.io/)
+    *   Authentication
+    *   PostgreSQL Database
+    *   Storage (for course assets, if applicable)
+    *   Edge Functions / Serverless Functions (RPC for operations like user deletion)
+*   **Styling:** [Tailwind CSS](https://tailwindcss.com/)
+*   **UI Components:** Custom components + [shadcn/ui](https://ui.shadcn.com/) (based on project structure)
+*   **Markdown Rendering:**
+    *   `react-markdown`
+    *   `remark-gfm` (GitHub Flavored Markdown)
+    *   `rehype-highlight` (Syntax highlighting for code blocks)
+*   **Payments & Subscriptions:** [Stripe](https://stripe.com/)
+*   **AI Content Generation:** `@google/generative-ai` (Gemini)
+*   **PDF Generation:** `html2pdf.js`
+*   **Language:** TypeScript
+
+## Getting Started
+
+### Prerequisites
+
+*   Node.js (e.g., v18.x or v20.x)
+*   npm or yarn
+*   Supabase account and project setup
+*   Stripe account and API keys
+*   Google Gemini API Key
+
+### Clone and Run Locally
+
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/your-username/courseforger.git
+    cd courseforger
+    ```
+
+2.  **Install dependencies:**
+    ```bash
+    npm install
+    # or
+    yarn install
+    ```
+
+3.  **Set up environment variables:**
+    Create a `.env.local` file in the root of the project and add your Supabase, Stripe, and Gemini API keys:
+    ```env
+    NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+    SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key # If needed for admin tasks
+    STRIPE_SECRET_KEY=your_stripe_secret_key
+    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
+    STRIPE_WEBHOOK_SECRET=your_stripe_webhook_secret # For handling Stripe events
+    GEMINI_API_KEY=your_gemini_api_key
+    # Add any other necessary environment variables (e.g., NEXT_PUBLIC_APP_URL for production)
+    ```
+
+4.  **Set up Supabase database schema:**
+    Apply the migrations located in `supabase/migrations/` to your Supabase project.
+    ```bash
+    npx supabase login
+    npx supabase link --project-ref <your-project-id>
+    npx supabase db push
+    # Or apply migrations manually via the Supabase dashboard SQL editor.
+    ```
+
+5.  **Run the development server:**
+    ```bash
+    npm run dev
+    # or
+    yarn dev
+    ```
+    Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+## Future Improvements
+
+*   **Advanced AI Content Tools:**
+    *   More granular control over AI-generated content (tone, style, depth).
+    *   AI-powered content summarization or question generation.
+    *   Image generation for course thumbnails or lesson illustrations.
+*   **Enhanced Analytics:** Detailed analytics for course creators on student engagement, completion rates, and quiz performance.
+*   **Community Features:** Discussion forums per course or lesson, Q&A sections.
+*   **Gamification:** Badges, points, leaderboards to increase student motivation.
+*   **Direct File Uploads:** For course materials (videos, PDFs, presentations) using Supabase Storage.
+*   **Mobile Application:** Native or PWA for learning on the go.
+*   **Internationalization (i18n):** Support for multiple languages.
+*   **Accessibility (a11y) Enhancements:** Continuous improvements to meet WCAG standards.
+*   **More Theming Options:** Allow users to customize the look and feel of their course pages.
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request or open an issue for bugs, features, or improvements.
+
+1.  Fork the Project
+2.  Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3.  Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4.  Push to the Branch (`git push origin feature/AmazingFeature`)
+5.  Open a Pull Request
+
+## License
+
+Distributed under the MIT License. (You may want to create a `LICENSE` file with the MIT License text if one doesn't exist).
+
 
 - Works across the entire [Next.js](https://nextjs.org) stack
   - App Router
