@@ -2,8 +2,6 @@
 
 - here is the current supabase database schema for the MVP
 
-
-
 CREATE TABLE public.chapters (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   course_id uuid,
@@ -33,8 +31,8 @@ CREATE TABLE public.enrollments (
   course_id uuid,
   enrolled_at timestamp with time zone DEFAULT now(),
   CONSTRAINT enrollments_pkey PRIMARY KEY (id),
-  CONSTRAINT enrollments_course_id_fkey FOREIGN KEY (course_id) REFERENCES public.courses(id),
-  CONSTRAINT enrollments_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+  CONSTRAINT enrollments_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id),
+  CONSTRAINT enrollments_course_id_fkey FOREIGN KEY (course_id) REFERENCES public.courses(id)
 );
 CREATE TABLE public.lessons (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -55,6 +53,8 @@ CREATE TABLE public.plans (
   price_cents integer NOT NULL,
   stripe_price_id text,
   created_at timestamp with time zone DEFAULT now(),
+  description text,
+  features ARRAY,
   CONSTRAINT plans_pkey PRIMARY KEY (id)
 );
 CREATE TABLE public.profiles (
@@ -63,6 +63,7 @@ CREATE TABLE public.profiles (
   avatar_url text,
   agreed_to_terms boolean DEFAULT false,
   created_at timestamp with time zone DEFAULT now(),
+  course_limit integer DEFAULT 0,
   CONSTRAINT profiles_pkey PRIMARY KEY (id),
   CONSTRAINT profiles_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id)
 );
@@ -88,7 +89,7 @@ CREATE TABLE public.quizzes (
 );
 CREATE TABLE public.subscriptions (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
-  user_id uuid,
+  user_id uuid UNIQUE,
   plan_id uuid,
   is_active boolean DEFAULT true,
   start_date timestamp with time zone DEFAULT now(),
@@ -96,6 +97,7 @@ CREATE TABLE public.subscriptions (
   stripe_customer_id text,
   stripe_subscription_id text,
   created_at timestamp with time zone DEFAULT now(),
+  stripe_current_period_end timestamp with time zone,
   CONSTRAINT subscriptions_pkey PRIMARY KEY (id),
   CONSTRAINT subscriptions_plan_id_fkey FOREIGN KEY (plan_id) REFERENCES public.plans(id),
   CONSTRAINT subscriptions_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)

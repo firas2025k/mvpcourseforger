@@ -27,26 +27,24 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 - 👤 **Profile & Settings:** User can manage their personal data and preferences
 
 ## **Core Pages:**
-   - Landing Page
-   - User Dashboard
-   - Course Creation (AI Prompt Input → Gemini API)
-   - Course Management
-   - Course Viewer (Learning UI)
-   - Admin Dashboard (Analytics View)
-   - Payment/Upgrade Page
-   - Profile & Settings Page
-
-## Current folder structure 
 .
 ├── README.md
 ├── app
 │   ├── api
+│   │   ├── course
+│   │   │   └── [courseId]
+│   │   │       └── route.ts
 │   │   ├── generate-course
 │   │   │   └── route.ts
 │   │   ├── lesson-progress
 │   │   │   └── route.ts
-│   │   └── save-course
-│   │       └── route.ts
+│   │   ├── save-course
+│   │   │   └── route.ts
+│   │   └── stripe
+│   │       ├── create-checkout-session
+│   │       │   └── route.ts
+│   │       └── webhook
+│   │           └── route.ts
 │   ├── auth
 │   │   ├── confirm
 │   │   │   └── route.ts
@@ -77,6 +75,9 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 │   ├── layout.tsx
 │   ├── opengraph-image.png
 │   ├── page.tsx
+│   ├── pricing
+│   │   ├── PricingClientPage.tsx
+│   │   └── page.tsx
 │   └── twitter-image.png
 ├── components
 │   ├── auth
@@ -101,6 +102,7 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 │   ├── theme-switcher.tsx
 │   └── ui
 │       ├── accordion.tsx
+│       ├── alert-dialog.tsx
 │       ├── avatar.tsx
 │       ├── badge.tsx
 │       ├── button.tsx
@@ -125,11 +127,14 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 │   ├── CONTEXT.md
 │   ├── USER_FLOW.md
 │   ├── course-gen-context.md
-│   └── database.md
+│   ├── database.md
+│   ├── errors.md
+│   └── saas-context.md
 ├── eslint.config.mjs
 ├── hooks
 ├── lib
 │   ├── gemini.ts
+│   ├── stripe.ts
 │   ├── supabase
 │   │   ├── client.ts
 │   │   ├── middleware.ts
@@ -147,7 +152,9 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 ├── tailwind.config.ts
 ├── tsconfig.json
 └── types
-    └── course.ts
+    ├── course.ts
+    └── index.ts
+
 
 
 
