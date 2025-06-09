@@ -1,30 +1,27 @@
 import { stripe } from '@/lib/stripe';
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
-import { cookies, type ReadonlyRequestCookies } from 'next/headers'; // Import ReadonlyRequestCookies
+import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
-  const cookieStore: ReadonlyRequestCookies = cookies(); // Explicitly type cookieStore
-  // NextResponse.next() is not available in Route Handlers. 
-  // Using a dummy NextResponse to handle cookie operations if necessary.
-  const tempHttpResponse = new NextResponse(null, {}); 
+  const cookieStore = await cookies(); // Attempting await
+  const tempHttpResponse = new NextResponse(null, {}); // For capturing Supabase's cookie operations
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name: string) {
-          const cookie = cookieStore.get(name); // Break down the call
-          return cookie?.value;
+        get: (name: string) => {
+          return cookieStore.get(name)?.value;
         },
-        set(name: string, value: string, options: CookieOptions) {
-          // If you are using latest version of Next.js, you can use cookieStore.set here directly
-          tempHttpResponse.cookies.set(name, value, options);
+        set: (name: string, value: string, options: CookieOptions) => {
+          // tempHttpResponse captures cookie changes from Supabase client
+          tempHttpResponse.cookies.set({ name, value, ...options });
         },
-        remove(name: string, options: CookieOptions) {
-          // If you are using latest version of Next.js, you can use cookieStore.delete here directly
-          tempHttpResponse.cookies.delete({ name, ...options });
+        remove: (name: string, options: CookieOptions) => {
+          // tempHttpResponse captures cookie changes from Supabase client
+          tempHttpResponse.cookies.set({ name, value: '', ...options });
         },
       },
     }

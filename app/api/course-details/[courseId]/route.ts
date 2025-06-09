@@ -20,22 +20,22 @@ export async function GET(
   request: NextRequest,
   { params }: { params: { courseId: string } }
 ) {
+  const cookieStore = await cookies(); // Diagnostic: await cookies()
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
         get(name: string) {
-          // Ensure cookies() is called within each method
-          const cookieStore = cookies(); 
+          // cookieStore is now from the outer scope
           return cookieStore.get(name)?.value;
         },
         set(name: string, value: string, options: CookieOptions) {
-          const cookieStore = cookies();
+          // cookieStore is now from the outer scope
           cookieStore.set(name, value, options);
         },
         remove(name: string, options: CookieOptions) {
-          const cookieStore = cookies();
+          // cookieStore is now from the outer scope
           cookieStore.set(name, '', options);
         },
       },

@@ -28,22 +28,14 @@ import ManageSubscriptionButton from '@/components/dashboard/ManageSubscriptionB
 interface Lesson {
   id: string;
   title: string;
-  content: string;
-  lesson_number: number;
-  quizzes: Quiz[];
-}
-
-interface Quiz {
-  id: string;
-  question: string;
-  choices: string[];
-  correct_answer: string;
+  content: string | null; // Made nullable
+  order_index: number; // Renamed from lesson_number, quizzes removed
 }
 
 interface Chapter {
   id: string;
   title: string;
-  chapter_number: number;
+  order_index: number; // Renamed from chapter_number
   lessons: Lesson[];
 }
 
@@ -64,6 +56,7 @@ export default async function DashboardPage() {
   let planName = "Free Plan"; // Default plan name
   let courseLimit = 1; // Default course limit, especially for Free Plan or if profile fetch fails
   let hasActivePaidSubscription = false;
+  let coursesCreatedCountFromProfile = 0; // Initialize courses_created_count
 
   const { data: subscriptionData, error: subscriptionError } = await supabase
     .from('subscriptions')
@@ -94,7 +87,7 @@ export default async function DashboardPage() {
   } else { // User does NOT have an active paid subscription, so they are on Free tier
     const { data: profileData, error: profileError } = await supabase
       .from('profiles')
-      .select('course_limit')
+      .select('course_limit, courses_created_count') // Added courses_created_count
       .eq('id', user.id)
       .single();
 
@@ -113,6 +106,16 @@ export default async function DashboardPage() {
     }
     // If profileData is null (no profile row, e.g. PGRST116) and no other error, 
     // courseLimit remains the initial default (1), which is suitable for a new Free Plan user.
+
+    // Get courses_created_count from profile if available
+    if (profileData && typeof profileData.courses_created_count === 'number') {
+      coursesCreatedCountFromProfile = profileData.courses_created_count;
+    } else if (!profileData && planName === "Free Plan") {
+      // If no profile (e.g., new user) and on Free Plan, assume 0 courses created.
+      // This might happen if the handle_new_user trigger hasn't populated courses_created_count yet.
+      coursesCreatedCountFromProfile = 0;
+    }
+    // If profile exists but courses_created_count is null/undefined, it defaults to 0 from initialization.
   }
 
   // 1. Fetch basic course data for the user
@@ -198,8 +201,9 @@ export default async function DashboardPage() {
   const activeCourses = courses.length; // Assuming all fetched are active for now
   const userPlan = {
     name: planName,
-    coursesCreated: totalCourses,
-    courseLimit: courseLimit,
+    coursesCreated: coursesCreatedCountFromProfile, 
+    courseLimit: courseLimit, // This is the effective limit for the current plan
+    coursesRemaining: Math.max(0, courseLimit - coursesCreatedCountFromProfile) // Calculate remaining courses
   };
 
   return (
@@ -248,10 +252,7 @@ export default async function DashboardPage() {
           <CardContent>
             <div className="text-lg font-bold">{userPlan.name}</div>
             <p className="text-xs text-muted-foreground">
-              {userPlan.name !== 'Free Plan' ? 
-                `${userPlan.courseLimit} course${userPlan.courseLimit === 1 ? '' : 's'} limit` :
-                `${userPlan.coursesCreated}/${userPlan.courseLimit} courses created` // Or a different message for free plan
-              }
+              {`${userPlan.coursesRemaining} course${userPlan.coursesRemaining === 1 ? '' : 's'} remaining`}
             </p>
             {hasActivePaidSubscription && <ManageSubscriptionButton />}
           </CardContent>
@@ -265,7 +266,7 @@ export default async function DashboardPage() {
             <LayoutGrid className="mr-3 h-6 w-6 text-purple-600" /> My Courses
           </h2>
           {/* This button should always be visible */}
-          {totalCourses < userPlan.courseLimit ? (
+          {userPlan.coursesCreated < userPlan.courseLimit ? (
             <Button asChild variant="default" className="bg-purple-600 hover:bg-purple-700 text-white">
               <Link href="/dashboard/courses/new">
                 <PlusCircle className="mr-2 h-4 w-4" /> Create New Course
@@ -297,8 +298,8 @@ export default async function DashboardPage() {
               <p className="text-muted-foreground">
                 It looks like you haven't created any courses. Get started by creating your first one.
               </p>
-              {/* This button is only visible when no courses exist */}
-              {userPlan.courseLimit > 0 ? (
+              {/* This button is only visible when no courses exist AND user has allowance */}
+              {userPlan.coursesCreated < userPlan.courseLimit ? (
                 <Button asChild size="lg" className="mt-4 bg-purple-600 hover:bg-purple-700 text-white">
                   <Link href="/dashboard/courses/new">
                     <PlusCircle className="mr-2 h-5 w-5" /> Create Your First Course

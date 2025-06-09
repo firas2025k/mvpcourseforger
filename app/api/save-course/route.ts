@@ -45,6 +45,72 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'User not authenticated' }, { status: 401 });
   }
 
+  // --- BEGIN COURSE LIMIT CHECK --- 
+  // Fetch profile to get course_limit and courses_created_count
+  const { data: profileData, error: profileFetchError } = await supabase
+    .from('profiles')
+    .select('course_limit, courses_created_count')
+    .eq('id', user.id)
+    .single();
+
+  if (profileFetchError || !profileData) {
+    console.error('Error fetching profile:', profileFetchError?.message);
+    return NextResponse.json({ error: 'Could not retrieve user profile.' }, { status: 500 });
+  }
+
+  let currentCourseLimit = profileData.course_limit;
+  const coursesCreatedCount = profileData.courses_created_count;
+
+  // Check for an active subscription to potentially override the profile's course_limit
+  const { data: activeSubscription, error: subscriptionFetchError } = await supabase
+    .from('subscriptions')
+    .select('plans(course_limit)') // Assumes 'plans' table is related and has 'course_limit'
+    .eq('user_id', user.id)
+    .eq('is_active', true) // Or your equivalent 'active' status field
+    .maybeSingle();
+
+  if (subscriptionFetchError) {
+    // Log warning but proceed with profile limit, as db error shouldn't block if profile is fine
+    console.warn('Could not check for active subscription, proceeding with profile limit:', subscriptionFetchError.message);
+  }
+
+  let onFreePlan = true; // Assume free plan initially
+
+  if (activeSubscription && activeSubscription.plans) {
+    const planDetailsArray = activeSubscription.plans;
+    // Check if it's an array and has at least one element
+    if (Array.isArray(planDetailsArray) && planDetailsArray.length > 0) {
+      const plan = planDetailsArray[0];
+      if (plan && typeof plan.course_limit === 'number' && plan.course_limit > currentCourseLimit) {
+        currentCourseLimit = plan.course_limit;
+        onFreePlan = false; // User has an active paid plan that sets the limit
+      }
+    } else if (!Array.isArray(planDetailsArray)) {
+      // Fallback: If it's somehow an object (which is what one might expect for a to-one relation)
+      const plan = planDetailsArray as { course_limit?: any }; // Type assertion for direct access
+      if (plan && typeof plan.course_limit === 'number' && plan.course_limit > currentCourseLimit) {
+        currentCourseLimit = plan.course_limit;
+        onFreePlan = false; // User has an active paid plan that sets the limit
+      }
+    }
+  }
+
+  // Safeguard: If user is on Free Plan (no overriding active paid subscription) and profile limit is < 1, set to 1.
+  if (onFreePlan && currentCourseLimit < 1) {
+    console.warn(`User ${user.id} (Free Plan context) has profile.course_limit or effective limit of ${currentCourseLimit} in DB. API applying effective limit of 1.`);
+    currentCourseLimit = 1;
+  }
+  
+  // Check if the user has reached their effective course creation limit
+  if (coursesCreatedCount >= currentCourseLimit) {
+    console.log(`User ${user.id} has reached course creation limit. Created (lifetime): ${coursesCreatedCount}, Effective Limit: ${currentCourseLimit}.`);
+    return NextResponse.json(
+      { error: 'You have reached your course creation limit for your current plan. To create more courses, please upgrade your plan or manage your existing courses.' },
+      { status: 403 } // Forbidden
+    );
+  }
+  // --- END COURSE LIMIT CHECK --- 
+
   let courseData: GeneratedCoursePayload;
   try {
     courseData = await request.json();
@@ -144,6 +210,19 @@ export async function POST(request: NextRequest) {
           }
         }
       }
+    }
+
+    // If all insertions are successful, increment courses_created_count on the profile
+    const { error: updateProfileError } = await supabase
+      .from('profiles')
+      .update({ courses_created_count: coursesCreatedCount + 1 })
+      .eq('id', user.id);
+
+    if (updateProfileError) {
+      // This is problematic. Course is saved, but count not updated.
+      // Ideally, this is a transaction. For now, log critical error.
+      console.error(`CRITICAL: Failed to increment courses_created_count for user ${user.id} after course creation. Error: ${updateProfileError.message}`);
+      // Don't fail the request at this point as course is already saved, but this needs monitoring/manual correction.
     }
 
     return NextResponse.json({ message: 'Course saved successfully', courseId: courseId }, { status: 201 });

@@ -25,7 +25,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import html2pdf from 'html2pdf.js';
+
 
 // Define the expected shape of a course object for this component
 // Ideally, this would come from a shared types/index.ts file
@@ -132,6 +132,8 @@ export default function CourseCard({ course }: CourseCardProps) {
       element.innerHTML = htmlContent;
       // Sanitize title for filename
       const safeTitle = course.title.replace(/[^a-z0-9_\-\s]/gi, '_').replace(/\s+/g, '_');
+
+      const html2pdf = (await import('html2pdf.js')).default;
 
       const opt = {
         margin:       0.5, // inches
