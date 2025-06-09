@@ -7,6 +7,8 @@ import {
   Activity,
   Crown,
   PlusCircle,
+  LayoutGrid, // For grid icon
+  AlertTriangle // For no courses message
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -18,6 +20,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import CourseCard, { CourseForCard } from '@/components/dashboard/CourseCard';
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -27,16 +30,29 @@ export default async function DashboardPage() {
     redirect("/auth/login");
   }
 
-  // Placeholder data - in a real app, this would come from the database
-  const totalCourses = 0;
-  const averageProgress = 0;
-  const activeCourses = 0;
+  // Fetch user's courses
+  const { data: coursesData, error: coursesError } = await supabase
+    .from('courses')
+    .select('id, title, prompt') // Select fields needed for CourseForCard
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false });
+
+  if (coursesError) {
+    console.error('Error fetching courses:', coursesError);
+    // Handle error appropriately, maybe show an error message
+  }
+
+  const courses: CourseForCard[] = coursesData || [];
+
+  // Placeholder data for stats - can be refined later
+  const totalCourses = courses.length;
+  const averageProgress = 0; // TODO: Calculate this based on actual progress
+  const activeCourses = courses.length; // Assuming all fetched are active for now
   const userPlan = {
-    name: "Free Plan",
-    courseLimit: 1,
-    coursesCreated: 0, 
+    name: "Free Plan", // TODO: Fetch actual user plan
+    courseLimit: 1, // TODO: Fetch actual limit
+    coursesCreated: courses.length, 
   };
-  const courses = []; // Empty array for no courses
 
   return (
     <div className="flex-1 w-full flex flex-col gap-8 py-8 md:py-12">
@@ -49,18 +65,16 @@ export default async function DashboardPage() {
       </header>
 
       {/* Statistic Cards Section */}
-      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 px-4 md:px-0">
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 px-4 md:px-0">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Courses
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Total Courses</CardTitle>
             <BookOpen className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalCourses}</div>
             <p className="text-xs text-muted-foreground">
-              Courses you're enrolled in or created.
+              courses you have created
             </p>
           </CardContent>
         </Card>
@@ -74,74 +88,61 @@ export default async function DashboardPage() {
           <CardContent>
             <div className="text-2xl font-bold">{averageProgress}%</div>
             <p className="text-xs text-muted-foreground">
-              Across all your active courses.
+              across all active courses (placeholder)
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Courses</CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{activeCourses}</div>
-            <p className="text-xs text-muted-foreground">
-              Courses you are currently working on.
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Subscription</CardTitle>
+            <CardTitle className="text-sm font-medium">User Plan</CardTitle>
             <Crown className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-lg font-semibold">{userPlan.name}</div>
+            <div className="text-lg font-bold">{userPlan.name}</div>
             <p className="text-xs text-muted-foreground">
-              {userPlan.coursesCreated}/{userPlan.courseLimit} courses created.
+               {userPlan.coursesCreated}/{userPlan.courseLimit} courses created (placeholder)
             </p>
+            {/* <Button variant="outline" size="sm" className="mt-2">Upgrade</Button> */}
           </CardContent>
-          <CardFooter className="flex justify-between items-center pt-2">
-            <Button size="sm" variant="default">
-              Upgrade Plan
-            </Button>
-          </CardFooter>
         </Card>
       </section>
 
       {/* My Courses Section */}
       <section className="px-4 md:px-0">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-semibold tracking-tight">My Courses</h2>
-          {courses.length > 0 && (
-            <Link href="/dashboard/courses/new" passHref>
-              <Button>
-                <PlusCircle className="mr-2 h-4 w-4" /> Create New Course
-              </Button>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-semibold flex items-center">
+            <LayoutGrid className="mr-3 h-6 w-6 text-purple-600" /> My Courses
+          </h2>
+          {/* This button should always be visible */}
+          <Button asChild variant="default" className="bg-purple-600 hover:bg-purple-700 text-white">
+            <Link href="/dashboard/courses/new">
+              <PlusCircle className="mr-2 h-4 w-4" /> Create New Course
             </Link>
-          )}
+          </Button>
         </div>
-
-        {courses.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-lg border border-dashed shadow-sm py-16 text-center">
-            <BookOpen className="mx-auto h-16 w-16 text-primary/70 mb-6" />
-            <h3 className="text-2xl font-semibold text-gray-800 dark:text-gray-100">
-              Your Learning Journey Awaits
-            </h3>
-            <p className="mt-3 mb-8 max-w-md text-muted-foreground">
-              You haven't created or enrolled in any courses yet. Take the first step to expand your knowledge.
-            </p>
-            <Link href="/dashboard/courses/new" passHref>
-              <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground">
-                <PlusCircle className="mr-2 h-5 w-5" /> Create Your First Course
-              </Button>
-            </Link>
+        
+        {courses.length > 0 ? (
+          <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {courses.map((course) => (
+              <CourseCard key={course.id} course={course} />
+            ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {/* Placeholder for course cards when they exist */}
-            <p>Course cards would go here. (Not implemented in this update)</p>
-          </div>
+          <Card className="col-span-full">
+            <CardContent className="flex flex-col items-center justify-center gap-4 p-8 text-center">
+              <AlertTriangle className="h-12 w-12 text-muted-foreground/50" />
+              <h3 className="text-xl font-semibold">No Courses Yet!</h3>
+              <p className="text-muted-foreground">
+                It looks like you haven't created any courses. Get started by creating your first one.
+              </p>
+              {/* This button is only visible when no courses exist */}
+              <Button asChild size="lg" className="mt-4 bg-purple-600 hover:bg-purple-700 text-white">
+                <Link href="/dashboard/courses/new">
+                  <PlusCircle className="mr-2 h-5 w-5" /> Create Your First Course
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
         )}
       </section>
     </div>

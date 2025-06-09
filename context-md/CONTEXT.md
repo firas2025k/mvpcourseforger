@@ -41,7 +41,9 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 ├── README.md
 ├── app
 │   ├── api
-│   │   └── generate-course
+│   │   ├── generate-course
+│   │   │   └── route.ts
+│   │   └── save-course
 │   │       └── route.ts
 │   ├── auth
 │   │   ├── confirm
@@ -60,7 +62,9 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 │   │       └── page.tsx
 │   ├── dashboard
 │   │   ├── courses
-│   │   │   └── new
+│   │   │   ├── new
+│   │   │   │   └── page.tsx
+│   │   │   └── preview
 │   │   │       └── page.tsx
 │   │   ├── layout.tsx
 │   │   └── page.tsx
@@ -130,6 +134,7 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 ├── tsconfig.json
 └── types
 
+
 ## Important notes
 - this setup has a template landing page ,supabase auth already implemented and a protected route (dashboard) for authentiticated users
 - when creating components,please put theme in a fodler related to the page it relates to
@@ -138,4 +143,4 @@ for example if you are creating a component for the dashboard page,please put it
 - TypeScript types/interfaces should be put in the types folder
 - for hooks,please put them in the hooks folder
 - for lib,please put them in the lib folder
-
+- for utilities,please put them in the utils folder
