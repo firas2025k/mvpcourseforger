@@ -3,10 +3,11 @@ import { Footer } from "@/components/landing/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import Link from "next/link";
+import Image from "next/image";
 import { CheckCircle, Zap, BookOpen, BarChart2, Lightbulb, Star, Users, Shield } from 'lucide-react'; // Example icons
 import { AuthButton } from "@/components/auth/auth-button";
 import { Navbar } from "@/components/landing/Navbar";
-
+import bannerImage from "@/assets/images/banner.png";
 export default function LandingPage() {
   const features = [
     {
@@ -42,49 +43,63 @@ export default function LandingPage() {
   const pricingPlans = [
     {
       name: "Free",
-      price: "$0",
+      price: "€0",
       period: "per month",
-      description: "Get started and create your first course.",
+      description: "Get started and create your first course for free.",
       features: [
-        "1 Course Limit",
-        "AI Course Generation (Basic)",
-        "Standard Learning Interface",
-        "Community Support"
+        "Create up to 1 course",
+        "Access your own created courses",
+        "Limited to basic course generation",
+        "Community Support",
       ],
       cta: "Start For Free",
       href: "/auth/sign-up",
       popular: false
     },
     {
+      name: "Basic",
+      price: "€10",
+      period: "per month",
+      description: "For individuals looking to create more.",
+      features: [
+        "Create up to 5 courses",
+        "Advanced AI Course Generation",
+        "Customizable Quizzes",
+        "Email Support"
+      ],
+      cta: "Get Started",
+      href: "/auth/sign-up?plan=basic",
+      popular: false
+    },
+    {
       name: "Pro",
-      price: "$49", 
+      price: "€25",
       period: "per month",
       description: "For professionals creating multiple courses.",
       features: [
-        "Unlimited Courses",
+        "Create up to 15 courses",
         "Advanced AI Course Generation",
         "Customizable Quizzes",
         "Priority Support",
         "Basic Analytics"
       ],
       cta: "Get Started with Pro",
-      href: "/auth/sign-up?plan=pro", // Example, adjust as needed
+      href: "/auth/sign-up?plan=pro",
       popular: true
     },
     {
-      name: "Enterprise",
-      price: "Custom",
-      period: "Tailored to your needs",
-      description: "For organizations requiring advanced features and support.",
+      name: "Ultimate",
+      price: "€50",
+      period: "per month",
+      description: "For power users and small teams.",
       features: [
+        "Create up to 50 courses",
         "All Pro Features",
         "Dedicated Account Manager",
-        "Custom Integrations",
         "Advanced Security & Compliance",
-        "Volume Discounts"
       ],
-      cta: "Contact Sales",
-      href: "#contact", // Placeholder
+      cta: "Get Started",
+      href: "/auth/sign-up?plan=ultimate",
       popular: false
     }
   ];
@@ -115,16 +130,20 @@ export default function LandingPage() {
               <div className="flex items-center justify-center gap-1">
                 <Star className="h-5 w-5 text-yellow-400" />
                 <Star className="h-5 w-5 text-yellow-400" />
-                <Star className="h-5 w-5 text-yellow-400" />
-                <Star className="h-5 w-5 text-yellow-400" />
-                <Star className="h-5 w-5 text-yellow-400" />
                 <span className="ml-2">Loved by creators worldwide</span>
               </div>
             </div>
-            {/* Placeholder for hero image/graphic */}
-            <div className="mt-16">
-              <div className="aspect-video bg-gradient-to-tr from-purple-400 to-pink-400 dark:from-purple-600 dark:to-pink-600 rounded-xl shadow-2xl flex items-center justify-center p-8">
-                <p className="text-white text-2xl font-semibold">[Placeholder: AI generating a course structure]</p>
+            {/* Hero Image */}
+            <div className="mt-12 md:mt-16 max-w-5xl mx-auto">
+              <div className="rounded-2xl shadow-2xl overflow-hidden border-2 border-purple-200/50 dark:border-purple-800/50">
+                <Image
+                  src={bannerImage}
+                  alt="CourseForger application banner"
+                  width={1920}
+                  height={1080}
+                  className="w-full h-auto"
+                  priority
+                />
               </div>
             </div>
           </div>
@@ -171,7 +190,7 @@ export default function LandingPage() {
                 Choose the plan that fits your needs. Start for free, upgrade anytime.
               </p>
             </div>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8 items-stretch">
               {pricingPlans.map((plan) => (
                 <Card key={plan.name} className={`flex flex-col ${plan.popular ? 'border-2 border-purple-500 dark:border-purple-400 shadow-2xl relative' : 'border-gray-200 dark:border-gray-700 shadow-lg'} bg-white dark:bg-gray-800/70 rounded-xl`}>
                   {plan.popular && (
