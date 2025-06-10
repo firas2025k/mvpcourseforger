@@ -7,8 +7,8 @@ export async function DELETE(
   { params }: { params: { courseId: string } }
 ) {
   const courseId = params.courseId;
-  const cookieStore = cookies(); // For reading incoming cookies
-  const tempHttpResponse = new NextResponse(null, {}); // Temporary response to hold outgoing cookies
+  const cookieStore = await cookies();
+  const tempHttpResponse = new NextResponse(null, {});
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -53,19 +53,6 @@ export async function DELETE(
         { status: 404, headers: tempHttpResponse.headers }
       );
     }
-
-    // Attempt to delete the course. 
-    // IMPORTANT: This relies on ON DELETE CASCADE being set up in your database for related tables 
-    // (chapters, lessons, quizzes, quiz_questions, progress, enrollments).
-    // If not, you'll need to delete from child tables manually in the correct order here.
-    // Consider also deleting related storage objects (e.g., course images) if applicable.
-    
-    // For now, assuming ON DELETE CASCADE handles related data.
-    // If you have specific tables like 'enrollments' or 'progress' that need manual cleanup
-    // and are NOT handled by cascade, you'd add those deletions here first.
-    // Example:
-    // await supabase.from('progress').delete().eq('lesson_id', anyLessonInThisCourse); // This would require fetching all lesson_ids first
-    // await supabase.from('enrollments').delete().eq('course_id', courseId);
 
     const { error: deleteError } = await supabase
       .from('courses')

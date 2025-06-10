@@ -1,10 +1,12 @@
+export const dynamic = "force-dynamic";
+
 import { createClient } from '@/lib/supabase/server';
 import { redirect, notFound } from 'next/navigation';
 import { CoursePageProps, FullCourseData, Chapter, Lesson, Quiz } from '@/types/course';
 import { Button } from '@/components/ui/button';
 import { BookOpen } from 'lucide-react';
 import Link from 'next/link';
-import CourseLayoutClient from '@/components/dashboard/courses/CourseLayoutClient'; // Import the new client component
+import CourseLayoutClient from '@/components/dashboard/courses/CourseLayoutClient';
 
 async function getCourseData(courseId: string, userId: string): Promise<FullCourseData | null> {
   const supabase = await createClient();
@@ -67,9 +69,9 @@ async function getCourseData(courseId: string, userId: string): Promise<FullCour
   return fullCourseData;
 }
 
-export default async function CourseDisplayPage(props: CoursePageProps) {
+export default async function CourseDisplayPage({ params, searchParams }: CoursePageProps) {
   // 1. Validate courseId immediately
-  const courseId = props.params.courseId;
+  const courseId = params.courseId;
   if (typeof courseId !== 'string') {
     console.error("CourseDisplayPage: Critical error - courseId is not a string or is missing. Received:", courseId);
     notFound(); // Use notFound for invalid resource identifier

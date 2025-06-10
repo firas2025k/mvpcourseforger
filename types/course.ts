@@ -43,9 +43,8 @@ export interface Course {
 
 // Props for the main course page component
 export interface CoursePageProps {
-  params: {
-    courseId: string;
-  };
+  params: { courseId: string };
+  searchParams: { [key: string]: string | string[] | undefined };
 }
 
 // Structure for the fully populated course data

@@ -86,6 +86,9 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 │   │   ├── PricingClientPage.tsx
 │   │   └── page.tsx
 │   └── twitter-image.png
+├── assets
+│   └── images
+│       └── banner.png
 ├── components
 │   ├── auth
 │   │   ├── AuthPageLayout.tsx
@@ -133,6 +136,7 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 ├── components.json
 ├── context-md
 │   ├── CONTEXT.md
+│   ├── DEPLOYMENT.md
 │   ├── USER_FLOW.md
 │   ├── course-gen-context.md
 │   ├── database.md
@@ -157,15 +161,11 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 ├── package-lock.json
 ├── package.json
 ├── postcss.config.mjs
-├── supabase
-│   └── migrations
-│       └── 0000_init_schema.sql
 ├── tailwind.config.ts
 ├── tsconfig.json
 └── types
     ├── course.ts
     └── index.ts
-
 ## Important notes
 - this setup has a template landing page ,supabase auth already implemented and a protected route (dashboard) for authentiticated users
 - when creating components,please put theme in a fodler related to the page it relates to
