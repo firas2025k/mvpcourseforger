@@ -7,7 +7,7 @@ import Image from "next/image";
 import { CheckCircle, Zap, BookOpen, BarChart2, Lightbulb, Star, Users, Shield } from 'lucide-react'; // Example icons
 import { AuthButton } from "@/components/auth/auth-button";
 import { Navbar } from "@/components/landing/Navbar";
-import bannerImage from "@/assets/images/banner.png";
+import bannerImage from "../assets/images/banner.png";
 export default function LandingPage() {
   const features = [
     {
