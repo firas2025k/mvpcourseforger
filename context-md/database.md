@@ -3,6 +3,11 @@
 - here is the current supabase database schema for the MVP
 -- WARNING: This schema is for context only and is not meant to be run.
 -- Table order and constraints may not be valid for execution.
+-- WARNING: This schema is for context only and is not meant to be run.
+-- Table order and constraints may not be valid for execution.
+
+-- WARNING: This schema is for context only and is not meant to be run.
+-- Table order and constraints may not be valid for execution.
 
 CREATE TABLE public.chapters (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -66,6 +71,7 @@ CREATE TABLE public.profiles (
   agreed_to_terms boolean DEFAULT false,
   created_at timestamp with time zone DEFAULT now(),
   course_limit integer DEFAULT 0,
+  courses_created_count integer DEFAULT 0,
   CONSTRAINT profiles_pkey PRIMARY KEY (id),
   CONSTRAINT profiles_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id)
 );
@@ -104,3 +110,34 @@ CREATE TABLE public.subscriptions (
   CONSTRAINT subscriptions_plan_id_fkey FOREIGN KEY (plan_id) REFERENCES public.plans(id),
   CONSTRAINT subscriptions_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
 );
+
+## handle_new_user function
+
+
+DECLARE
+  default_plan_id UUID;
+BEGIN
+  -- Get Free plan ID
+  SELECT id INTO default_plan_id FROM public.plans WHERE name = 'Free' LIMIT 1;
+  IF default_plan_id IS NULL THEN
+    RAISE EXCEPTION 'Free plan not found in plans table. Please seed plans table.';
+  END IF;
+  -- Insert into profiles with course_limit = 1 and courses_created_count = 0
+  INSERT INTO public.profiles (id, course_limit, courses_created_count, agreed_to_terms)
+  VALUES (NEW.id, 1, 0, FALSE);
+  -- Insert into subscriptions for Free plan
+  INSERT INTO public.subscriptions (user_id, plan_id, is_active)
+  VALUES (NEW.id, default_plan_id, TRUE);
+  RETURN NEW;
+END;
+
+## sync_profile_course_limit
+
+BEGIN
+  IF NEW.is_active = TRUE THEN
+    UPDATE public.profiles
+    SET course_limit = (SELECT course_limit FROM public.plans WHERE id = NEW.plan_id)
+    WHERE id = NEW.user_id;
+  END IF;
+  RETURN NEW;
+END;

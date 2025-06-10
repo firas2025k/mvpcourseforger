@@ -74,7 +74,9 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 │   │   │   └── preview
 │   │   │       └── page.tsx
 │   │   ├── layout.tsx
-│   │   └── page.tsx
+│   │   ├── page.tsx
+│   │   └── settings
+│   │       └── page.tsx
 │   ├── favicon.ico
 │   ├── globals.css
 │   ├── layout.tsx
@@ -140,6 +142,7 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 │   └── saas-context.md
 ├── eslint.config.mjs
 ├── hooks
+├── html2pdf.d.ts
 ├── lib
 │   ├── gemini.ts
 │   ├── stripe.ts
@@ -162,9 +165,6 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 └── types
     ├── course.ts
     └── index.ts
-
-
-
 
 ## Important notes
 - this setup has a template landing page ,supabase auth already implemented and a protected route (dashboard) for authentiticated users

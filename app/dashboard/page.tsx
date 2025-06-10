@@ -25,22 +25,32 @@ import {
 import CourseCard, { type CourseForCard } from '@/components/dashboard/CourseCard';
 import ManageSubscriptionButton from '@/components/dashboard/ManageSubscriptionButton';
 
-interface Lesson {
+// --- Type Definitions ---
+interface Course {
   id: string;
   title: string;
-  content: string | null; // Made nullable
-  order_index: number; // Renamed from lesson_number, quizzes removed
+  prompt: string | null;
 }
 
-interface Chapter {
+interface Plan {
+  name: string;
+  course_limit: number;
+}
+
+interface SubscriptionWithPlan {
+  is_active: boolean;
+  stripe_subscription_id: string | null;
+  plans: Plan | null; // Supabase returns an object, not an array, for a to-one relationship
+}
+
+interface LessonForCount {
   id: string;
-  title: string;
-  order_index: number; // Renamed from chapter_number
-  lessons: Lesson[];
+  chapters: { course_id: string } | null;
 }
 
-interface CourseDetail extends Course {
-  chapters: Chapter[];
+interface ProgressForCount {
+  lesson_id: string;
+  lessons: { id: string; chapters: { course_id: string } | null } | null;
 }
 
 export default async function DashboardPage() {
@@ -51,86 +61,65 @@ export default async function DashboardPage() {
     redirect("/auth/login");
   }
 
-  // Fetch active subscription and plan details
-  let activeSubscription: any = null;
-  let planName = "Free Plan"; // Default plan name
-  let courseLimit = 1; // Default course limit, especially for Free Plan or if profile fetch fails
-  let hasActivePaidSubscription = false;
-  let coursesCreatedCountFromProfile = 0; // Initialize courses_created_count
+  // --- Refactored & Typed Data Fetching for Plan & Limits ---
 
-  const { data: subscriptionData, error: subscriptionError } = await supabase
-    .from('subscriptions')
-    .select(`
-      is_active,
-      stripe_subscription_id,
-      plans (
-        name,
-        course_limit
-      )
-    `)
-    .eq('user_id', user.id)
-    .eq('is_active', true)
-    .maybeSingle(); // Use maybeSingle as user might not have an active subscription
+  // 1. Fetch user profile first to get the universal courses_created_count and a baseline course_limit.
+  const { data: profileData, error: profileError } = await supabase
+    .from('profiles')
+    .select('course_limit, courses_created_count')
+    .eq('id', user.id)
+    .single();
 
-  if (subscriptionError) {
-    console.error('Error fetching subscription:', subscriptionError.message);
-    // Proceed with default plan details, or handle error as preferred
+  if (profileError && profileError.code !== 'PGRST116') {
+    console.error(`Error fetching profile for user ${user.id}:`, profileError.message);
   }
 
-  if (subscriptionData && subscriptionData.plans) { // User has an active paid subscription
+  const coursesCreatedCount = profileData?.courses_created_count ?? 0;
+  let courseLimit = profileData?.course_limit ?? 1; // Default to 1 if no profile
+  let planName = "Free Plan";
+  let activeSubscription: SubscriptionWithPlan | null = null;
+  let hasActivePaidSubscription = false;
+
+  // 2. Fetch active subscription to override plan details if it exists.
+  const { data, error: subscriptionError } = await supabase
+    .from('subscriptions')
+    .select(`is_active, stripe_subscription_id, plans (name, course_limit)`)
+    .eq('user_id', user.id)
+    .eq('is_active', true)
+    .maybeSingle();
+
+  const subscriptionData = data as SubscriptionWithPlan | null;
+
+  if (subscriptionError) {
+    console.warn('Error fetching subscription:', subscriptionError.message);
+  }
+
+  if (subscriptionData?.plans) { // User has an active paid subscription
     activeSubscription = subscriptionData;
     planName = subscriptionData.plans.name;
     courseLimit = subscriptionData.plans.course_limit;
-    if (subscriptionData.stripe_subscription_id) {
-      hasActivePaidSubscription = true;
+    hasActivePaidSubscription = !!subscriptionData.stripe_subscription_id;
+  } else {
+    // User is on the Free Plan, apply safeguard for the limit.
+    if (courseLimit < 1) {
+      console.warn(`User ${user.id} on Free Plan has profile course_limit of ${profileData?.course_limit}. Overriding to 1.`);
+      courseLimit = 1;
     }
-  } else { // User does NOT have an active paid subscription, so they are on Free tier
-    const { data: profileData, error: profileError } = await supabase
-      .from('profiles')
-      .select('course_limit, courses_created_count') // Added courses_created_count
-      .eq('id', user.id)
-      .single();
-
-    if (profileData && !profileError) {
-      // Profile exists, use its course_limit.
-      courseLimit = profileData.course_limit;
-      // Safeguard: If it's the Free Plan and profile somehow has limit < 1, set to 1.
-      // This handles misconfiguration in new user profile creation for the free tier.
-      if (planName === "Free Plan" && courseLimit < 1) {
-        console.warn(`User ${user.id} on Free Plan has profile course_limit of ${profileData.course_limit}. Overriding to 1. Please check 'handle_new_user' SQL trigger to set a proper default (e.g., 1).`);
-        courseLimit = 1;
-      }
-    } else if (profileError && profileError.code !== 'PGRST116') { // PGRST116: 'single' row not found (expected for new users if trigger hasn't run or profile deleted)
-      console.error(`Error fetching profile for user ${user.id}:`, profileError.message);
-      // courseLimit remains the initial default (1) if profile fetch fails for other reasons.
-    }
-    // If profileData is null (no profile row, e.g. PGRST116) and no other error, 
-    // courseLimit remains the initial default (1), which is suitable for a new Free Plan user.
-
-    // Get courses_created_count from profile if available
-    if (profileData && typeof profileData.courses_created_count === 'number') {
-      coursesCreatedCountFromProfile = profileData.courses_created_count;
-    } else if (!profileData && planName === "Free Plan") {
-      // If no profile (e.g., new user) and on Free Plan, assume 0 courses created.
-      // This might happen if the handle_new_user trigger hasn't populated courses_created_count yet.
-      coursesCreatedCountFromProfile = 0;
-    }
-    // If profile exists but courses_created_count is null/undefined, it defaults to 0 from initialization.
   }
 
-  // 1. Fetch basic course data for the user
-  const { data: rawCoursesData, error: coursesError } = await supabase
+  // 3. Fetch basic course data for the user
+  const { data: rawCourses, error: coursesError } = await supabase
     .from('courses')
     .select('id, title, prompt')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false });
 
+  const userCourses = (rawCourses as Course[] | null) || [];
+
   if (coursesError) {
     console.error('Error fetching courses:', coursesError.message); 
-    // courses will be an empty array if rawCoursesData is null due to error
   }
   
-  const userCourses = rawCoursesData || [];
   let courses: CourseForCard[] = [];
   const totalLessonsByCourse: Record<string, number> = {};
   const completedLessonsByCourse: Record<string, number> = {};
@@ -138,43 +127,47 @@ export default async function DashboardPage() {
   if (userCourses.length > 0) {
     const courseIds = userCourses.map(c => c.id);
 
-    // 2. Fetch all lessons for these courses to count total lessons per course
-    const { data: lessonsInCoursesData, error: lessonsError } = await supabase
+    // 4. Fetch all lessons for these courses to count total lessons per course
+    const { data: lessonsData, error: lessonsError } = await supabase
       .from('lessons')
-      .select('id, chapters!inner(course_id)') // We need course_id to group lessons
+      .select('id, chapters!inner(course_id)')
       .in('chapters.course_id', courseIds);
+    
+    const lessonsInCoursesData = lessonsData as LessonForCount[] | null;
 
     if (lessonsError) {
       console.error('Error fetching lessons for courses:', lessonsError.message);
     } else if (lessonsInCoursesData) {
       for (const lesson of lessonsInCoursesData) {
-        const courseId = lesson.chapters?.course_id;
-        if (courseId) {
+        if (lesson.chapters?.course_id) {
+          const courseId = lesson.chapters.course_id;
           totalLessonsByCourse[courseId] = (totalLessonsByCourse[courseId] || 0) + 1;
         }
       }
     }
 
-    // 3. Fetch user's completed lessons for these courses
-    const { data: userProgressData, error: progressError } = await supabase
+    // 5. Fetch user's completed lessons for these courses
+    const { data: progressData, error: progressError } = await supabase
       .from('progress')
       .select('lesson_id, lessons!inner(id, chapters!inner(course_id))')
       .eq('user_id', user.id)
       .eq('is_completed', true)
-      .in('lessons.chapters.course_id', courseIds); // Only fetch progress for the user's courses
+      .in('lessons.chapters.course_id', courseIds);
+    
+    const userProgressData = progressData as ProgressForCount[] | null;
 
     if (progressError) {
       console.error('Error fetching user progress:', progressError.message);
     } else if (userProgressData) {
       for (const progressItem of userProgressData) {
-        const courseId = progressItem.lessons?.chapters?.course_id;
-        if (courseId) {
+        if (progressItem.lessons?.chapters?.course_id) {
+          const courseId = progressItem.lessons.chapters.course_id;
           completedLessonsByCourse[courseId] = (completedLessonsByCourse[courseId] || 0) + 1;
         }
       }
     }
     
-    // 4. Combine data to form CourseForCard objects
+    // 6. Combine data to form CourseForCard objects
     courses = userCourses.map(course => {
       const totalLessons = totalLessonsByCourse[course.id] || 0;
       const completedLessons = completedLessonsByCourse[course.id] || 0;
@@ -189,21 +182,21 @@ export default async function DashboardPage() {
       };
     });
   } else {
-    // No courses found for the user, courses array will remain empty
     console.log('No courses found for user:', user.id);
   }
 
-  const totalCourses = courses.length;
+  const totalCourses = coursesCreatedCount;
   const coursesWithLessons = courses.filter(c => c.totalLessons > 0);
   const averageProgress = coursesWithLessons.length > 0 
     ? Math.round(coursesWithLessons.reduce((sum, course) => sum + course.progress, 0) / coursesWithLessons.length)
     : 0;
   const activeCourses = courses.length; // Assuming all fetched are active for now
+
   const userPlan = {
     name: planName,
-    coursesCreated: coursesCreatedCountFromProfile, 
-    courseLimit: courseLimit, // This is the effective limit for the current plan
-    coursesRemaining: Math.max(0, courseLimit - coursesCreatedCountFromProfile) // Calculate remaining courses
+    courseLimit: courseLimit,
+    coursesCreated: coursesCreatedCount,
+    coursesRemaining: Math.max(0, courseLimit - coursesCreatedCount),
   };
 
   return (
@@ -284,10 +277,7 @@ export default async function DashboardPage() {
         {courses.length > 0 ? (
           <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {courses.map((course) => (
-              <CourseCard key={course.id} course={course}>
-                <div className="flex items-center justify-between">
-                </div>
-              </CourseCard>
+              <CourseCard key={course.id} course={course} />
             ))}
           </div>
         ) : (
