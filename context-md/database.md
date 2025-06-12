@@ -1,13 +1,6 @@
 ## Database Schema
 
 - here is the current supabase database schema for the MVP
--- WARNING: This schema is for context only and is not meant to be run.
--- Table order and constraints may not be valid for execution.
--- WARNING: This schema is for context only and is not meant to be run.
--- Table order and constraints may not be valid for execution.
-
--- WARNING: This schema is for context only and is not meant to be run.
--- Table order and constraints may not be valid for execution.
 
 CREATE TABLE public.chapters (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -110,7 +103,6 @@ CREATE TABLE public.subscriptions (
   CONSTRAINT subscriptions_plan_id_fkey FOREIGN KEY (plan_id) REFERENCES public.plans(id),
   CONSTRAINT subscriptions_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
 );
-
 ## handle_new_user function
 
 

@@ -26,7 +26,6 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
   - Paid Plans → Multiple courses
 - 👤 **Profile & Settings:** User can manage their personal data and preferences
 
-## **Core Pages:**
 .
 ├── README.md
 ├── app
@@ -102,6 +101,7 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 │   │   ├── CourseCard.tsx
 │   │   ├── DashboardLayout.tsx
 │   │   ├── ManageSubscriptionButton.tsx
+│   │   ├── UserPlanCard.tsx
 │   │   └── courses
 │   │       └── CourseLayoutClient.tsx
 │   ├── landing
@@ -157,7 +157,7 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 │   └── utils.ts
 ├── middleware.ts
 ├── next-env.d.ts
-├── next.config.ts
+├── next.config.mjs
 ├── package-lock.json
 ├── package.json
 ├── postcss.config.mjs
