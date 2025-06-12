@@ -15,6 +15,7 @@ import { ChevronLeft, ChevronRight, BookOpen, HelpCircle, CheckCircle, XCircle }
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
+import { useRouter } from 'next/navigation';
 
 interface CourseLayoutClientProps {
   courseData: FullCourseData;
@@ -41,6 +42,7 @@ export default function CourseLayoutClient({ courseData }: CourseLayoutClientPro
   const [quizFeedback, setQuizFeedback] = useState<Record<string, QuizFeedback | null>>({}); // State for quiz feedback
   const [lessonCompletionStatus, setLessonCompletionStatus] = useState<Record<string, boolean>>({});
   const [isLoadingProgress, setIsLoadingProgress] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     // Reset feedback and selected answers when the selected lesson changes
@@ -124,6 +126,8 @@ export default function CourseLayoutClient({ courseData }: CourseLayoutClientPro
     );
   }, [flattenedLessons, selectedChapterId, selectedLessonId]);
 
+  const isLastLesson = currentFlattenedLessonIndex === flattenedLessons.length - 1;
+
   const handlePreviousLesson = () => {
     if (currentFlattenedLessonIndex > 0) {
       const previousFlattenedLesson = flattenedLessons[currentFlattenedLessonIndex - 1];
@@ -131,6 +135,32 @@ export default function CourseLayoutClient({ courseData }: CourseLayoutClientPro
       // setSelectedLessonId(previousFlattenedLesson.lessonId); // Handled by handleLessonClick
       handleLessonClick(previousFlattenedLesson.chapterId, previousFlattenedLesson.lessonId);
     }
+  };
+
+  const handleCompleteCourse = async () => {
+    if (selectedLessonId && !lessonCompletionStatus[selectedLessonId]) {
+      await handleToggleLessonComplete(selectedLessonId);
+    }
+
+    //  Mark the entire course as complete in the database
+    try {
+      const response = await fetch('/api/complete-course', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ courseId: courseData.id }),
+      });
+
+      if (!response.ok) {
+        console.error('Failed to update course completion:', await response.text());
+        // Optionally, show an error to the user
+      }
+    } catch (error) {
+      console.error('Error updating course completion:', error);
+    }
+
+    router.push('/dashboard');
   };
 
   const handleNextLesson = async () => {
@@ -369,7 +399,7 @@ export default function CourseLayoutClient({ courseData }: CourseLayoutClientPro
               </div>
             )}
           </ScrollArea>
-          {/* Bottom Navigation */} 
+          {/* Bottom Navigation */}
           {selectedLesson && (
               <div className="p-4 border-t bg-background flex justify-between items-center sticky bottom-0">
                   <Button 
@@ -382,13 +412,19 @@ export default function CourseLayoutClient({ courseData }: CourseLayoutClientPro
                   <span className="text-sm text-muted-foreground">
                      Chapter {selectedChapter?.order_index} - Lesson {selectedLesson.lesson_number}
                   </span>
-                  <Button 
-                    variant="outline" 
-                    onClick={handleNextLesson}
-                    disabled={currentFlattenedLessonIndex === -1 || currentFlattenedLessonIndex >= flattenedLessons.length - 1}
-                  >
+                  {isLastLesson ? (
+                    <Button variant="outline" onClick={handleCompleteCourse}>
+                      Finish <CheckCircle className="ml-2 h-4 w-4" />
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      onClick={handleNextLesson}
+                      disabled={currentFlattenedLessonIndex === -1 || currentFlattenedLessonIndex >= flattenedLessons.length - 1}
+                    >
                       Next <ChevronRight className="ml-2 h-4 w-4" />
-                  </Button>
+                    </Button>
+                  )}
               </div>
           )}
         </div>

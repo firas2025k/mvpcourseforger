@@ -1,4 +1,6 @@
 // app/dashboard/analytics/page.tsx
+export const dynamic = 'force-dynamic';
+
 import { redirect } from "next/navigation";
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
@@ -12,10 +14,7 @@ import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 
-// Import DashboardLayout
 // Assuming DashboardLayout is used to wrap content like in app/dashboard/page.tsx
-// You might need to adjust the import path if necessary based on its actual location
-// import DashboardLayout from '@/components/dashboard/DashboardLayout'; // If you have a specific layout component, uncomment this
 
 // --- Type Definitions ---
 interface Lesson {
@@ -31,6 +30,11 @@ interface ProgressItem {
   completed_at: string | null; // ISO timestamp
 }
 
+interface CourseCompletion {
+  course_id: string;
+  is_completed: boolean;
+}
+
 interface UserProgress {
   percentageCompleted: number;
   chaptersCompleted: number;
@@ -39,6 +43,7 @@ interface UserProgress {
   totalLessons: number;
   currentLesson: string;
   lastActivity: string | null;
+  isCourseCompleted: boolean;
 }
 
 interface LessonInteraction {
@@ -79,15 +84,24 @@ export default async function AnalyticsPage() {
     .select('lesson_id, is_completed, completed_at')
     .eq('user_id', user.id);
 
+  const { data: courseCompletionData, error: courseCompletionError } = await supabase
+    .from('enrollments')
+    .select('course_id, is_completed')
+    .eq('user_id', user.id);
+
   if (lessonsError) {
     console.error('Error fetching lessons:', lessonsError);
   }
   if (progressError) {
     console.error('Error fetching progress:', progressError);
   }
+  if (courseCompletionError) {
+    console.error('Error fetching course completion:', courseCompletionError);
+  }
 
   const lessons: Lesson[] = (lessonsData as any[]) || [];
   const progressItems: ProgressItem[] = (progressData as any[]) || [];
+  const courseCompletions: CourseCompletion[] = (courseCompletionData as any[]) || [];
 
   // --- Data Processing ---
 
@@ -96,11 +110,12 @@ export default async function AnalyticsPage() {
   const completedLessons = progressItems.filter(item => item.is_completed).length;
   const percentageCompleted = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
 
-  //const chaptersCompleted = new Set(progressItems.filter(item => item.is_completed).map(item => lessons.find(lesson => lesson.id === item.lesson_id)?.chapter_id)).size;
   const completedLessonIds = new Set(progressItems.filter(item => item.is_completed).map(item => item.lesson_id));
-  const chaptersCompleted = new Set(lessons
-    .filter(lesson => completedLessonIds.has(lesson.id))
-    .map(lesson => lesson.chapter_id)).size;
+  const chaptersCompleted = new Set(
+    lessons
+      .filter(lesson => completedLessonIds.has(lesson.id))
+      .map(lesson => lesson.chapter_id)
+  ).size;
 
   const totalChapters = new Set(lessons.map(lesson => lesson.chapter_id)).size;
 
@@ -110,6 +125,9 @@ export default async function AnalyticsPage() {
     }
     return latest;
   }, null);
+
+  // Determine if the course is completed.  Use .some() to check if ANY enrollment is completed.
+  const isCourseCompleted = courseCompletions.some(completion => completion.is_completed === true);
 
   // Find the current lesson in progress
   const currentLessonInProgress = lessons.find(lesson => !progressItems.find(progress => progress.lesson_id === lesson.id && progress.is_completed));
@@ -123,6 +141,7 @@ export default async function AnalyticsPage() {
     totalLessons,
     currentLesson,
     lastActivity,
+    isCourseCompleted: isCourseCompleted,
   };
 
   // Structure Lesson Interaction Data
@@ -165,7 +184,6 @@ export default async function AnalyticsPage() {
   ];
 
   return (
-    // <DashboardLayout> // Uncomment if you have a specific DashboardLayout component to wrap this
     <div className="flex-1 w-full flex flex-col gap-8 py-8 md:py-12">
       {/* Header Section */}
       <header className="px-4 md:px-0">
@@ -203,6 +221,7 @@ export default async function AnalyticsPage() {
                   <p>Lessons Completed: {userProgress.lessonsCompleted} / {userProgress.totalLessons}</p>
                   <p>Current Lesson: {userProgress.currentLesson}</p>
                   <p>Last Activity: {userProgress.lastActivity ? new Date(userProgress.lastActivity).toLocaleString() : 'N/A'}</p>
+                  <p>Course Completed: {userProgress.isCourseCompleted ? 'Yes' : 'No'}</p>
                 </div>
               </CardContent>
             </Card>
@@ -271,6 +290,5 @@ export default async function AnalyticsPage() {
         </Tabs>
       </section>
     </div>
-    // </DashboardLayout> // Uncomment if you have a specific DashboardLayout component to wrap this
   );
 }
