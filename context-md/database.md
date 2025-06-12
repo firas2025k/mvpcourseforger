@@ -2,6 +2,9 @@
 
 - here is the current supabase database schema for the MVP
 
+-- WARNING: This schema is for context only and is not meant to be run.
+-- Table order and constraints may not be valid for execution.
+
 CREATE TABLE public.chapters (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   course_id uuid,
@@ -30,6 +33,7 @@ CREATE TABLE public.enrollments (
   user_id uuid,
   course_id uuid,
   enrolled_at timestamp with time zone DEFAULT now(),
+  is_completed boolean DEFAULT false,
   CONSTRAINT enrollments_pkey PRIMARY KEY (id),
   CONSTRAINT enrollments_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id),
   CONSTRAINT enrollments_course_id_fkey FOREIGN KEY (course_id) REFERENCES public.courses(id)
