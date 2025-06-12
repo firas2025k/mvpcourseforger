@@ -39,7 +39,7 @@ interface NavLink {
 
 const navLinks: NavLink[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/dashboard/courses", label: "Courses", icon: BookMarked },
+  { href: "/dashboard/analytics", label: "Analytics", icon: BookMarked },
   { href: "/dashboard/settings", label: "Settings", icon: Settings }, 
 ];
 
