@@ -52,12 +52,25 @@ export function LessonsCompletionBarChart({ data }: LessonsCompletionBarChartPro
             <XAxis dataKey="courseTitle" tick={{ fontSize: 12 }} angle={-20} textAnchor="end" height={50} interval={0} />
             <YAxis unit="%" />
             <Tooltip
-              formatter={(value: number) => [`${value}%`, "Progress"]}
-              labelFormatter={(label: string) => {
-                const course = data.find(d => d.courseTitle === label);
-                return `${label} (${course?.completed}/${course?.total} lessons)`;
-              }}
-            />
+  formatter={(value: number) => [`${value}%`, "Progress"]}
+  content={({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      const course = data.find(d => d.courseTitle === label);
+      return (
+        <div className="bg-white shadow-md rounded-md px-3 py-2 border border-gray-200">
+          <p className="font-semibold text-sm mb-1">{label}</p>
+          <p className="text-xs text-muted-foreground">
+            {course?.completed}/{course?.total} lessons completed
+          </p>
+          <p className="text-xs">
+            <span className="font-medium">Progress:</span> {course?.progress}%
+          </p>
+        </div>
+      );
+    }
+    return null;
+  }}
+/>
             <Legend />
             <Bar dataKey="progress" fill="#4F46E5" name="Completion Progress" />
           </BarChart>
