@@ -8,21 +8,18 @@ if (!apiKey) {
 
 const genAI = new GoogleGenerativeAI(apiKey);
 
-// Basic model configuration - you can customize this further
 const model = genAI.getGenerativeModel({
-  model: "gemini-2.0-flash", // Or your preferred model
+  model: "gemini-2.0-flash",
 });
 
-// Default generation configuration - can be overridden per request
 const generationConfig = {
-  temperature: 0.7,
+  temperature: 0.6, // Lowered for more predictable JSON output
   topP: 0.95,
   topK: 64,
-  maxOutputTokens: 8192,
-  responseMimeType: "application/json", // Expect JSON output for course structure
+  maxOutputTokens: 16384, // Increased for larger courses
+  responseMimeType: "application/json",
 };
 
-// Safety settings - adjust as needed for your use case
 const safetySettings = [
   {
     category: HarmCategory.HARM_CATEGORY_HARASSMENT,
@@ -44,22 +41,26 @@ const safetySettings = [
 
 export { model, generationConfig, safetySettings };
 
-/**
- * Example function to generate content.
- * You can create more specific functions based on your needs.
- */
-export async function generateContentWithGemini(prompt: string) {
-  try {
-    const chatSession = model.startChat({
-      generationConfig,
-      safetySettings,
-      history: [], // Add history if you want a conversational chat
-    });
+export async function generateContentWithGemini(prompt: string, retries: number = 2) {
+  let attempts = 0;
+  while (attempts <= retries) {
+    try {
+      const chatSession = model.startChat({
+        generationConfig,
+        safetySettings,
+        history: [],
+      });
 
-    const result = await chatSession.sendMessage(prompt);
-    return result.response.text();
-  } catch (error) {
-    console.error("Error generating content with Gemini:", error);
-    throw new Error("Failed to generate content with Gemini.");
+      const result = await chatSession.sendMessage(prompt);
+      return result.response.text();
+    } catch (error) {
+      attempts++;
+      if (attempts > retries) {
+        console.error(`Failed after ${retries} retries:`, error);
+        throw new Error("Failed to generate content with Gemini.");
+      }
+      console.warn(`Retry ${attempts}/${retries} due to error:`, error);
+    }
   }
+  throw new Error("Unexpected error in generateContentWithGemini.");
 }

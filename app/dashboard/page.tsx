@@ -1,16 +1,20 @@
+// app/dashboard/page.tsx
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { cookies } from 'next/headers'; // Import cookies for server-side Supabase client
+import { createServerClient } from '@supabase/ssr'; // Import createServerClient for server components
+
 import {
   BookOpen,
   BarChart3,
   Activity,
   Crown,
   PlusCircle,
-  LayoutGrid, // For grid icon
-  AlertTriangle, // For no courses message
-  FileDown, // For PDF export icon
-  Loader2 // For loading state
+  LayoutGrid,
+  AlertTriangle,
+  FileDown,
+  Loader2
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -23,7 +27,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import CourseCard, { type CourseForCard } from '@/components/dashboard/CourseCard';
-import ManageSubscriptionButton from '@/components/dashboard/ManageSubscriptionButton';
+// import ManageSubscriptionButton from '@/components/dashboard/ManageSubscriptionButton'; // This will now be handled within UserPlanCard
+import UserPlanCard from '@/components/dashboard/UserPlanCard'; // <--- NEW IMPORT
 
 // --- Type Definitions ---
 interface Course {
@@ -33,13 +38,19 @@ interface Course {
 }
 
 interface Plan {
+  id: string; // Added id to Plan interface for consistency
   name: string;
   course_limit: number;
+  price_cents: number;
+  stripe_price_id: string | null;
+  description: string | null;
+  features: string[] | null;
 }
 
 interface SubscriptionWithPlan {
   is_active: boolean;
   stripe_subscription_id: string | null;
+  plan_id: string; // Add plan_id to SubscriptionWithPlan
   plans: Plan | null; // Supabase returns an object, not an array, for a to-one relationship
 }
 
@@ -54,7 +65,19 @@ interface ProgressForCount {
 }
 
 export default async function DashboardPage() {
-  const supabase = await createClient();
+  const cookieStore = cookies(); // Initialize cookieStore for createServerClient
+
+  const supabase = createServerClient( // Use createServerClient for page.tsx
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+      },
+    }
+  );
 
   const { data: { user }, error: authError } = await supabase.auth.getUser();
   if (authError || !user) {
@@ -63,7 +86,20 @@ export default async function DashboardPage() {
 
   // --- Refactored & Typed Data Fetching for Plan & Limits ---
 
-  // 1. Fetch user profile first to get the universal courses_created_count and a baseline course_limit.
+  // 1. Fetch all plans to determine free plan ID and other plan details
+  const { data: allPlans, error: plansError } = await supabase
+    .from('plans')
+    .select('id, name, course_limit, price_cents, stripe_price_id, description, features');
+
+  if (plansError) {
+    console.error('Error fetching all plans:', plansError.message);
+    // Handle error appropriately, e.g., return an error state or empty plans
+  }
+  const plans: Plan[] = (allPlans as Plan[] || []).map(plan => ({ ...plan, stripe_price_id: plan.stripe_price_id || null }));
+  const freePlan = plans.find(p => p.name === 'Free');
+
+
+  // 2. Fetch user profile first to get the universal courses_created_count and a baseline course_limit.
   const { data: profileData, error: profileError } = await supabase
     .from('profiles')
     .select('course_limit, courses_created_count')
@@ -75,39 +111,49 @@ export default async function DashboardPage() {
   }
 
   const coursesCreatedCount = profileData?.courses_created_count ?? 0;
-  let courseLimit = profileData?.course_limit ?? 1; // Default to 1 if no profile
+  let courseLimit = profileData?.course_limit ?? (freePlan?.course_limit || 1); // Default to free plan limit or 1
   let planName = "Free Plan";
   let activeSubscription: SubscriptionWithPlan | null = null;
   let hasActivePaidSubscription = false;
 
-  // 2. Fetch active subscription to override plan details if it exists.
-  const { data, error: subscriptionError } = await supabase
+  // 3. Fetch active subscription to override plan details if it exists.
+  const { data: subscriptionData, error: subscriptionError } = await supabase
     .from('subscriptions')
-    .select(`is_active, stripe_subscription_id, plans (name, course_limit)`)
+    .select(`is_active, stripe_subscription_id, plan_id, plans (name, course_limit)`) // Select plan_id directly
     .eq('user_id', user.id)
-    .eq('is_active', true)
+    // .eq('is_active', true) // Remove this filter, as subscriptions with cancel_at_period_end will be `is_active: false`
     .maybeSingle();
 
-  const subscriptionData = data as SubscriptionWithPlan | null;
+  const currentSubscription = subscriptionData as SubscriptionWithPlan | null;
 
-  if (subscriptionError) {
+  if (subscriptionError && subscriptionError.code !== 'PGRST116') {
     console.warn('Error fetching subscription:', subscriptionError.message);
   }
 
-  if (subscriptionData?.plans) { // User has an active paid subscription
-    activeSubscription = subscriptionData;
-    planName = subscriptionData.plans.name;
-    courseLimit = subscriptionData.plans.course_limit;
-    hasActivePaidSubscription = !!subscriptionData.stripe_subscription_id;
-  } else {
-    // User is on the Free Plan, apply safeguard for the limit.
-    if (courseLimit < 1) {
-      console.warn(`User ${user.id} on Free Plan has profile course_limit of ${profileData?.course_limit}. Overriding to 1.`);
-      courseLimit = 1;
+  // Determine active subscription status based on current logic (is_active in DB from webhook)
+  if (currentSubscription && currentSubscription.is_active) {
+    activeSubscription = currentSubscription;
+    if (currentSubscription.plans) {
+      planName = currentSubscription.plans.name;
+      courseLimit = currentSubscription.plans.course_limit;
     }
+    // hasActivePaidSubscription is true if it's active AND not the Free plan
+    hasActivePaidSubscription = activeSubscription.is_active && activeSubscription.plan_id !== freePlan?.id;
+  } else {
+    // If no active subscription or is_active is false, ensure they are on the Free Plan logically
+    planName = freePlan?.name || "Free Plan";
+    courseLimit = freePlan?.course_limit || 1;
+    hasActivePaidSubscription = false;
   }
 
-  // 3. Fetch basic course data for the user
+  // Ensure courseLimit is at least 1 if user is on Free plan
+  if (planName === (freePlan?.name || "Free Plan") && courseLimit < (freePlan?.course_limit || 1)) {
+    console.warn(`User ${user.id} on Free Plan has profile course_limit of ${profileData?.course_limit}. Overriding to ${freePlan?.course_limit || 1}.`);
+    courseLimit = freePlan?.course_limit || 1;
+  }
+
+
+  // 4. Fetch basic course data for the user
   const { data: rawCourses, error: coursesError } = await supabase
     .from('courses')
     .select('id, title, prompt')
@@ -117,9 +163,9 @@ export default async function DashboardPage() {
   const userCourses = (rawCourses as Course[] | null) || [];
 
   if (coursesError) {
-    console.error('Error fetching courses:', coursesError.message); 
+    console.error('Error fetching courses:', coursesError.message);
   }
-  
+
   let courses: CourseForCard[] = [];
   const totalLessonsByCourse: Record<string, number> = {};
   const completedLessonsByCourse: Record<string, number> = {};
@@ -127,12 +173,12 @@ export default async function DashboardPage() {
   if (userCourses.length > 0) {
     const courseIds = userCourses.map(c => c.id);
 
-    // 4. Fetch all lessons for these courses to count total lessons per course
+    // 5. Fetch all lessons for these courses to count total lessons per course
     const { data: lessonsData, error: lessonsError } = await supabase
       .from('lessons')
       .select('id, chapters!inner(course_id)')
       .in('chapters.course_id', courseIds);
-    
+
     const lessonsInCoursesData = lessonsData as LessonForCount[] | null;
 
     if (lessonsError) {
@@ -146,14 +192,14 @@ export default async function DashboardPage() {
       }
     }
 
-    // 5. Fetch user's completed lessons for these courses
+    // 6. Fetch user's completed lessons for these courses
     const { data: progressData, error: progressError } = await supabase
       .from('progress')
       .select('lesson_id, lessons!inner(id, chapters!inner(course_id))')
       .eq('user_id', user.id)
       .eq('is_completed', true)
       .in('lessons.chapters.course_id', courseIds);
-    
+
     const userProgressData = progressData as ProgressForCount[] | null;
 
     if (progressError) {
@@ -166,8 +212,8 @@ export default async function DashboardPage() {
         }
       }
     }
-    
-    // 6. Combine data to form CourseForCard objects
+
+    // 7. Combine data to form CourseForCard objects
     courses = userCourses.map(course => {
       const totalLessons = totalLessonsByCourse[course.id] || 0;
       const completedLessons = completedLessonsByCourse[course.id] || 0;
@@ -187,18 +233,19 @@ export default async function DashboardPage() {
 
   const totalCourses = coursesCreatedCount;
   const coursesWithLessons = courses.filter(c => c.totalLessons > 0);
-  const averageProgress = coursesWithLessons.length > 0 
+  const averageProgress = coursesWithLessons.length > 0
     ? Math.round(coursesWithLessons.reduce((sum, course) => sum + course.progress, 0) / coursesWithLessons.length)
     : 0;
   const activeCourses = courses.length; // Assuming all fetched are active for now
 
-  const userPlan = {
+  // Data passed to UserPlanCard
+  const userPlanForCard = {
     name: planName,
     courseLimit: courseLimit,
     coursesCreated: coursesCreatedCount,
     coursesRemaining: Math.max(0, courseLimit - coursesCreatedCount),
   };
-
+  const isFreePlan = planName === (freePlan?.name || "Free Plan");
   return (
     <div className="flex-1 w-full flex flex-col gap-8 py-8 md:py-12">
       {/* Header Section */}
@@ -237,19 +284,11 @@ export default async function DashboardPage() {
             </p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">User Plan</CardTitle>
-            <Crown className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-lg font-bold">{userPlan.name}</div>
-            <p className="text-xs text-muted-foreground">
-              {`${userPlan.coursesRemaining} course${userPlan.coursesRemaining === 1 ? '' : 's'} remaining`}
-            </p>
-            {hasActivePaidSubscription && <ManageSubscriptionButton />}
-          </CardContent>
-        </Card>
+        {/* Render the new UserPlanCard client component */}
+        <UserPlanCard
+          userPlan={userPlanForCard}
+          hasActivePaidSubscription={hasActivePaidSubscription}
+        />
       </section>
 
       {/* My Courses Section */}
@@ -259,7 +298,7 @@ export default async function DashboardPage() {
             <LayoutGrid className="mr-3 h-6 w-6 text-purple-600" /> My Courses
           </h2>
           {/* This button should always be visible */}
-          {userPlan.coursesCreated < userPlan.courseLimit ? (
+          {userPlanForCard.coursesCreated < userPlanForCard.courseLimit ? (
             <Button asChild variant="default" className="bg-purple-600 hover:bg-purple-700 text-white">
               <Link href="/dashboard/courses/new">
                 <PlusCircle className="mr-2 h-4 w-4" /> Create New Course
@@ -273,11 +312,11 @@ export default async function DashboardPage() {
             </Button>
           )}
         </div>
-        
+
         {courses.length > 0 ? (
           <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {courses.map((course) => (
-              <CourseCard key={course.id} course={course} />
+              <CourseCard key={course.id} course={course} isFreePlan={isFreePlan} />
             ))}
           </div>
         ) : (
@@ -289,7 +328,7 @@ export default async function DashboardPage() {
                 It looks like you haven't created any courses. Get started by creating your first one.
               </p>
               {/* This button is only visible when no courses exist AND user has allowance */}
-              {userPlan.coursesCreated < userPlan.courseLimit ? (
+              {userPlanForCard.coursesCreated < userPlanForCard.courseLimit ? (
                 <Button asChild size="lg" className="mt-4 bg-purple-600 hover:bg-purple-700 text-white">
                   <Link href="/dashboard/courses/new">
                     <PlusCircle className="mr-2 h-5 w-5" /> Create Your First Course

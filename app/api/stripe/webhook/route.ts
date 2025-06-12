@@ -89,7 +89,7 @@ async function updateUserSubscription(
   }
 
   console.log(`Webhook Helper: Subscription upserted for user ${userId}. Now updating profile course limit.`);
-  
+  /*
   // Update course_limit on profiles table
   const { error: profileError } = await supabaseAdmin
     .from('profiles') 
@@ -100,8 +100,8 @@ async function updateUserSubscription(
     console.error(`Webhook Helper: Error updating course_limit for user ${userId}:`, profileError.message);
     // Decide if this is a critical error to throw. For now, logging it.
   }
-
-  console.log(`Webhook: Successfully updated subscription and course limit for user ${userId} to plan ${appPlanId} (${planData.name}). Active: ${isActive}, Course Limit: ${planData.course_limit}`);
+*/
+console.log(`Webhook: Successfully updated subscription for user ${userId} to plan ${appPlanId} (${planData.name}). Active: ${isActive}. Profile course limit update handled by trigger.`);
 }
 
 
@@ -179,79 +179,174 @@ export async function POST(request: Request) {
           await updateUserSubscription(userId, appPlanId, true, customerId, subscriptionId, currentPeriodEnd);
           break;
 
-        case 'customer.subscription.updated':
-          const updatedSubscription = event.data.object as Stripe.Subscription;
-          userId = updatedSubscription.metadata.supabase_user_id!;
-          const newStripePriceId = updatedSubscription.items.data[0]?.price.id;
+      // In route.ts, inside the 'customer.subscription.updated' case:
 
-          const { data: newPlanData, error: newPlanError } = await supabaseAdmin
-            .from('plans')
-            .select('id') // Select your internal plan ID
-            .eq('stripe_price_id', newStripePriceId)
-            .single();
+      case 'customer.subscription.updated':
+        const updatedSubscription = event.data.object as Stripe.Subscription;
+        let userId = updatedSubscription.metadata.supabase_user_id;
 
-          if (newPlanError || !newPlanData) {
-            console.error(`Webhook: Could not find app plan for Stripe price ID ${newStripePriceId} during subscription update.`);
-            break;
-          }
-          appPlanId = newPlanData.id; // Your internal Plan UUID
-          customerId = typeof updatedSubscription.customer === 'string' ? updatedSubscription.customer : updatedSubscription.customer.id;
-          subscriptionId = updatedSubscription.id;
-          const subscriptionStatus = updatedSubscription.status;
-          currentPeriodEnd = new Date(updatedSubscription.current_period_end * 1000);
-          // Consider 'trialing' as active for access purposes
-          const isActive = subscriptionStatus === 'active' || subscriptionStatus === 'trialing'; 
-
+        if (!userId) {
+          // Fetch the customer object and retrieve the supabase_user_id from metadata
+          const customerId = typeof updatedSubscription.customer === 'string' ? updatedSubscription.customer : updatedSubscription.customer.id;
+          const customer = await stripe.customers.retrieve(customerId);
+          userId = (customer as any).metadata.supabase_user_id;
           if (!userId) {
-            console.error('Webhook Error: Missing supabase_user_id in subscription metadata for customer.subscription.updated.');
+            console.error('Webhook Error: Missing supabase_user_id in customer metadata for customer.subscription.updated.');
             break;
           }
-          console.log(`Webhook: Processing customer.subscription.updated for user ${userId}, new app plan ID ${appPlanId}, status ${subscriptionStatus}`);
-          await updateUserSubscription(userId, appPlanId, isActive, customerId, subscriptionId, currentPeriodEnd);
-          break;
-
-        case 'customer.subscription.deleted':
-          const deletedSubscription = event.data.object as Stripe.Subscription;
-          userId = deletedSubscription.metadata.supabase_user_id!;
-          customerId = typeof deletedSubscription.customer === 'string' ? deletedSubscription.customer : deletedSubscription.customer.id;
-          
-          // Revert to a 'Free' plan or a default state.
-          // Ensure you have a plan in your 'plans' table that represents this state.
-          const { data: freePlanData, error: freePlanError } = await supabaseAdmin
-            .from('plans')
-            .select('id')
-            .eq('name', 'Free') // Make sure 'Free' plan exists with this name
-            .single();
-          
-          if (freePlanError || !freePlanData) {
-            console.error('Webhook: Free plan not found for customer.subscription.deleted. Cannot revert user properly.');
-            // Fallback: Mark subscription inactive but cannot set to a specific free plan ID
-            // You might need to handle this case by setting course_limit to 0 directly or another default.
-             const { error: subUpdateError } = await supabaseAdmin
-              .from('subscriptions')
-              .update({ is_active: false, stripe_subscription_id: null }) // Clear stripe_subscription_id
-              .eq('user_id', userId);
-            if (subUpdateError) console.error("Error marking sub inactive on delete without free plan:", subUpdateError);
-            
-            const { error: profileUpdateError } = await supabaseAdmin
-                .from('profiles')
-                .update({ course_limit: 0 }) // Default to 0 if no free plan found
-                .eq('id', userId);
-            if (profileUpdateError) console.error("Error setting course limit to 0 on delete without free plan:", profileUpdateError);
-
-            break; 
-          }
-          appPlanId = freePlanData.id; // Your internal 'Free' Plan UUID
-
-          if (!userId) {
-            console.error('Webhook Error: Missing supabase_user_id in subscription metadata for customer.subscription.deleted.');
-            break;
-          }
-          console.log(`Webhook: Processing customer.subscription.deleted for user ${userId}. Reverting to app plan ID ${appPlanId}`);
-          // Mark as inactive, clear subscription ID. currentPeriodEnd is not relevant for inactive.
-          await updateUserSubscription(userId, appPlanId, false, customerId, null /* clear stripe_subscription_id */);
-          break;
+        }
         
+        const newStripePriceId = updatedSubscription.items.data[0]?.price.id;
+
+        // Determine if the subscription is active, trialing, or set to cancel at period end
+        const subscriptionStatus = updatedSubscription.status;
+        // IMPORTANT: If cancel_at_period_end is true, the user has chosen to cancel.
+        // You should mark them as 'inactive' or 'pending_cancellation' in your system.
+        const willCancelAtPeriodEnd = updatedSubscription.cancel_at_period_end;
+
+        // This flag dictates current access:
+        // It's active if status is 'active' or 'trialing' AND not set to cancel at period end
+        const isActive = (subscriptionStatus === 'active' || subscriptionStatus === 'trialing') && !willCancelAtPeriodEnd; 
+
+        let appPlanId: string;
+        let currentPeriodEnd: Date | undefined;
+
+        // If the subscription is truly active OR is set to cancel at period end,
+        // we need its plan details.
+        if (isActive || willCancelAtPeriodEnd) {
+            const { data: newPlanData, error: newPlanError } = await supabaseAdmin
+                .from('plans')
+                .select('id') // Select your internal plan ID
+                .eq('stripe_price_id', newStripePriceId)
+                .single();
+
+            if (newPlanError || !newPlanData) {
+                console.error(`Webhook: Could not find app plan for Stripe price ID ${newStripePriceId} during subscription update.`);
+                // Fallback to a default free plan or mark inactive if plan not found.
+                const { data: freePlanData } = await supabaseAdmin.from('plans').select('id').eq('name', 'Free').single();
+                appPlanId = freePlanData?.id || null; // Use free plan ID or null if not found
+                console.warn(`Webhook: Falling back to free plan or null for user ${userId} due to missing Stripe price ID.`);
+                // Also consider setting isActive to false if plan lookup fails
+                if (!freePlanData) {
+                   // If even free plan is not found, user effectively has no plan.
+                   await updateUserSubscription(userId, null, false, customerId, updatedSubscription.id, undefined);
+                   break; // Exit early if no plan can be determined
+                }
+            } else {
+                appPlanId = newPlanData.id; // Your internal Plan UUID
+            }
+            currentPeriodEnd = new Date(updatedSubscription.current_period_end * 1000);
+        } else {
+            // If it's not active and not cancelling at period end, it's likely truly inactive/canceled.
+            // In this case, revert to the 'Free' plan logic.
+            const { data: freePlanData, error: freePlanError } = await supabaseAdmin
+                .from('plans')
+                .select('id')
+                .eq('name', 'Free')
+                .single();
+
+            if (freePlanError || !freePlanData) {
+                console.error('Webhook: Free plan not found for inactive customer.subscription.updated. Cannot revert user properly.');
+                // Set to null plan and inactive.
+                appPlanId = null;
+            } else {
+                appPlanId = freePlanData.id;
+            }
+            // No current period end as it's not active.
+            currentPeriodEnd = undefined; 
+        }
+        
+        customerId = typeof updatedSubscription.customer === 'string' ? updatedSubscription.customer : updatedSubscription.customer.id;
+        subscriptionId = updatedSubscription.id;
+        
+        console.log(`Webhook: Processing customer.subscription.updated for user ${userId}, app plan ID ${appPlanId}, status ${subscriptionStatus}, cancel_at_period_end: ${willCancelAtPeriodEnd}`);
+        await updateUserSubscription(userId, appPlanId, isActive, customerId, subscriptionId, currentPeriodEnd);
+        break;
+     // In route.ts, locate the 'customer.subscription.deleted' case within the switch statement.
+case 'customer.subscription.deleted':
+  const deletedSubscription = event.data.object as Stripe.Subscription;
+  const customerIdForDeletion = typeof deletedSubscription.customer === 'string' ? deletedSubscription.customer : deletedSubscription.customer.id;
+  const subscriptionIdForDeletion = deletedSubscription.id;
+
+  // --- START CHANGES HERE ---
+
+  let userIdForDeletion: string | undefined;
+
+  // Try to retrieve user_id from the deleted subscription's metadata first
+  // This is the most reliable if it was set during checkout.
+  if (deletedSubscription.metadata?.supabase_user_id) {
+      userIdForDeletion = deletedSubscription.metadata.supabase_user_id;
+  } else {
+      // If not in subscription metadata, try to find the user via existing subscription record
+      // or customer metadata if possible (though less direct for this event).
+      // Fetching from your own `subscriptions` table is best if you stored user_id there.
+      const { data: existingSubRecord, error: subRecordError } = await supabaseAdmin
+          .from('subscriptions')
+          .select('user_id')
+          .eq('stripe_subscription_id', subscriptionIdForDeletion)
+          .single();
+
+      if (existingSubRecord) {
+          userIdForDeletion = existingSubRecord.user_id;
+      } else {
+          console.error(`Webhook: Could not find user_id for deleted subscription ${subscriptionIdForDeletion}. Error: ${subRecordError?.message}`);
+          // Attempting to retrieve from customer metadata as a fallback (less reliable for this event)
+          try {
+              const customer = await stripe.customers.retrieve(customerIdForDeletion);
+              if ((customer as any).metadata?.supabase_user_id) {
+                  userIdForDeletion = (customer as any).metadata.supabase_user_id;
+              }
+          } catch (e: any) {
+              console.error(`Webhook: Failed to retrieve customer ${customerIdForDeletion} for user_id fallback: ${e.message}`);
+          }
+      }
+  }
+
+  if (!userIdForDeletion) {
+      console.error(`Webhook Error: Critical - Could not determine supabase_user_id for customer.subscription.deleted event for customer ${customerIdForDeletion}. Cannot revert plan.`);
+      break; // Cannot proceed without a user ID
+  }
+
+  // Now proceed to revert to 'Free' plan or mark as inactive
+  const { data: freePlanData, error: freePlanError } = await supabaseAdmin
+      .from('plans')
+      .select('id')
+      .eq('name', 'Free') // Make sure 'Free' plan exists with this name
+      .single();
+
+  if (freePlanError || !freePlanData) {
+      console.error('Webhook: Free plan not found for customer.subscription.deleted. Cannot revert user properly. Marking subscription inactive and course_limit to 0.');
+      // Fallback: Mark subscription inactive and set course limit to 0
+      await supabaseAdmin
+          .from('subscriptions')
+          .update({ 
+              is_active: false, 
+              stripe_subscription_id: null, 
+              plan_id: null, // Optionally set plan_id to null or a default 'unsubscribed' plan ID
+              end_date: new Date().toISOString() 
+          }) 
+          .eq('user_id', userIdForDeletion);
+
+      await supabaseAdmin
+          .from('profiles')
+          .update({ course_limit: 0 }) // Default to 0 if no free plan found
+          .eq('id', userIdForDeletion);
+      break;
+  }
+
+  const appPlanIdForDeletion = freePlanData.id;
+
+  console.log(`Webhook: Processing customer.subscription.deleted for user ${userIdForDeletion}. Reverting to app plan ID ${appPlanIdForDeletion}`);
+  // Mark as inactive, clear subscription ID. currentPeriodEnd is not relevant for inactive.
+  await updateUserSubscription(
+      userIdForDeletion, // Pass the retrieved user ID
+      appPlanIdForDeletion,
+      false, // Set is_active to false
+      customerIdForDeletion,
+      null // Clear stripe_subscription_id
+  );
+  break;
+// --- END CHANGES HERE ---
         case 'invoice.payment_failed':
           const failedInvoice = event.data.object as Stripe.Invoice;
           console.log(`Webhook: Invoice payment failed for customer ${failedInvoice.customer}, subscription ${failedInvoice.subscription}. User might need to update payment method.`);

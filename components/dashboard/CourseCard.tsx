@@ -62,9 +62,10 @@ export interface CourseForCard {
 
 interface CourseCardProps {
   course: CourseForCard;
+  isFreePlan:boolean;
 }
 
-export default function CourseCard({ course }: CourseCardProps) {
+export default function CourseCard({ course,isFreePlan }: CourseCardProps) {
   const router = useRouter();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -205,15 +206,17 @@ export default function CourseCard({ course }: CourseCardProps) {
           <Button asChild className="flex-1 bg-purple-600 hover:bg-purple-700 text-white">
             <Link href={`/dashboard/courses/${course.id}`}>View Course</Link>
           </Button>
-          <Button 
-            variant="outline" 
-            className="flex-1"
-            onClick={handleExportToPdf} 
-            disabled={isExportingPdf}
-          >
-            {isExportingPdf ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileDown className="mr-2 h-4 w-4" />} 
-            {isExportingPdf ? 'Exporting...' : 'Export PDF'}
-          </Button>
+          {!isFreePlan && ( // Hide Export PDF button for Free plan
+            <Button 
+              variant="outline" 
+              className="flex-1"
+              onClick={handleExportToPdf} 
+              disabled={isExportingPdf}
+            >
+              {isExportingPdf ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileDown className="mr-2 h-4 w-4" />} 
+              {isExportingPdf ? 'Exporting...' : 'Export PDF'}
+            </Button>
+          )}
         </div>
       </CardFooter>
     </Card>

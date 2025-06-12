@@ -128,18 +128,14 @@ export async function POST(request: NextRequest) {
 
     // Construct the prompt for Gemini based on course-gen-context.md
     const geminiPrompt = `
-You are an AI course generator.
-Based on the following input:
+You are an AI course generator. Based on the input:
 
 Prompt: ${userPrompt}
-
 Chapters: ${chapters}
-
 Lessons per chapter: ${lessons_per_chapter}
-
 Difficulty: ${difficulty}
 
-Please return a JSON object with the following structure:
+Return a JSON object with this structure:
 
 {
   "title": "Course Title",
@@ -150,7 +146,7 @@ Please return a JSON object with the following structure:
       "lessons": [
         {
           "title": "Lesson Title",
-          "content": "Text content of the lesson...",
+          "content": "Lesson content (2-3 paragraphs)...",
           "quiz": {
             "questions": [
               {
@@ -161,16 +157,18 @@ Please return a JSON object with the following structure:
             ]
           }
         }
-        // ... more lessons based on 'lessons_per_chapter'
       ]
     }
-    // ... more chapters based on 'chapters'
   ]
 }
-Ensure the number of chapters and lessons per chapter matches the input.
-Provide detailed content for each lesson and relevant quiz questions. Ensure that the 'content' for each lesson is comprehensive, detailed, and at least a few paragraphs long, suitable for a learning module.
 
-IMPORTANT: All string values within the JSON structure, especially the 'title', 'content', 'question', 'choices' (if strings), and 'answer' fields, MUST be properly escaped to be valid JSON strings. For example, newline characters must be represented as "\n", double quotes as "\"", backslashes as "\\", etc. This is critical if the content includes code snippets or special characters.
+Ensure:
+- Exactly ${chapters} chapters and ${lessons_per_chapter} lessons per chapter.
+- Lesson content is 2-3 paragraphs, suitable for ${difficulty} level.
+- At least 1 quiz question per lesson with 4 choices.
+- All strings are valid JSON (escape newlines as "\\n", quotes as "\\"", etc.).
+- Output ONLY valid JSON, no markdown, comments, or extra text.
+- Do not wrap output in quotes or backticks.
 `;
 
     const chatSession = model.startChat({

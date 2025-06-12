@@ -138,6 +138,10 @@ BEGIN
     UPDATE public.profiles
     SET course_limit = (SELECT course_limit FROM public.plans WHERE id = NEW.plan_id)
     WHERE id = NEW.user_id;
+  ELSE
+    UPDATE public.profiles
+    SET course_limit = (SELECT course_limit FROM public.plans WHERE name = 'Free')
+    WHERE id = NEW.user_id;
   END IF;
   RETURN NEW;
 END;
