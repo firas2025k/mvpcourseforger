@@ -133,8 +133,11 @@ export default function CourseLayoutClient({ courseData }: CourseLayoutClientPro
     }
   };
 
-  const handleNextLesson = () => {
+  const handleNextLesson = async () => {
     if (currentFlattenedLessonIndex !== -1 && currentFlattenedLessonIndex < flattenedLessons.length - 1) {
+      if(selectedLessonId && !lessonCompletionStatus[selectedLessonId]){
+        await handleToggleLessonComplete(selectedLessonId)
+      }
       const nextFlattenedLesson = flattenedLessons[currentFlattenedLessonIndex + 1];
       // setSelectedChapterId(nextFlattenedLesson.chapterId); // Handled by handleLessonClick
       // setSelectedLessonId(nextFlattenedLesson.lessonId); // Handled by handleLessonClick
