@@ -38,6 +38,8 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 │   │   ├── course-details
 │   │   │   └── [courseId]
 │   │   │       └── route.ts
+│   │   ├── export-course-pdf
+│   │   │   └── route.ts
 │   │   ├── generate-course
 │   │   │   └── route.ts
 │   │   ├── lesson-progress
@@ -175,10 +177,12 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 ├── tsconfig.json
 ├── types
 │   ├── course.ts
-│   └── index.ts
-└── utils
-    └── pdfExport.ts
-    
+│   ├── index.ts
+│   └── pdf-types.ts
+├── utils
+│   └── pdfExport.ts
+└── vercel.json
+
 ## Important notes
 - this setup has a template landing page ,supabase auth already implemented and a protected route (dashboard) for authentiticated users
 - when creating components,please put theme in a fodler related to the page it relates to
