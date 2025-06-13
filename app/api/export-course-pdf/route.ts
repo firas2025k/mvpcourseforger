@@ -1,17 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
+console.log(`[PDF Export] NODE_ENV: ${process.env.NODE_ENV}`);
+
 // Conditionally import puppeteer based on environment
-let puppeteer;
-let chromium;
+let puppeteer: typeof import('puppeteer') | typeof import('puppeteer-core');
+let chromium: typeof import('@sparticuz/chromium') | undefined; // chromium is only defined in production
 
 if (process.env.NODE_ENV === 'production') {
   // For Vercel deployment
   puppeteer = require('puppeteer-core');
   chromium = require('@sparticuz/chromium');
+  console.log('[PDF Export] Using puppeteer-core and @sparticuz/chromium (Production)');
 } else {
   // For local development
   puppeteer = require('puppeteer');
+  console.log('[PDF Export] Using full puppeteer package (Development)');
 }
 
 // Types for the PDF export functionality
@@ -105,12 +109,12 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (courseError) {
-      console.error('[PDF Export] Error fetching course:', courseError);
+      console.error('Error fetching course:', courseError);
       return NextResponse.json({ error: 'Course not found or access denied' }, { status: 404 });
     }
 
     if (!courseData) {
-      console.error('[PDF Export] No course data returned');
+      console.error('No course data returned');
       return NextResponse.json({ error: 'Course not found' }, { status: 404 });
     }
 
@@ -119,6 +123,8 @@ export async function POST(request: NextRequest) {
       chaptersCount: courseData.chapters?.length || 0,
       lessonsCount: courseData.chapters?.reduce((total, chapter) => total + (chapter.lessons?.length || 0), 0) || 0
     });
+
+    console.log(`[PDF Export] Course data sorted, launching Puppeteer...`);
 
     // Sort chapters and lessons by order_index
     const sortedCourse: CourseData = {
@@ -131,18 +137,25 @@ export async function POST(request: NextRequest) {
         }))
     };
 
-    console.log(`[PDF Export] Course data sorted, launching Puppeteer...`);
-
     // Launch Puppeteer based on environment
     if (process.env.NODE_ENV === 'production') {
+      if (!chromium) {
+        throw new Error("Chromium module not loaded in production environment.");
+      }
+      const executablePath = await chromium.executablePath;
+      console.log(`[PDF Export] Production executablePath: ${executablePath}`);
+      console.log(`[PDF Export] Production args: ${chromium.args}`);
+      console.log(`[PDF Export] Production headless: ${chromium.headless}`);
+
       browser = await puppeteer.launch({
         args: chromium.args,
         defaultViewport: chromium.defaultViewport,
-        executablePath: await chromium.executablePath,
+        executablePath: executablePath,
         headless: chromium.headless,
         ignoreHTTPSErrors: true,
       });
     } else {
+      // For local development, use default puppeteer launch without special args
       browser = await puppeteer.launch({
         headless: true,
         args: [
@@ -214,7 +227,7 @@ export async function POST(request: NextRequest) {
     console.error('[PDF Export] PDF generation error:', error);
     console.error('[PDF Export] Error stack:', error.stack);
     return NextResponse.json({ 
-      error: 'Failed to generate PDF', 
+      error: 'Failed to generate PDF',
       details: error.message 
     }, { status: 500 });
   } finally {
@@ -411,4 +424,5 @@ function generateCourseHTML(course: CourseData): string {
   console.log(`[PDF Export] HTML generated (${html.length} characters)`);
   return html;
 }
+
 

@@ -1,139 +1,164 @@
-[PDF Export] Starting PDF generation for course eb1609c2-ed72-4e1c-bb45-6538660fbe2b by user 555fb621-481b-491d-8ce8-dcfea1035763
-[PDF Export] Fetching course data for course eb1609c2-ed72-4e1c-bb45-6538660fbe2b
+# Deployed Version Erros 
+## Console errors:
+page-16163115c92a822e.js:1 
+            
+            
+           POST https://mvp-ivory-three.vercel.app/api/export-course-pdf 500 (Internal Server Error)
+v @ page-16163115c92a822e.js:1
+z @ page-16163115c92a822e.js:1
+a_ @ fd9d1056-898dbe322567f69b.js:1
+aR @ fd9d1056-898dbe322567f69b.js:1
+(anonymous) @ fd9d1056-898dbe322567f69b.js:1
+sF @ fd9d1056-898dbe322567f69b.js:1
+sM @ fd9d1056-898dbe322567f69b.js:1
+(anonymous) @ fd9d1056-898dbe322567f69b.js:1
+o4 @ fd9d1056-898dbe322567f69b.js:1
+iV @ fd9d1056-898dbe322567f69b.js:1
+sU @ fd9d1056-898dbe322567f69b.js:1
+uR @ fd9d1056-898dbe322567f69b.js:1
+uM @ fd9d1056-898dbe322567f69b.js:1
+117-d40287c62439107e.js:1 PDF export error: Error: Server error occurred while generating PDF
+    at v (page-16163115c92a822e.js:1:1575)
+    at async z (page-16163115c92a822e.js:1:2910)
+push.92304.window.console.error @ 117-d40287c62439107e.js:1
+v @ page-16163115c92a822e.js:1
+await in v
+z @ page-16163115c92a822e.js:1
+a_ @ fd9d1056-898dbe322567f69b.js:1
+aR @ fd9d1056-898dbe322567f69b.js:1
+(anonymous) @ fd9d1056-898dbe322567f69b.js:1
+sF @ fd9d1056-898dbe322567f69b.js:1
+sM @ fd9d1056-898dbe322567f69b.js:1
+(anonymous) @ fd9d1056-898dbe322567f69b.js:1
+o4 @ fd9d1056-898dbe322567f69b.js:1
+iV @ fd9d1056-898dbe322567f69b.js:1
+sU @ fd9d1056-898dbe322567f69b.js:1
+uR @ fd9d1056-898dbe322567f69b.js:1
+uM @ fd9d1056-898dbe322567f69b.js:1
+117-d40287c62439107e.js:1 PDF export failed: Server error occurred while generating PDF
+## vercel log errors:
+[PDF Export] Starting PDF generation for course 82e85e99-a84b-4e13-a397-c1af2ec37fe0 by user 97a00cf3-34ee-4249-9076-fd8312229244
+[PDF Export] Fetching course data for course 82e85e99-a84b-4e13-a397-c1af2ec37fe0
 [PDF Export] Course data fetched successfully: {
-  title: "A Beginner's Guide to Falconry",
-  chaptersCount: 5,
-  lessonsCount: 25
+  title: 'Introduction to Digital Marketing',
+  chaptersCount: 3,
+  lessonsCount: 9
 }
 [PDF Export] Course data sorted, launching Puppeteer...
-[PDF Export] PDF generation error: Error: Browser was not found at the configured executablePath (async executablePath(input) {
-        /**
-         * If the `chromium` binary already exists in /tmp/chromium, return it.
-         */
-        if ((0, node_fs_1.existsSync)("/tmp/chromium") === true) {
-            return Promise.resolve("/tmp/chromium");
-        }
-        /**
-         * If input is a valid URL, download and extract the file. It will extract to /tmp/chromium-pack
-         * and executablePath will be recursively called on that location, which will then extract
-         * the brotli files to the correct locations
-         */
-        if (input && (0, helper_1.isValidUrl)(input)) {
-            return this.executablePath(await (0, helper_1.downloadAndExtract)(input));
-        }
-        /**
-         * If input is defined, use that as the location of the brotli files,
-         * otherwise, the default location is ../bin.
-         * A custom location is needed for workflows that using custom packaging.
-         */
-        input ??= (0, node_path_1.join)(__dirname, "..", "bin");
-        /**
-         * If the input directory doesn't exist, throw an error.
-         */
-        if (!(0, node_fs_1.existsSync)(input)) {
-            throw new Error(`The input directory "${input}" does not exist.`);
-        }
-        // Extract the required files
-        const promises = [
-            lambdafs_1.default.inflate(`${input}/chromium.br`),
-            lambdafs_1.default.inflate(`${input}/fonts.tar.br`),
-            lambdafs_1.default.inflate(`${input}/swiftshader.tar.br`),
-        ];
-        if ((0, helper_1.isRunningInAwsLambda)(nodeMajorVersion)) {
-            // If running in AWS Lambda, extract more required files
-            promises.push(lambdafs_1.default.inflate(`${input}/al2.tar.br`));
-        }
-        if ((0, helper_1.isRunningInAwsLambdaNode20)(nodeMajorVersion)) {
-            promises.push(lambdafs_1.default.inflate(`${input}/al2023.tar.br`));
-        }
-        // Await all extractions
-        const result = await Promise.all(promises);
-        // Returns the first result of the promise, which is the location of the `chromium` binary
-        return result.shift();
-    })
-    at ChromeLauncher.launch (file:///Users/firasbentaleb/Documents/mvp/courseforger/node_modules/puppeteer-core/lib/esm/puppeteer/node/BrowserLauncher.js:53:19)
-    at async POST (webpack-internal:///(rsc)/./app/api/export-course-pdf/route.ts:107:19)
-    at async /Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:57228
-    at async eT.execute (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:46851)
-    at async eT.handle (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:58760)
-    at async doRender (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/base-server.js:1366:42)
-    at async cacheEntry.responseCache.get.routeKind (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/base-server.js:1588:28)
-    at async DevServer.renderToResponseWithComponentsImpl (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/base-server.js:1496:28)
-    at async DevServer.renderPageComponent (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/base-server.js:1924:24)
-    at async DevServer.renderToResponseImpl (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/base-server.js:1962:32)
-    at async DevServer.pipeImpl (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/base-server.js:922:25)
-    at async NextNodeServer.handleCatchallRenderRequest (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/next-server.js:272:17)
-    at async DevServer.handleRequestImpl (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/base-server.js:818:17)
-    at async /Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/dev/next-dev-server.js:339:20
-    at async Span.traceAsyncFn (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/trace/trace.js:154:20)
-    at async DevServer.handleRequest (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/dev/next-dev-server.js:336:24)
-    at async invokeRender (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/lib/router-server.js:178:21)
-    at async handleRequest (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/lib/router-server.js:355:24)
-    at async requestHandlerImpl (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/lib/router-server.js:379:13)
-    at async Server.requestListener (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/lib/start-server.js:141:13)
-[PDF Export] Error stack: Error: Browser was not found at the configured executablePath (async executablePath(input) {
-        /**
-         * If the `chromium` binary already exists in /tmp/chromium, return it.
-         */
-        if ((0, node_fs_1.existsSync)("/tmp/chromium") === true) {
-            return Promise.resolve("/tmp/chromium");
-        }
-        /**
-         * If input is a valid URL, download and extract the file. It will extract to /tmp/chromium-pack
-         * and executablePath will be recursively called on that location, which will then extract
-         * the brotli files to the correct locations
-         */
-        if (input && (0, helper_1.isValidUrl)(input)) {
-            return this.executablePath(await (0, helper_1.downloadAndExtract)(input));
-        }
-        /**
-         * If input is defined, use that as the location of the brotli files,
-         * otherwise, the default location is ../bin.
-         * A custom location is needed for workflows that using custom packaging.
-         */
-        input ??= (0, node_path_1.join)(__dirname, "..", "bin");
-        /**
-         * If the input directory doesn't exist, throw an error.
-         */
-        if (!(0, node_fs_1.existsSync)(input)) {
-            throw new Error(`The input directory "${input}" does not exist.`);
-        }
-        // Extract the required files
-        const promises = [
-            lambdafs_1.default.inflate(`${input}/chromium.br`),
-            lambdafs_1.default.inflate(`${input}/fonts.tar.br`),
-            lambdafs_1.default.inflate(`${input}/swiftshader.tar.br`),
-        ];
-        if ((0, helper_1.isRunningInAwsLambda)(nodeMajorVersion)) {
-            // If running in AWS Lambda, extract more required files
-            promises.push(lambdafs_1.default.inflate(`${input}/al2.tar.br`));
-        }
-        if ((0, helper_1.isRunningInAwsLambdaNode20)(nodeMajorVersion)) {
-            promises.push(lambdafs_1.default.inflate(`${input}/al2023.tar.br`));
-        }
-        // Await all extractions
-        const result = await Promise.all(promises);
-        // Returns the first result of the promise, which is the location of the `chromium` binary
-        return result.shift();
-    })
-    at ChromeLauncher.launch (file:///Users/firasbentaleb/Documents/mvp/courseforger/node_modules/puppeteer-core/lib/esm/puppeteer/node/BrowserLauncher.js:53:19)
-    at async POST (webpack-internal:///(rsc)/./app/api/export-course-pdf/route.ts:107:19)
-    at async /Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:57228
-    at async eT.execute (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:46851)
-    at async eT.handle (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:58760)
-    at async doRender (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/base-server.js:1366:42)
-    at async cacheEntry.responseCache.get.routeKind (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/base-server.js:1588:28)
-    at async DevServer.renderToResponseWithComponentsImpl (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/base-server.js:1496:28)
-    at async DevServer.renderPageComponent (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/base-server.js:1924:24)
-    at async DevServer.renderToResponseImpl (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/base-server.js:1962:32)
-    at async DevServer.pipeImpl (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/base-server.js:922:25)
-    at async NextNodeServer.handleCatchallRenderRequest (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/next-server.js:272:17)
-    at async DevServer.handleRequestImpl (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/base-server.js:818:17)
-    at async /Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/dev/next-dev-server.js:339:20
-    at async Span.traceAsyncFn (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/trace/trace.js:154:20)
-    at async DevServer.handleRequest (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/dev/next-dev-server.js:336:24)
-    at async invokeRender (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/lib/router-server.js:178:21)
-    at async handleRequest (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/lib/router-server.js:355:24)
-    at async requestHandlerImpl (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/lib/router-server.js:379:13)
-    at async Server.requestListener (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/lib/start-server.js:141:13)
- POST /api/export-course-pdf 500 in 3668ms
+[PDF Export] PDF generation error: Error: Browser was not found at the configured executablePath (async executablePath(e){if(!0===(0,n.existsSync)("/tmp/chromium"))return Promise.resolve("/tmp/chromium");if(e&&(0,l.isValidUrl)(e))return this.executablePath(await (0,l.downloadAndExtract)(e));if(e??=(0,a.join)(__dirname,"..","bin"),!(0,n.existsSync)(e))throw Error(`The input directory "${e}" does not exist.`);let t=[o.default.inflate(`${e}/chromium.br`),o.default.inflate(`${e}/fonts.tar.br`),o.default.inflate(`${e}/swiftshader.tar.br`)];return(0,l.isRunningInAwsLambda)(h)&&t.push(o.default.inflate(`${e}/al2.tar.br`)),(0,l.isRunningInAwsLambdaNode20)(h)&&t.push(o.default.inflate(`${e}/al2023.tar.br`)),(await Promise.all(t)).shift()})
+    at ChromeLauncher.launch (/var/task/node_modules/puppeteer-core/lib/cjs/puppeteer/node/BrowserLauncher.js:89:19)
+    at async c (/var/task/.next/server/app/api/export-course-pdf/route.js:23:741)
+    at async /var/task/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38411
+    at async e_.execute (/var/task/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:27880)
+    at async e_.handle (/var/task/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:39943)
+    at async en (/var/task/node_modules/next/dist/compiled/next-server/server.runtime.prod.js:16:25561)
+    at async ea.responseCache.get.routeKind (/var/task/node_modules/next/dist/compiled/next-server/server.runtime.prod.js:17:1028)
+    at async r9.renderToResponseWithComponentsImpl (/var/task/node_modules/next/dist/compiled/next-server/server.runtime.prod.js:17:508)
+    at async r9.renderPageComponent (/var/task/node_modules/next/dist/compiled/next-server/server.runtime.prod.js:17:5102)
+    at async r9.renderToResponseImpl (/var/task/node_modules/next/dist/compiled/next-server/server.runtime.prod.js:17:5680)
+[PDF Export] Error stack: Error: Browser was not found at the configured executablePath (async executablePath(e){if(!0===(0,n.existsSync)("/tmp/chromium"))return Promise.resolve("/tmp/chromium");if(e&&(0,l.isValidUrl)(e))return this.executablePath(await (0,l.downloadAndExtract)(e));if(e??=(0,a.join)(__dirname,"..","bin"),!(0,n.existsSync)(e))throw Error(`The input directory "${e}" does not exist.`);let t=[o.default.inflate(`${e}/chromium.br`),o.default.inflate(`${e}/fonts.tar.br`),o.default.inflate(`${e}/swiftshader.tar.br`)];return(0,l.isRunningInAwsLambda)(h)&&t.push(o.default.inflate(`${e}/al2.tar.br`)),(0,l.isRunningInAwsLambdaNode20)(h)&&t.push(o.default.inflate(`${e}/al2023.tar.br`)),(await Promise.all(t)).shift()})
+    at ChromeLauncher.launch (/var/task/node_modules/puppeteer-core/lib/cjs/puppeteer/node/BrowserLauncher.js:89:19)
+    at async c (/var/task/.next/server/app/api/export-course-pdf/route.js:23:741)
+    at async /var/task/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38411
+    at async e_.execute (/var/task/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:27880)
+    at async e_.handle (/var/task/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:39943)
+    at async en (/var/task/node_modules/next/dist/compiled/next-server/server.runtime.prod.js:16:25561)
+    at async ea.responseCache.get.routeKind (/var/task/node_modules/next/dist/compiled/next-server/server.runtime.prod.js:17:1028)
+    at async r9.renderToResponseWithComponentsImpl (/var/task/node_modules/next/dist/compiled/next-server/server.runtime.prod.js:17:508)
+    at async r9.renderPageComponent (/var/task/node_modules/next/dist/compiled/next-server/server.runtime.prod.js:17:5102)
+    at async r9.renderToResponseImpl (/var/task/node_modules/next/dist/compiled/next-server/server.runtime.prod.js:17:5680)
+
+    
+# Local envirenoment:
+the pdf genertes just fines however 
+
+on the app/api/export-course-pdf/route.ts i got 8 errors
+[{
+	"resource": "/Users/firasbentaleb/Documents/mvp/courseforger/app/api/export-course-pdf/route.ts",
+	"owner": "typescript",
+	"code": "7005",
+	"severity": 8,
+	"message": "Variable 'puppeteer' implicitly has an 'any' type.",
+	"source": "ts",
+	"startLineNumber": 146,
+	"startColumn": 23,
+	"endLineNumber": 146,
+	"endColumn": 32
+},{
+	"resource": "/Users/firasbentaleb/Documents/mvp/courseforger/app/api/export-course-pdf/route.ts",
+	"owner": "typescript",
+	"code": "7005",
+	"severity": 8,
+	"message": "Variable 'chromium' implicitly has an 'any' type.",
+	"source": "ts",
+	"startLineNumber": 142,
+	"startColumn": 19,
+	"endLineNumber": 142,
+	"endColumn": 27
+},{
+	"resource": "/Users/firasbentaleb/Documents/mvp/courseforger/app/api/export-course-pdf/route.ts",
+	"owner": "typescript",
+	"code": "7005",
+	"severity": 8,
+	"message": "Variable 'chromium' implicitly has an 'any' type.",
+	"source": "ts",
+	"startLineNumber": 141,
+	"startColumn": 31,
+	"endLineNumber": 141,
+	"endColumn": 39
+},{
+	"resource": "/Users/firasbentaleb/Documents/mvp/courseforger/app/api/export-course-pdf/route.ts",
+	"owner": "typescript",
+	"code": "7005",
+	"severity": 8,
+	"message": "Variable 'chromium' implicitly has an 'any' type.",
+	"source": "ts",
+	"startLineNumber": 140,
+	"startColumn": 26,
+	"endLineNumber": 140,
+	"endColumn": 34
+},{
+	"resource": "/Users/firasbentaleb/Documents/mvp/courseforger/app/api/export-course-pdf/route.ts",
+	"owner": "typescript",
+	"code": "7005",
+	"severity": 8,
+	"message": "Variable 'chromium' implicitly has an 'any' type.",
+	"source": "ts",
+	"startLineNumber": 139,
+	"startColumn": 15,
+	"endLineNumber": 139,
+	"endColumn": 23
+},{
+	"resource": "/Users/firasbentaleb/Documents/mvp/courseforger/app/api/export-course-pdf/route.ts",
+	"owner": "typescript",
+	"code": "7005",
+	"severity": 8,
+	"message": "Variable 'puppeteer' implicitly has an 'any' type.",
+	"source": "ts",
+	"startLineNumber": 138,
+	"startColumn": 23,
+	"endLineNumber": 138,
+	"endColumn": 32
+},{
+	"resource": "/Users/firasbentaleb/Documents/mvp/courseforger/app/api/export-course-pdf/route.ts",
+	"owner": "typescript",
+	"code": "7034",
+	"severity": 8,
+	"message": "Variable 'chromium' implicitly has type 'any' in some locations where its type cannot be determined.",
+	"source": "ts",
+	"startLineNumber": 6,
+	"startColumn": 5,
+	"endLineNumber": 6,
+	"endColumn": 13
+},{
+	"resource": "/Users/firasbentaleb/Documents/mvp/courseforger/app/api/export-course-pdf/route.ts",
+	"owner": "typescript",
+	"code": "7034",
+	"severity": 8,
+	"message": "Variable 'puppeteer' implicitly has type 'any' in some locations where its type cannot be determined.",
+	"source": "ts",
+	"startLineNumber": 5,
+	"startColumn": 5,
+	"endLineNumber": 5,
+	"endColumn": 14
+}]
