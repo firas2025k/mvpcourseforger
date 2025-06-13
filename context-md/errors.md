@@ -37,17 +37,22 @@ uR @ fd9d1056-898dbe322567f69b.js:1
 uM @ fd9d1056-898dbe322567f69b.js:1
 117-d40287c62439107e.js:1 PDF export failed: Server error occurred while generating PDF
 ## vercel log errors:
-[PDF Export] Starting PDF generation for course 82e85e99-a84b-4e13-a397-c1af2ec37fe0 by user 97a00cf3-34ee-4249-9076-fd8312229244
-[PDF Export] Fetching course data for course 82e85e99-a84b-4e13-a397-c1af2ec37fe0
+[PDF Export] NODE_ENV: production
+[PDF Export] Using puppeteer-core and @sparticuz/chromium (Production)
+[PDF Export] Starting PDF generation for course 40af24cd-9ae9-4a62-b8bb-e18b9e824077 by user 97a00cf3-34ee-4249-9076-fd8312229244
+[PDF Export] Fetching course data for course 40af24cd-9ae9-4a62-b8bb-e18b9e824077
 [PDF Export] Course data fetched successfully: {
-  title: 'Introduction to Digital Marketing',
-  chaptersCount: 3,
-  lessonsCount: 9
+  title: 'Advanced Marketing Tactics',
+  chaptersCount: 5,
+  lessonsCount: 15
 }
 [PDF Export] Course data sorted, launching Puppeteer...
-[PDF Export] PDF generation error: Error: Browser was not found at the configured executablePath (async executablePath(e){if(!0===(0,n.existsSync)("/tmp/chromium"))return Promise.resolve("/tmp/chromium");if(e&&(0,l.isValidUrl)(e))return this.executablePath(await (0,l.downloadAndExtract)(e));if(e??=(0,a.join)(__dirname,"..","bin"),!(0,n.existsSync)(e))throw Error(`The input directory "${e}" does not exist.`);let t=[o.default.inflate(`${e}/chromium.br`),o.default.inflate(`${e}/fonts.tar.br`),o.default.inflate(`${e}/swiftshader.tar.br`)];return(0,l.isRunningInAwsLambda)(h)&&t.push(o.default.inflate(`${e}/al2.tar.br`)),(0,l.isRunningInAwsLambdaNode20)(h)&&t.push(o.default.inflate(`${e}/al2023.tar.br`)),(await Promise.all(t)).shift()})
+[PDF Export] Production executablePath: async executablePath(e){if(!0===(0,n.existsSync)("/tmp/chromium"))return Promise.resolve("/tmp/chromium");if(e&&(0,u.isValidUrl)(e))return this.executablePath(await (0,u.downloadAndExtract)(e));if(e??=(0,a.join)(__dirname,"..","bin"),!(0,n.existsSync)(e))throw Error(`The input directory "${e}" does not exist.`);let t=[o.default.inflate(`${e}/chromium.br`),o.default.inflate(`${e}/fonts.tar.br`),o.default.inflate(`${e}/swiftshader.tar.br`)];return(0,u.isRunningInAwsLambda)(h)&&t.push(o.default.inflate(`${e}/al2.tar.br`)),(0,u.isRunningInAwsLambdaNode20)(h)&&t.push(o.default.inflate(`${e}/al2023.tar.br`)),(await Promise.all(t)).shift()}
+[PDF Export] Production args: --allow-pre-commit-input,--disable-background-networking,--disable-background-timer-throttling,--disable-backgrounding-occluded-windows,--disable-breakpad,--disable-client-side-phishing-detection,--disable-component-extensions-with-background-pages,--disable-component-update,--disable-default-apps,--disable-dev-shm-usage,--disable-extensions,--disable-hang-monitor,--disable-ipc-flooding-protection,--disable-popup-blocking,--disable-prompt-on-repost,--disable-renderer-backgrounding,--disable-sync,--enable-automation,--enable-blink-features=IdleDetection,--export-tagged-pdf,--force-color-profile=srgb,--metrics-recording-only,--no-first-run,--password-store=basic,--use-mock-keychain,--disable-domain-reliability,--disable-print-preview,--disable-speech-api,--disk-cache-size=33554432,--mute-audio,--no-default-browser-check,--no-pings,--single-process,--font-render-hinting=none,--disable-features=Translate,BackForwardCache,AcceptCHFrame,MediaRouter,OptimizationHints,AudioServiceOutOfProcess,IsolateOrigins,site-per-process,--enable-features=NetworkServiceInProcess2,SharedArrayBuffer,--hide-scrollbars,--ignore-gpu-blocklist,--in-process-gpu,--window-size=1920,1080,--use-gl=angle,--use-angle=swiftshader,--enable-unsafe-swiftshader,--allow-running-insecure-content,--disable-setuid-sandbox,--disable-site-isolation-trials,--disable-web-security,--no-sandbox,--no-zygote,--headless='shell'
+[PDF Export] Production headless: shell
+[PDF Export] PDF generation error: Error: Browser was not found at the configured executablePath (async executablePath(e){if(!0===(0,n.existsSync)("/tmp/chromium"))return Promise.resolve("/tmp/chromium");if(e&&(0,u.isValidUrl)(e))return this.executablePath(await (0,u.downloadAndExtract)(e));if(e??=(0,a.join)(__dirname,"..","bin"),!(0,n.existsSync)(e))throw Error(`The input directory "${e}" does not exist.`);let t=[o.default.inflate(`${e}/chromium.br`),o.default.inflate(`${e}/fonts.tar.br`),o.default.inflate(`${e}/swiftshader.tar.br`)];return(0,u.isRunningInAwsLambda)(h)&&t.push(o.default.inflate(`${e}/al2.tar.br`)),(0,u.isRunningInAwsLambdaNode20)(h)&&t.push(o.default.inflate(`${e}/al2023.tar.br`)),(await Promise.all(t)).shift()})
     at ChromeLauncher.launch (/var/task/node_modules/puppeteer-core/lib/cjs/puppeteer/node/BrowserLauncher.js:89:19)
-    at async c (/var/task/.next/server/app/api/export-course-pdf/route.js:23:741)
+    at async c (/var/task/.next/server/app/api/export-course-pdf/route.js:23:998)
     at async /var/task/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38411
     at async e_.execute (/var/task/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:27880)
     at async e_.handle (/var/task/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:39943)
@@ -56,9 +61,9 @@ uM @ fd9d1056-898dbe322567f69b.js:1
     at async r9.renderToResponseWithComponentsImpl (/var/task/node_modules/next/dist/compiled/next-server/server.runtime.prod.js:17:508)
     at async r9.renderPageComponent (/var/task/node_modules/next/dist/compiled/next-server/server.runtime.prod.js:17:5102)
     at async r9.renderToResponseImpl (/var/task/node_modules/next/dist/compiled/next-server/server.runtime.prod.js:17:5680)
-[PDF Export] Error stack: Error: Browser was not found at the configured executablePath (async executablePath(e){if(!0===(0,n.existsSync)("/tmp/chromium"))return Promise.resolve("/tmp/chromium");if(e&&(0,l.isValidUrl)(e))return this.executablePath(await (0,l.downloadAndExtract)(e));if(e??=(0,a.join)(__dirname,"..","bin"),!(0,n.existsSync)(e))throw Error(`The input directory "${e}" does not exist.`);let t=[o.default.inflate(`${e}/chromium.br`),o.default.inflate(`${e}/fonts.tar.br`),o.default.inflate(`${e}/swiftshader.tar.br`)];return(0,l.isRunningInAwsLambda)(h)&&t.push(o.default.inflate(`${e}/al2.tar.br`)),(0,l.isRunningInAwsLambdaNode20)(h)&&t.push(o.default.inflate(`${e}/al2023.tar.br`)),(await Promise.all(t)).shift()})
+[PDF Export] Error stack: Error: Browser was not found at the configured executablePath (async executablePath(e){if(!0===(0,n.existsSync)("/tmp/chromium"))return Promise.resolve("/tmp/chromium");if(e&&(0,u.isValidUrl)(e))return this.executablePath(await (0,u.downloadAndExtract)(e));if(e??=(0,a.join)(__dirname,"..","bin"),!(0,n.existsSync)(e))throw Error(`The input directory "${e}" does not exist.`);let t=[o.default.inflate(`${e}/chromium.br`),o.default.inflate(`${e}/fonts.tar.br`),o.default.inflate(`${e}/swiftshader.tar.br`)];return(0,u.isRunningInAwsLambda)(h)&&t.push(o.default.inflate(`${e}/al2.tar.br`)),(0,u.isRunningInAwsLambdaNode20)(h)&&t.push(o.default.inflate(`${e}/al2023.tar.br`)),(await Promise.all(t)).shift()})
     at ChromeLauncher.launch (/var/task/node_modules/puppeteer-core/lib/cjs/puppeteer/node/BrowserLauncher.js:89:19)
-    at async c (/var/task/.next/server/app/api/export-course-pdf/route.js:23:741)
+    at async c (/var/task/.next/server/app/api/export-course-pdf/route.js:23:998)
     at async /var/task/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38411
     at async e_.execute (/var/task/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:27880)
     at async e_.handle (/var/task/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:39943)
@@ -67,98 +72,3 @@ uM @ fd9d1056-898dbe322567f69b.js:1
     at async r9.renderToResponseWithComponentsImpl (/var/task/node_modules/next/dist/compiled/next-server/server.runtime.prod.js:17:508)
     at async r9.renderPageComponent (/var/task/node_modules/next/dist/compiled/next-server/server.runtime.prod.js:17:5102)
     at async r9.renderToResponseImpl (/var/task/node_modules/next/dist/compiled/next-server/server.runtime.prod.js:17:5680)
-
-    
-# Local envirenoment:
-the pdf genertes just fines however 
-
-on the app/api/export-course-pdf/route.ts i got 8 errors
-[{
-	"resource": "/Users/firasbentaleb/Documents/mvp/courseforger/app/api/export-course-pdf/route.ts",
-	"owner": "typescript",
-	"code": "7005",
-	"severity": 8,
-	"message": "Variable 'puppeteer' implicitly has an 'any' type.",
-	"source": "ts",
-	"startLineNumber": 146,
-	"startColumn": 23,
-	"endLineNumber": 146,
-	"endColumn": 32
-},{
-	"resource": "/Users/firasbentaleb/Documents/mvp/courseforger/app/api/export-course-pdf/route.ts",
-	"owner": "typescript",
-	"code": "7005",
-	"severity": 8,
-	"message": "Variable 'chromium' implicitly has an 'any' type.",
-	"source": "ts",
-	"startLineNumber": 142,
-	"startColumn": 19,
-	"endLineNumber": 142,
-	"endColumn": 27
-},{
-	"resource": "/Users/firasbentaleb/Documents/mvp/courseforger/app/api/export-course-pdf/route.ts",
-	"owner": "typescript",
-	"code": "7005",
-	"severity": 8,
-	"message": "Variable 'chromium' implicitly has an 'any' type.",
-	"source": "ts",
-	"startLineNumber": 141,
-	"startColumn": 31,
-	"endLineNumber": 141,
-	"endColumn": 39
-},{
-	"resource": "/Users/firasbentaleb/Documents/mvp/courseforger/app/api/export-course-pdf/route.ts",
-	"owner": "typescript",
-	"code": "7005",
-	"severity": 8,
-	"message": "Variable 'chromium' implicitly has an 'any' type.",
-	"source": "ts",
-	"startLineNumber": 140,
-	"startColumn": 26,
-	"endLineNumber": 140,
-	"endColumn": 34
-},{
-	"resource": "/Users/firasbentaleb/Documents/mvp/courseforger/app/api/export-course-pdf/route.ts",
-	"owner": "typescript",
-	"code": "7005",
-	"severity": 8,
-	"message": "Variable 'chromium' implicitly has an 'any' type.",
-	"source": "ts",
-	"startLineNumber": 139,
-	"startColumn": 15,
-	"endLineNumber": 139,
-	"endColumn": 23
-},{
-	"resource": "/Users/firasbentaleb/Documents/mvp/courseforger/app/api/export-course-pdf/route.ts",
-	"owner": "typescript",
-	"code": "7005",
-	"severity": 8,
-	"message": "Variable 'puppeteer' implicitly has an 'any' type.",
-	"source": "ts",
-	"startLineNumber": 138,
-	"startColumn": 23,
-	"endLineNumber": 138,
-	"endColumn": 32
-},{
-	"resource": "/Users/firasbentaleb/Documents/mvp/courseforger/app/api/export-course-pdf/route.ts",
-	"owner": "typescript",
-	"code": "7034",
-	"severity": 8,
-	"message": "Variable 'chromium' implicitly has type 'any' in some locations where its type cannot be determined.",
-	"source": "ts",
-	"startLineNumber": 6,
-	"startColumn": 5,
-	"endLineNumber": 6,
-	"endColumn": 13
-},{
-	"resource": "/Users/firasbentaleb/Documents/mvp/courseforger/app/api/export-course-pdf/route.ts",
-	"owner": "typescript",
-	"code": "7034",
-	"severity": 8,
-	"message": "Variable 'puppeteer' implicitly has type 'any' in some locations where its type cannot be determined.",
-	"source": "ts",
-	"startLineNumber": 5,
-	"startColumn": 5,
-	"endLineNumber": 5,
-	"endColumn": 14
-}]

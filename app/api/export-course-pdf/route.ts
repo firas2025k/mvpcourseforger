@@ -5,7 +5,7 @@ console.log(`[PDF Export] NODE_ENV: ${process.env.NODE_ENV}`);
 
 // Conditionally import puppeteer based on environment
 let puppeteer: typeof import('puppeteer') | typeof import('puppeteer-core');
-let chromium: typeof import('@sparticuz/chromium') | undefined; // chromium is only defined in production
+let chromium: any; // Use 'any' to avoid type issues with conditional require
 
 if (process.env.NODE_ENV === 'production') {
   // For Vercel deployment
@@ -124,8 +124,6 @@ export async function POST(request: NextRequest) {
       lessonsCount: courseData.chapters?.reduce((total, chapter) => total + (chapter.lessons?.length || 0), 0) || 0
     });
 
-    console.log(`[PDF Export] Course data sorted, launching Puppeteer...`);
-
     // Sort chapters and lessons by order_index
     const sortedCourse: CourseData = {
       ...courseData,
@@ -136,22 +134,27 @@ export async function POST(request: NextRequest) {
           lessons: (chapter.lessons || []).sort((a, b) => a.order_index - b.order_index)
         }))
     };
+    
+    console.log(`[PDF Export] Course data sorted, launching Puppeteer...`);
 
     // Launch Puppeteer based on environment
     if (process.env.NODE_ENV === 'production') {
       if (!chromium) {
         throw new Error("Chromium module not loaded in production environment.");
       }
-      const executablePath = await chromium.executablePath;
+      
+      // *** THE FIX IS HERE ***
+      // We must INVOKE the function to get the executable path string
+      const executablePath = await chromium.executablePath();
+
       console.log(`[PDF Export] Production executablePath: ${executablePath}`);
-      console.log(`[PDF Export] Production args: ${chromium.args}`);
-      console.log(`[PDF Export] Production headless: ${chromium.headless}`);
 
       browser = await puppeteer.launch({
         args: chromium.args,
         defaultViewport: chromium.defaultViewport,
         executablePath: executablePath,
         headless: chromium.headless,
+        // @ts-ignore
         ignoreHTTPSErrors: true,
       });
     } else {
@@ -308,7 +311,6 @@ function generateCourseHTML(course: CourseData): string {
         
         .chapter {
           margin: 40px 0;
-          page-break-inside: avoid;
         }
         
         .chapter-title {
@@ -318,11 +320,13 @@ function generateCourseHTML(course: CourseData): string {
           margin-bottom: 20px;
           padding-bottom: 10px;
           border-bottom: 2px solid #e5e7eb;
+          page-break-after: avoid;
         }
         
         .lesson {
           margin: 30px 0;
           padding-left: 20px;
+          page-break-inside: avoid;
         }
         
         .lesson-title {
@@ -341,36 +345,16 @@ function generateCourseHTML(course: CourseData): string {
           margin-bottom: 12px;
         }
         
-        /* Removed quiz-section styling as quizzes will be excluded */
-        
         .page-break-before {
           page-break-before: always;
         }
         
-        .debug-info {
-          background-color: #fef2f2;
-          border: 1px solid #fecaca;
-          padding: 10px;
-          margin: 10px 0;
-          border-radius: 4px;
-          font-size: 0.8em;
-          color: #991b1b;
-        }
-        
         @media print {
           body { margin: 0; }
-          .course-header { page-break-after: avoid; }
-          .chapter { page-break-inside: avoid; }
-          .debug-info { display: none; }
         }
       </style>
     </head>
     <body>
-      <div class="debug-info">
-        Debug Info: Course ID: ${course.id}, Chapters: ${course.chapters.length}, 
-        Total Lessons: ${course.chapters.reduce((total, chapter) => total + chapter.lessons.length, 0)}
-      </div>
-      
       <div class="course-header">
         <h1 class="course-title">${course.title}</h1>
         <div class="course-meta">
@@ -387,31 +371,25 @@ function generateCourseHTML(course: CourseData): string {
         <p>${course.prompt || 'No course description available.'}</p>
       </div>
       
-      ${course.chapters.length === 0 ? 
-        '<div class="debug-info">No chapters found for this course.</div>' :
-        course.chapters.map((chapter, chapterIndex) => `
-          <div class="chapter ${chapterIndex > 0 ? 'page-break-before' : ''}">
-            <h2 class="chapter-title">Chapter ${chapter.order_index}: ${chapter.title}</h2>
-            
-            ${chapter.lessons.length === 0 ? 
-              '<div class="debug-info">No lessons found for this chapter.</div>' :
-              chapter.lessons.map((lesson, lessonIndex) => `
-                <div class="lesson ${lessonIndex > 0 ? 'page-break-before' : ''}">
-                  <h3 class="lesson-title">${lesson.title}</h3>
-                  <div class="lesson-content">
-                    ${lesson.content ? 
-                      lesson.content.split('\n').map(paragraph => 
-                        paragraph.trim() ? `<p>${paragraph.trim()}</p>` : ''
-                      ).join('') :
-                      '<p><em>No content available for this lesson.</em></p>'
-                    }
-                  </div>
-                </div>
-              `).join('')
-            }
-          </div>
-        `).join('')
-      }
+      ${course.chapters.map((chapter, chapterIndex) => `
+        <div class="chapter ${chapterIndex > 0 ? 'page-break-before' : ''}">
+          <h2 class="chapter-title">Chapter ${chapter.order_index}: ${chapter.title}</h2>
+          
+          ${chapter.lessons.map(lesson => `
+            <div class="lesson">
+              <h3 class="lesson-title">${lesson.title}</h3>
+              <div class="lesson-content">
+                ${lesson.content ? 
+                  lesson.content.split('\n').map(paragraph => 
+                    paragraph.trim() ? `<p>${paragraph.trim()}</p>` : ''
+                  ).join('') :
+                  '<p><em>No content available for this lesson.</em></p>'
+                }
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `).join('')}
       
       <div style="margin-top: 50px; text-align: center; color: #6b7280; font-size: 0.9em;">
         <p>Generated on ${new Date().toLocaleDateString()}</p>
@@ -421,8 +399,5 @@ function generateCourseHTML(course: CourseData): string {
     </html>
   `;
   
-  console.log(`[PDF Export] HTML generated (${html.length} characters)`);
   return html;
 }
-
-
