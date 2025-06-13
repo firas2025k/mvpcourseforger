@@ -30,6 +30,8 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 ├── README.md
 ├── app
 │   ├── api
+│   │   ├── complete-course
+│   │   │   └── route.ts
 │   │   ├── course
 │   │   │   └── [courseId]
 │   │   │       └── route.ts
@@ -65,6 +67,8 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 │   │   └── update-password
 │   │       └── page.tsx
 │   ├── dashboard
+│   │   ├── analytics
+│   │   │   └── page.tsx
 │   │   ├── courses
 │   │   │   ├── [courseId]
 │   │   │   │   └── page.tsx
@@ -89,6 +93,9 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 │   └── images
 │       └── banner.png
 ├── components
+│   ├── analytics
+│   │   ├── CourseProgressPieChart.tsx
+│   │   └── LessonsCompletionBarChart.tsx
 │   ├── auth
 │   │   ├── AuthPageLayout.tsx
 │   │   ├── auth-button.tsx
@@ -130,11 +137,13 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 │       ├── select.tsx
 │       ├── separator.tsx
 │       ├── sheet.tsx
+│       ├── sonner.tsx
 │       ├── tabs.tsx
 │       ├── textarea.tsx
 │       └── tooltip.tsx
 ├── components.json
 ├── context-md
+│   ├── Analytics_page.md
 │   ├── CONTEXT.md
 │   ├── DEPLOYMENT.md
 │   ├── USER_FLOW.md
@@ -143,7 +152,8 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 │   ├── errors.md
 │   ├── query.md
 │   ├── results.md
-│   └── saas-context.md
+│   ├── saas-context.md
+│   └── working-code.md
 ├── eslint.config.mjs
 ├── hooks
 ├── html2pdf.d.ts
@@ -163,9 +173,12 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 ├── postcss.config.mjs
 ├── tailwind.config.ts
 ├── tsconfig.json
-└── types
-    ├── course.ts
-    └── index.ts
+├── types
+│   ├── course.ts
+│   └── index.ts
+└── utils
+    └── pdfExport.ts
+    
 ## Important notes
 - this setup has a template landing page ,supabase auth already implemented and a protected route (dashboard) for authentiticated users
 - when creating components,please put theme in a fodler related to the page it relates to

@@ -25,7 +25,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { exportCourseToPdf } from '@/utils/pdfExport';
+import { handleSavePdf } from '@/utils/pdfExport';
 
 
 // Define the expected shape of a course object for this component
@@ -103,20 +103,22 @@ export default function CourseCard({ course,isFreePlan }: CourseCardProps) {
 
   // Simplified PDF export handler using the utility function
   const handleExportToPdf = async () => {
-    await exportCourseToPdf({
-      courseId: course.id,
-      courseTitle: course.title,
-      onStart: () => setIsExportingPdf(true),
-      onSuccess: () => {
-        console.log('PDF exported successfully');
-        // You could add a toast notification here
-      },
-      onError: (error) => {
-        console.error('PDF export failed:', error);
-        alert(`Failed to export to PDF: ${error}`);
-      },
-      onComplete: () => setIsExportingPdf(false),
-    });
+    setIsExportingPdf(true);
+    try {
+      await handleSavePdf({
+        courseId: course.id,
+        onSuccess: () => {
+          console.log('PDF exported successfully');
+          // You could add a toast notification here
+        },
+        onError: (error) => {
+          console.error('PDF export failed:', error);
+          alert(`Failed to export to PDF: ${error}`);
+        },
+      });
+    } finally {
+      setIsExportingPdf(false);
+    }
   };
 
   return (
