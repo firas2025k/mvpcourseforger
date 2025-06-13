@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { toast } from "sonner"; // Correct import for sonner's toast
 
 export default function CreateCoursePage() {
   const [prompt, setPrompt] = useState('');
@@ -41,7 +42,9 @@ export default function CreateCoursePage() {
       if (!response.ok) {
         const errorData = await response.json();
         console.error('Error generating course:', errorData);
-        alert(`Failed to generate course: ${errorData.error || response.statusText}`);
+        toast.error(errorData.error || response.statusText, { // Using toast.error for destructive messages
+          description: "Please try again.",
+      });
         return;
       }
 
@@ -51,11 +54,15 @@ export default function CreateCoursePage() {
       sessionStorage.setItem('generatedCourseData', JSON.stringify(courseData));
       // Redirect to the preview page
       router.push('/dashboard/courses/preview'); 
+      toast.success("Course generated successfully!"); // Success toast
+
 
     } catch (error) {
       setIsLoading(false);
       console.error('Error submitting form:', error);
-      alert('An unexpected error occurred. Please try again.');
+      toast.error("An unexpected error occurred.", {
+        description: "Please try again.",
+    });
     }
   };
 

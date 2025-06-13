@@ -25,6 +25,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { exportCourseToPdf } from '@/utils/pdfExport';
 
 
 // Define the expected shape of a course object for this component
@@ -100,58 +101,22 @@ export default function CourseCard({ course,isFreePlan }: CourseCardProps) {
     }
   };
 
+  // Simplified PDF export handler using the utility function
   const handleExportToPdf = async () => {
-    setIsExportingPdf(true);
-    try {
-      const response = await fetch(`/api/course-details/${course.id}`);
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to fetch course details for PDF export.');
-      }
-      const courseDetails: CourseDetail = await response.json();
-
-      let htmlContent = `<style>body { color: black; } h1, h2, h3, h4, h5, h6 { color: black; } p { color: black; } div { color: black; } li { color: black; }</style><h1>${courseDetails.title}</h1>`;
-      if (courseDetails.description) {
-         htmlContent += `<p>${courseDetails.description.replace(/\n/g, '<br />')}</p>`;
-      } else if(courseDetails.prompt) {
-         htmlContent += `<p>${courseDetails.prompt.replace(/\n/g, '<br />')}</p>`;
-      }
-      htmlContent += '<hr />'
-
-      courseDetails.chapters.forEach(chapter => {
-        htmlContent += `<h2>Chapter ${chapter.order_index}: ${chapter.title}</h2>`;
-        chapter.lessons.forEach(lesson => {
-          htmlContent += `<h3>Lesson ${lesson.order_index}: ${lesson.title}</h3>`;
-          const formattedContent = lesson.content ? lesson.content.replace(/\n/g, '<br />') : 'No content available.';
-          htmlContent += `<div>${formattedContent}</div>`;
-          // Quiz generation removed
-          htmlContent += '<hr style="margin-top: 1em; margin-bottom: 1em;" />';
-        });
-      });
-
-      const element = document.createElement('div');
-      element.innerHTML = htmlContent;
-      // Sanitize title for filename
-      const safeTitle = course.title.replace(/[^a-z0-9_\-\s]/gi, '_').replace(/\s+/g, '_');
-
-      const html2pdf = (await import('html2pdf.js')).default;
-
-      const opt = {
-        margin:       0.5, // inches
-        filename:     `${safeTitle}.pdf`,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, logging: false, useCORS: true, letterRendering: true },
-        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
-      };
-
-      html2pdf().from(element).set(opt).save();
-
-    } catch (error) {
-      console.error('Error exporting to PDF:', error);
-      alert(`Failed to export to PDF: ${error instanceof Error ? error.message : String(error)}`);
-    } finally {
-      setIsExportingPdf(false);
-    }
+    await exportCourseToPdf({
+      courseId: course.id,
+      courseTitle: course.title,
+      onStart: () => setIsExportingPdf(true),
+      onSuccess: () => {
+        console.log('PDF exported successfully');
+        // You could add a toast notification here
+      },
+      onError: (error) => {
+        console.error('PDF export failed:', error);
+        alert(`Failed to export to PDF: ${error}`);
+      },
+      onComplete: () => setIsExportingPdf(false),
+    });
   };
 
   return (
