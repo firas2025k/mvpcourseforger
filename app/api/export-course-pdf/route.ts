@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import puppeteer from 'puppeteer';
+import puppeteer from 'puppeteer-core'; // Use puppeteer-core
+import chromium from '@sparticuz/chromium'; // Import chromium
 
 // Types for the PDF export functionality
 interface CourseData {
@@ -121,18 +122,13 @@ export async function POST(request: NextRequest) {
 
     console.log(`[PDF Export] Course data sorted, launching Puppeteer...`);
 
-    // Launch Puppeteer with debugging options
-    browser = await puppeteer.launch({ 
-      headless: true,
-      args: [
-        '--no-sandbox', 
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-accelerated-2d-canvas',
-        '--no-first-run',
-        '--no-zygote',
-        '--disable-gpu'
-      ]
+    // Launch Puppeteer with Vercel-compatible configuration
+    browser = await puppeteer.launch({
+      args: chromium.args,
+      defaultViewport: chromium.defaultViewport,
+      executablePath: await chromium.executablePath,
+      headless: chromium.headless,
+      ignoreHTTPSErrors: true, // Useful for local development with self-signed certs
     });
     
     const page = await browser.newPage();
@@ -152,12 +148,12 @@ export async function POST(request: NextRequest) {
     console.log(`[PDF Export] Page content set, taking screenshot for debugging...`);
 
     // Take a screenshot for debugging
-    const screenshotBuffer = await page.screenshot({ 
-      fullPage: true, 
-      type: 'png' 
-    });
-    
-    console.log(`[PDF Export] Screenshot taken (${screenshotBuffer.length} bytes), generating PDF...`);
+    // Note: Screenshots can be large and might impact performance/memory on Vercel
+    // const screenshotBuffer = await page.screenshot({ 
+    //   fullPage: true, 
+    //   type: 'png' 
+    // });
+    // console.log(`[PDF Export] Screenshot taken (${screenshotBuffer.length} bytes), generating PDF...`);
 
     // Generate PDF
     const pdfBuffer = await page.pdf({
@@ -397,4 +393,3 @@ function generateCourseHTML(course: CourseData): string {
   console.log(`[PDF Export] HTML generated (${html.length} characters)`);
   return html;
 }
-
