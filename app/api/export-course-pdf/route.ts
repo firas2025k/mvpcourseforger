@@ -1,7 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import puppeteer from 'puppeteer-core'; // Use puppeteer-core
-import chromium from '@sparticuz/chromium'; // Import chromium
+
+// Conditionally import puppeteer based on environment
+let puppeteer;
+let chromium;
+
+if (process.env.NODE_ENV === 'production') {
+  // For Vercel deployment
+  puppeteer = require('puppeteer-core');
+  chromium = require('@sparticuz/chromium');
+} else {
+  // For local development
+  puppeteer = require('puppeteer');
+}
 
 // Types for the PDF export functionality
 interface CourseData {
@@ -122,14 +133,29 @@ export async function POST(request: NextRequest) {
 
     console.log(`[PDF Export] Course data sorted, launching Puppeteer...`);
 
-    // Launch Puppeteer with Vercel-compatible configuration
-    browser = await puppeteer.launch({
-      args: chromium.args,
-      defaultViewport: chromium.defaultViewport,
-      executablePath: await chromium.executablePath,
-      headless: chromium.headless,
-      ignoreHTTPSErrors: true, // Useful for local development with self-signed certs
-    });
+    // Launch Puppeteer based on environment
+    if (process.env.NODE_ENV === 'production') {
+      browser = await puppeteer.launch({
+        args: chromium.args,
+        defaultViewport: chromium.defaultViewport,
+        executablePath: await chromium.executablePath,
+        headless: chromium.headless,
+        ignoreHTTPSErrors: true,
+      });
+    } else {
+      browser = await puppeteer.launch({
+        headless: true,
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-accelerated-2d-canvas',
+          '--no-first-run',
+          '--no-zygote',
+          '--disable-gpu'
+        ]
+      });
+    }
     
     const page = await browser.newPage();
 
@@ -145,15 +171,7 @@ export async function POST(request: NextRequest) {
     
     await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
 
-    console.log(`[PDF Export] Page content set, taking screenshot for debugging...`);
-
-    // Take a screenshot for debugging
-    // Note: Screenshots can be large and might impact performance/memory on Vercel
-    // const screenshotBuffer = await page.screenshot({ 
-    //   fullPage: true, 
-    //   type: 'png' 
-    // });
-    // console.log(`[PDF Export] Screenshot taken (${screenshotBuffer.length} bytes), generating PDF...`);
+    console.log(`[PDF Export] Page content set, generating PDF...`);
 
     // Generate PDF
     const pdfBuffer = await page.pdf({
@@ -393,3 +411,4 @@ function generateCourseHTML(course: CourseData): string {
   console.log(`[PDF Export] HTML generated (${html.length} characters)`);
   return html;
 }
+
