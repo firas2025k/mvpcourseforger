@@ -314,50 +314,9 @@ function generateCourseHTML(course: CourseData): string {
           margin-bottom: 12px;
         }
         
-        .quiz-section {
-          background-color: #f9fafb;
-          padding: 20px;
-          border-radius: 8px;
-          margin-top: 20px;
-          border: 1px solid #e5e7eb;
-        }
+        /* Removed quiz-section styling as quizzes will be excluded */
         
-        .quiz-title {
-          font-size: 1.1em;
-          font-weight: 600;
-          color: #1f2937;
-          margin-bottom: 15px;
-        }
-        
-        .quiz-question {
-          margin-bottom: 20px;
-        }
-        
-        .question-text {
-          font-weight: 500;
-          margin-bottom: 8px;
-          color: #374151;
-        }
-        
-        .answer-options {
-          margin-left: 20px;
-        }
-        
-        .answer-option {
-          margin: 5px 0;
-          padding: 5px 0;
-        }
-        
-        .correct-answer {
-          color: #059669;
-          font-weight: 500;
-        }
-        
-        .wrong-answer {
-          color: #6b7280;
-        }
-        
-        .page-break {
+        .page-break-before {
           page-break-before: always;
         }
         
@@ -404,13 +363,13 @@ function generateCourseHTML(course: CourseData): string {
       ${course.chapters.length === 0 ? 
         '<div class="debug-info">No chapters found for this course.</div>' :
         course.chapters.map((chapter, chapterIndex) => `
-          <div class="chapter ${chapterIndex > 0 ? 'page-break' : ''}">
+          <div class="chapter ${chapterIndex > 0 ? 'page-break-before' : ''}">
             <h2 class="chapter-title">Chapter ${chapter.order_index}: ${chapter.title}</h2>
             
             ${chapter.lessons.length === 0 ? 
               '<div class="debug-info">No lessons found for this chapter.</div>' :
-              chapter.lessons.map(lesson => `
-                <div class="lesson">
+              chapter.lessons.map((lesson, lessonIndex) => `
+                <div class="lesson ${lessonIndex > 0 ? 'page-break-before' : ''}">
                   <h3 class="lesson-title">${lesson.title}</h3>
                   <div class="lesson-content">
                     ${lesson.content ? 
@@ -420,29 +379,6 @@ function generateCourseHTML(course: CourseData): string {
                       '<p><em>No content available for this lesson.</em></p>'
                     }
                   </div>
-                  
-                  ${lesson.quizzes && lesson.quizzes.length > 0 ? `
-                    <div class="quiz-section">
-                      <h4 class="quiz-title">📝 Knowledge Check</h4>
-                      ${lesson.quizzes.map((quiz, quizIndex) => `
-                        <div class="quiz-question">
-                          <div class="question-text">
-                            <strong>Question ${quizIndex + 1}:</strong> ${quiz.question}
-                          </div>
-                          <div class="answer-options">
-                            <div class="answer-option correct-answer">
-                              ✓ ${quiz.correct_answer}
-                            </div>
-                            ${quiz.wrong_answers.map(wrongAnswer => `
-                              <div class="answer-option wrong-answer">
-                                ✗ ${wrongAnswer}
-                              </div>
-                            `).join('')}
-                          </div>
-                        </div>
-                      `).join('')}
-                    </div>
-                  ` : ''}
                 </div>
               `).join('')
             }
