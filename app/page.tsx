@@ -116,7 +116,7 @@ export default function LandingPage() {
               Transform Course Creation with Advanced AI
             </h1>
             <p className="max-w-2xl mx-auto text-lg sm:text-xl text-gray-600 dark:text-gray-300 mb-10">
-              Stop wrestling with tedious course outlines and content. CourseForger leverages the Gemini API to help you design and launch engaging online courses faster than ever before.
+              Stop wrestling with tedious course outlines and content. NexusEd leverages the Gemini API to help you design and launch engaging online courses faster than ever before.
             </p>
             <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
               <Button asChild size="lg" className="bg-purple-600 hover:bg-purple-700 text-white dark:bg-purple-500 dark:hover:bg-purple-600 shadow-lg transform hover:scale-105 transition-transform duration-150">
@@ -137,8 +137,8 @@ export default function LandingPage() {
             <div className="mt-12 md:mt-16 max-w-5xl mx-auto">
               <div className="rounded-2xl shadow-2xl overflow-hidden border-2 border-purple-200/50 dark:border-purple-800/50">
                 <Image
-                  src={bannerImage}
-                  alt="CourseForger application banner"
+                  src="/assets/images/banner.png"
+                  alt="NexusEd application banner"
                   width={1920}
                   height={1080}
                   className="w-full h-auto"
@@ -230,7 +230,7 @@ export default function LandingPage() {
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h2 className="text-3xl sm:text-4xl font-bold mb-6">Ready to Revolutionize Your Course Creation?</h2>
             <p className="text-lg sm:text-xl opacity-90 mb-10">
-              Join thousands of educators and creators building the future of learning with CourseForger. Get started today!
+              Join thousands of educators and creators building the future of learning with NexsusEd. Get started today!
             </p>
             <Button asChild size="lg" className="bg-white text-purple-700 hover:bg-gray-100 dark:bg-gray-100 dark:text-purple-700 dark:hover:bg-gray-200 font-semibold shadow-xl transform hover:scale-105 transition-transform duration-150 px-10 py-3">
               <Link href="/auth/sign-up">Sign Up Now & Start Creating</Link>

@@ -90,7 +90,7 @@ export function SignUpForm({
         <CardHeader className="space-y-1 text-center p-6 bg-gray-50 dark:bg-gray-800/50 border-b dark:border-gray-700/60">
           <CardTitle className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-50">Create Your Account</CardTitle>
           <CardDescription className="text-gray-600 dark:text-gray-400">
-            Join CourseForger and start building AI-powered courses today!
+            Join NexusEd and start building AI-powered courses today!
           </CardDescription>
         </CardHeader>
         <CardContent className="p-6 sm:p-8">

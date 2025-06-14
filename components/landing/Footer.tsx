@@ -6,7 +6,7 @@ export function Footer() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
-            <h3 className="text-lg font-semibold text-white mb-4">CourseForger</h3>
+            <h3 className="text-lg font-semibold text-white mb-4">Nexus Ed</h3>
             <p className="text-sm">
               Revolutionizing course creation with the power of AI.
             </p>
@@ -36,7 +36,7 @@ export function Footer() {
           </div>
         </div>
         <div className="mt-8 border-t border-gray-700 pt-8 flex flex-col sm:flex-row justify-between items-center">
-          <p className="text-sm">&copy; {new Date().getFullYear()} CourseForger. All rights reserved.</p>
+          <p className="text-sm">&copy; {new Date().getFullYear()} NexusEd. All rights reserved.</p>
           <div className="flex space-x-4 mt-4 sm:mt-0">
             {/* Placeholder for social icons */}
             {/* <Link href="#" className="hover:text-white">FB</Link> */}
