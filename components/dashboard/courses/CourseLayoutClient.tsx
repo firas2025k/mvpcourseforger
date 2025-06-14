@@ -11,11 +11,12 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
-import { ChevronLeft, ChevronRight, BookOpen, HelpCircle, CheckCircle, XCircle } from 'lucide-react'; // Added CheckCircle, XCircle
+import { ChevronLeft, ChevronRight, BookOpen, HelpCircle, CheckCircle, XCircle, Edit3, Eye } from 'lucide-react'; // Added CheckCircle, XCircle, Edit3, Eye
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
 import { useRouter } from 'next/navigation';
+import LessonEditor from './LessonEditor';
 
 interface CourseLayoutClientProps {
   courseData: FullCourseData;
@@ -25,7 +26,7 @@ interface FlattenedLesson {
   chapterId: string;
   chapterOrderIndex: number;
   lessonId: string;
-  lessonNumber: number;
+  lessonOrderIndex: number; // Use order_index for consistency
   lesson: Lesson;
 }
 
@@ -42,6 +43,8 @@ export default function CourseLayoutClient({ courseData }: CourseLayoutClientPro
   const [quizFeedback, setQuizFeedback] = useState<Record<string, QuizFeedback | null>>({}); // State for quiz feedback
   const [lessonCompletionStatus, setLessonCompletionStatus] = useState<Record<string, boolean>>({});
   const [isLoadingProgress, setIsLoadingProgress] = useState(true);
+  const [isEditMode, setIsEditMode] = useState(false); // Add edit mode state
+  const [lessonContent, setLessonContent] = useState<Record<string, string>>({}); // Track lesson content changes
   const router = useRouter();
 
   useEffect(() => {
@@ -102,16 +105,16 @@ export default function CourseLayoutClient({ courseData }: CourseLayoutClientPro
     if (!courseData.chapters) return [];
     const lessons: FlattenedLesson[] = [];
     courseData.chapters
-      .sort((a, b) => a.order_index - b.order_index)
+      .sort((a, b) => (a.order_index || 0) - (b.order_index || 0))
       .forEach(chapter => {
         (chapter.lessons || [])
-          .sort((a, b) => a.lesson_number - b.lesson_number)
+          .sort((a, b) => (a.order_index || 0) - (b.order_index || 0)) // CORRECTED SORT KEY
           .forEach(lesson => {
             lessons.push({
               chapterId: chapter.id,
               chapterOrderIndex: chapter.order_index,
               lessonId: lesson.id,
-              lessonNumber: lesson.lesson_number,
+              lessonOrderIndex: lesson.order_index, // Use order_index
               lesson: lesson,
             });
           });
@@ -131,8 +134,6 @@ export default function CourseLayoutClient({ courseData }: CourseLayoutClientPro
   const handlePreviousLesson = () => {
     if (currentFlattenedLessonIndex > 0) {
       const previousFlattenedLesson = flattenedLessons[currentFlattenedLessonIndex - 1];
-      // setSelectedChapterId(previousFlattenedLesson.chapterId); // Handled by handleLessonClick
-      // setSelectedLessonId(previousFlattenedLesson.lessonId); // Handled by handleLessonClick
       handleLessonClick(previousFlattenedLesson.chapterId, previousFlattenedLesson.lessonId);
     }
   };
@@ -169,8 +170,6 @@ export default function CourseLayoutClient({ courseData }: CourseLayoutClientPro
         await handleToggleLessonComplete(selectedLessonId)
       }
       const nextFlattenedLesson = flattenedLessons[currentFlattenedLessonIndex + 1];
-      // setSelectedChapterId(nextFlattenedLesson.chapterId); // Handled by handleLessonClick
-      // setSelectedLessonId(nextFlattenedLesson.lessonId); // Handled by handleLessonClick
       handleLessonClick(nextFlattenedLesson.chapterId, nextFlattenedLesson.lessonId);
     }
   };
@@ -201,9 +200,7 @@ export default function CourseLayoutClient({ courseData }: CourseLayoutClientPro
           [lessonId]: currentStatus 
         }));
         console.error('Failed to update lesson progress:', await response.text());
-        // Optionally, show an error to the user
       }
-      // Success: local state is already updated optimistically
     } catch (error) {
       // Revert optimistic update on network error
       setLessonCompletionStatus(prev => ({
@@ -211,7 +208,6 @@ export default function CourseLayoutClient({ courseData }: CourseLayoutClientPro
         [lessonId]: currentStatus
       }));
       console.error('Error updating lesson progress:', error);
-      // Optionally, show an error to the user
     }
   };
 
@@ -255,7 +251,9 @@ export default function CourseLayoutClient({ courseData }: CourseLayoutClientPro
           </div>
           {courseData.chapters && courseData.chapters.length > 0 ? (
             <Accordion type="single" collapsible value={accordionDefaultValue} onValueChange={setAccordionDefaultValue} key={accordionDefaultValue}>
-              {courseData.chapters?.map((chapter) => (
+              {courseData.chapters
+                ?.sort((a, b) => (a.order_index || 0) - (b.order_index || 0))
+                ?.map((chapter) => (
                 <AccordionItem value={`chapter-${chapter.id}`} key={chapter.id}>
                   <AccordionTrigger className="text-md font-medium hover:no-underline px-2 py-3">
                     {(() => {
@@ -265,7 +263,9 @@ export default function CourseLayoutClient({ courseData }: CourseLayoutClientPro
                   </AccordionTrigger>
                   <AccordionContent>
                     <ul className="space-y-1">
-                      {(chapter.lessons || [])?.map((lesson) => (
+                      {(chapter.lessons || [])
+                        ?.sort((a, b) => (a.order_index || 0) - (b.order_index || 0)) // CORRECTED SORT KEY
+                        ?.map((lesson) => (
                         <li key={lesson.id}>
                           <Button
                             variant={selectedLessonId === lesson.id ? 'secondary' : 'ghost'}
@@ -276,7 +276,7 @@ export default function CourseLayoutClient({ courseData }: CourseLayoutClientPro
                               <CheckCircle className="h-4 w-4 mr-2 text-green-500 flex-shrink-0" />
                             )}
                             <span className="flex-grow">
-                              Lesson {lesson.lesson_number}: {lesson.title}
+                              Lesson {lesson.order_index}: {lesson.title} {/* Display order_index */}
                             </span>
                           </Button>
                         </li>
@@ -300,7 +300,28 @@ export default function CourseLayoutClient({ courseData }: CourseLayoutClientPro
           <ScrollArea className="flex-grow p-6">
             {selectedLesson ? (
               <article>
-                <h1 className="text-3xl font-bold mb-2 pb-2 border-b">{selectedLesson.title}</h1>
+                <div className="flex items-center justify-between mb-4">
+                  <h1 className="text-3xl font-bold pb-2 border-b flex-grow">{selectedLesson.title}</h1>
+                  <Button
+                    variant={isEditMode ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setIsEditMode(!isEditMode)}
+                    className="ml-4"
+                  >
+                    {isEditMode ? (
+                      <>
+                        <Eye className="h-4 w-4 mr-2" />
+                        Preview
+                      </>
+                    ) : (
+                      <>
+                        <Edit3 className="h-4 w-4 mr-2" />
+                        Edit
+                      </>
+                    )}
+                  </Button>
+                </div>
+                
                 <div className="flex items-center space-x-2 mb-4 pt-2">
                   <Checkbox 
                     id={`complete-${selectedLesson.id}`}
@@ -312,18 +333,49 @@ export default function CourseLayoutClient({ courseData }: CourseLayoutClientPro
                     Mark lesson as complete
                   </Label>
                 </div>
-                <div className="prose dark:prose-invert max-w-none mb-8">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
-                    {selectedLesson.content || '*No content available for this lesson.*'}
-                  </ReactMarkdown>
-                </div>
+
+                {isEditMode ? (
+                  <div className="mb-8">
+                    <LessonEditor
+                      lessonId={selectedLesson.id}
+                      initialContent={lessonContent[selectedLesson.id] || selectedLesson.content || ''}
+                      onContentChange={(content) => {
+                        setLessonContent(prev => ({
+                          ...prev,
+                          [selectedLesson.id]: content
+                        }));
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <div className="prose dark:prose-invert max-w-none mb-8">
+                    {lessonContent[selectedLesson.id] ? (
+                      <div dangerouslySetInnerHTML={{ __html: lessonContent[selectedLesson.id] }} />
+                    ) : selectedLesson.content ? (
+                      // Check if content is HTML or Markdown
+                      selectedLesson.content.includes('<') && selectedLesson.content.includes('>') ? (
+                        <div dangerouslySetInnerHTML={{ __html: selectedLesson.content }} />
+                      ) : (
+                        <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
+                          {selectedLesson.content}
+                        </ReactMarkdown>
+                      )
+                    ) : (
+                      <div className="text-center py-12 text-muted-foreground">
+                        <BookOpen className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                        <p>No content available for this lesson.</p>
+                        <p className="text-sm">Click "Edit" to add content.</p>
+                      </div>
+                    )}
+                  </div>
+                )}
                 
                 {selectedLesson.quizzes && selectedLesson.quizzes.length > 0 && (
                   <section className="mt-10 pt-6 border-t">
                     <h2 className="text-2xl font-semibold mb-6 flex items-center">
                       <HelpCircle className="mr-3 h-6 w-6 text-purple-600" /> Quiz
                     </h2>
-                    <div className="space-y-8"> {/* Increased space-y for better separation */}
+                    <div className="space-y-8">
                       {selectedLesson.quizzes.map((quiz) => {
                         const feedback = quizFeedback[quiz.id];
                         return (
@@ -333,12 +385,11 @@ export default function CourseLayoutClient({ courseData }: CourseLayoutClientPro
                               value={selectedAnswers[quiz.id] || ""}
                               onValueChange={(value) => {
                                 setSelectedAnswers(prev => ({ ...prev, [quiz.id]: value }));
-                                // Clear feedback for this quiz if a new option is selected
                                 if (quizFeedback[quiz.id]) {
                                   setQuizFeedback(prev => ({ ...prev, [quiz.id]: null }));
                                 }
                               }}
-                              className="space-y-2 mb-4" // Added mb-4
+                              className="space-y-2 mb-4"
                             >
                               {Array.isArray(quiz.options) && quiz.options.map((option, index) => {
                                 let optionStyle = "border rounded-md hover:bg-muted/50 transition-colors";
@@ -353,10 +404,7 @@ export default function CourseLayoutClient({ courseData }: CourseLayoutClientPro
                                       ? <CheckCircle className="h-5 w-5 text-green-500 ml-auto" /> 
                                       : <XCircle className="h-5 w-5 text-red-500 ml-auto" />;
                                   } else if (option === quiz.correct_answer && !feedback.isCorrect) {
-                                    // Highlight the correct answer if the user was wrong
                                     optionStyle = "border-2 border-green-500 bg-green-500/10 rounded-md transition-colors";
-                                    // Optionally add an icon here too if desired for the actual correct answer
-                                    // icon = <CheckCircle className="h-5 w-5 text-green-500 ml-auto" />;
                                   }
                                 }
                                 return (
@@ -399,7 +447,6 @@ export default function CourseLayoutClient({ courseData }: CourseLayoutClientPro
               </div>
             )}
           </ScrollArea>
-          {/* Bottom Navigation */}
           {selectedLesson && (
               <div className="p-4 border-t bg-background flex justify-between items-center sticky bottom-0">
                   <Button 
@@ -410,7 +457,7 @@ export default function CourseLayoutClient({ courseData }: CourseLayoutClientPro
                       <ChevronLeft className="mr-2 h-4 w-4" /> Previous
                   </Button>
                   <span className="text-sm text-muted-foreground">
-                     Chapter {selectedChapter?.order_index} - Lesson {selectedLesson.lesson_number}
+                     Chapter {selectedChapter?.order_index} - Lesson {selectedLesson.order_index}
                   </span>
                   {isLastLesson ? (
                     <Button variant="outline" onClick={handleCompleteCourse}>

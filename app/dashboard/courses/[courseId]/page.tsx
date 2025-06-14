@@ -58,7 +58,7 @@ async function getCourseData(courseId: string, userId: string): Promise<FullCour
             // correct_answer is already part of ...q
           };
         }).sort((a,b) => a.id.localeCompare(b.id))
-    })).sort((a,b) => a.lesson_number - b.lesson_number)
+    })).sort((a,b) => (a.order_index || 0) - (b.order_index || 0)) // CORRECTED SORT KEY
   };}).sort((a: Chapter, b: Chapter) => (a.order_index || 0) - (b.order_index || 0));
 
   const fullCourseData: FullCourseData = {
