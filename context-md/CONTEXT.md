@@ -17,14 +17,15 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 ## ✨ MVP Features (Single Role)
 
 - ✅ **Authentication:** Email and Google SSO via Supabase Auth
-- 🧠 **AI Course Generation:** Prompt-based course creation using Gemini API
-- 🗃️ **Course Management:** Create, publish, archive courses
+- 🧠 **AI Course Generation:** Prompt-based Multi-langual course creation using Gemini API
+- 🗃️ **Course Management:** Create, edit, delete courses
 - 📚 **Learning Interface:** Dashboard with progress tracking and quizzes
 - 📊 **Admin Dashboard:** Basic analytics for users with active subscriptions
 - 💳 **Payments Integration:** Stripe checkout with course limits enforced
   - Free Plan → 1 course
   - Paid Plans → Multiple courses
 - 👤 **Profile & Settings:** User can manage their personal data and preferences
+
 .
 ├── README.md
 ├── app
@@ -92,9 +93,6 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 │   │   ├── PricingClientPage.tsx
 │   │   └── page.tsx
 │   └── twitter-image.png
-├── assets
-│   └── images
-│       └── banner.png
 ├── components
 │   ├── analytics
 │   │   ├── CourseProgressPieChart.tsx
@@ -177,6 +175,12 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 ├── package-lock.json
 ├── package.json
 ├── postcss.config.mjs
+├── public
+│   └── assets
+│       └── images
+│           ├── banner.png
+│           ├── logo-icon.png
+│           └── logo.png
 ├── tailwind.config.ts
 ├── tsconfig.json
 ├── types
@@ -186,7 +190,6 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 ├── utils
 │   └── pdfExport.ts
 └── vercel.json
-
 
 ## Important notes
 
