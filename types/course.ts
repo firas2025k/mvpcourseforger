@@ -17,6 +17,9 @@ export interface Lesson {
   chapter_id: string;
   title: string;
   content: string; // Rich text or markdown
+  order_index:number;
+  created_at?:string;
+  type?:string;
   lesson_number: number;
   quizzes?: Quiz[]; // Quizzes will be attached here after fetching
 }

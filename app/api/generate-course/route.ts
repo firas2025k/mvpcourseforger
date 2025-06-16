@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers'; // Added for Supabase SSR client
-import { createServerClient, type CookieOptions } from '@supabase/ssr'; // Added for Supabase SSR client and CookieOptions
+import { cookies } from 'next/headers';
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { model, generationConfig, safetySettings } from '@/lib/gemini';
 
-// Define an interface for the expected request body
+// ----- INTERFACES -----
+
 interface GenerateCourseRequestBody {
   prompt: string;
   chapters: number;
@@ -11,74 +12,82 @@ interface GenerateCourseRequestBody {
   difficulty: 'beginner' | 'intermediate' | 'advanced';
 }
 
-// Interfaces for AI-generated content structure
-interface QuizQuestion {
-  question: string;
-  choices: string[];
-  answer: string;
-}
-
 interface AiLesson {
   title: string;
   content: string;
   quiz: {
-    questions: QuizQuestion[];
+    questions: {
+      question: string;
+      choices: string[];
+      answer: string;
+    }[];
   };
 }
 
 interface AiChapter {
-  title: string;
+  title:string;
   lessons: AiLesson[];
 }
 
-// Interface for the direct JSON output expected from Gemini
-// Based on the prompt, Gemini is asked to return title, difficulty, and chapters.
-interface GeminiJsonOutput {
-  title: string;
-  difficulty: 'beginner' | 'intermediate' | 'advanced'; // Gemini should echo this back
-  chapters: AiChapter[];
+interface CourseOutline {
+    courseTitle: string;
+    chapters: {
+        chapterTitle: string;
+        lessonTitles: string[];
+    }[];
 }
 
-// Interface for the full payload returned by this API endpoint
-// This includes original user inputs and the AI-generated course content.
-interface GeneratedCoursePayload {
-  originalPrompt: string;
-  originalChapterCount: number;
-  originalLessonsPerChapter: number;
-  difficulty: 'beginner' | 'intermediate' | 'advanced'; // This is the original user input
-  aiGeneratedCourse: GeminiJsonOutput; // This is the structured content from Gemini
+interface LessonContent {
+    content: string;
+    quiz: {
+        questions: {
+            question: string;
+            choices: string[];
+            answer: string;
+        }[];
+    };
 }
+
 
 export async function POST(request: NextRequest) {
+  // CORRECTED: Supabase client initialization for Route Handlers
+  const cookieStore = cookies();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
         get(name: string) {
-          const cookieStore = cookies();
           return cookieStore.get(name)?.value;
         },
         set(name: string, value: string, options: CookieOptions) {
-          const cookieStore = cookies();
-          cookieStore.set(name, value, options);
+          try {
+            cookieStore.set({ name, value, ...options });
+          } catch (error) {
+            // The `set` method was called from a Server Component.
+            // This can be ignored if you have middleware refreshing user sessions.
+          }
         },
         remove(name: string, options: CookieOptions) {
-          const cookieStore = cookies();
-          cookieStore.set(name, '', options);
+          try {
+            cookieStore.set({ name, value: '', ...options });
+          } catch (error) {
+            // The `delete` method was called from a Server Component.
+            // This can be ignored if you have middleware refreshing user sessions.
+          }
         },
       },
     }
   );
 
   try {
-    // 1. Authenticate user
+    // 1. Authenticate user & check course limits
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized: User not authenticated.' }, { status: 401 });
     }
-
-    // 2. Fetch user's course limit and current course count
+    
+    // User and course limit checks
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('course_limit')
@@ -89,16 +98,9 @@ export async function POST(request: NextRequest) {
       console.error('Error fetching profile or profile not found:', profileError?.message);
       return NextResponse.json({ error: 'Could not retrieve user profile.' }, { status: 500 });
     }
-
+    
     let effectiveCourseLimit = profile.course_limit;
-
-    // Backend safeguard for Free Plan: if profile.course_limit is < 1, enforce a minimum of 1.
-    // This assumes a user with profile.course_limit < 1 and no active paid subscription is on a Free tier that should get 1 course.
-    // A more robust check might involve verifying no active paid subscription exists.
-    if (effectiveCourseLimit < 1) {
-      // TODO: Add a check here to confirm the user doesn't have an active paid subscription 
-      // if you have plans where course_limit could legitimately be 0.
-      // For now, we assume course_limit < 1 implies a Free tier needing this override.
+     if (effectiveCourseLimit < 1) {
       console.warn(`User ${user.id} has profile.course_limit: ${profile.course_limit} in DB. API applying effective limit of 1 for Free Plan check.`);
       effectiveCourseLimit = 1;
     }
@@ -113,12 +115,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Could not retrieve course count.' }, { status: 500 });
     }
 
-    // 3. Check limit against effectiveCourseLimit
     if (courseCount !== null && courseCount >= effectiveCourseLimit) {
       return NextResponse.json({ error: 'Course limit reached. Please upgrade your plan to create more courses.' }, { status: 403 });
     }
 
-    // 4. Proceed with course generation if limit not reached
+
     const body = await request.json() as GenerateCourseRequestBody;
     const { prompt: userPrompt, chapters, lessons_per_chapter, difficulty } = body;
 
@@ -126,91 +127,87 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Construct the prompt for Gemini based on course-gen-context.md
-    const geminiPrompt = `
-You are an AI course generator. Based on the input:
+    // STAGE 1 - GENERATE COURSE OUTLINE
+    const outlinePrompt = `
+      You are an AI course planner. Based on the user's request, generate a course outline.
+      User Request: "${userPrompt}", Difficulty: ${difficulty}
+      Generate a JSON object with a course title, and exactly ${chapters} chapter titles.
+      For each chapter, generate exactly ${lessons_per_chapter} unique and compelling lesson titles.
+      Return ONLY a valid JSON object with this structure:
+      { "courseTitle": "...", "chapters": [ { "chapterTitle": "...", "lessonTitles": ["...", "..."] } ] }
+    `;
 
-Prompt: ${userPrompt}
-Chapters: ${chapters}
-Lessons per chapter: ${lessons_per_chapter}
-Difficulty: ${difficulty}
+    const chatSession = model.startChat({ generationConfig, safetySettings });
+    const outlineResult = await chatSession.sendMessage(outlinePrompt);
+    const outlineText = outlineResult.response.text().replace(/^```json\n|\n```$/g, '');
+    let courseOutline: CourseOutline;
 
-Return a JSON object with this structure:
+    try {
+        courseOutline = JSON.parse(outlineText);
+    } catch (e) {
+        console.error("Failed to parse course outline JSON:", e);
+        console.error("Raw outline response from Gemini:", outlineText);
+        return NextResponse.json({ error: "Failed to generate a valid course outline from AI." }, { status: 500 });
+    }
 
-{
-  "title": "Course Title",
-  "difficulty": "${difficulty}",
-  "chapters": [
-    {
-      "title": "Chapter Title",
-      "lessons": [
-        {
-          "title": "Lesson Title",
-          "content": "Lesson content (2-3 paragraphs)...",
-          "quiz": {
-            "questions": [
-              {
-                "question": "Question text?",
-                "choices": ["A", "B", "C", "D"],
-                "answer": "Correct Answer"
-              }
-            ]
+
+    // STAGE 2 - GENERATE CONTENT FOR EACH LESSON (SEQUENTIALLY TO AVOID RATE LIMITS)
+    const finalChapters: AiChapter[] = [];
+
+    for (const chapterOutline of courseOutline.chapters) {
+        const generatedLessons: AiLesson[] = [];
+        // Using a for...of loop to process lessons one by one
+        for (const lessonTitle of chapterOutline.lessonTitles) {
+            const lessonPrompt = `
+                You are an AI educator creating content for a single lesson.
+                Course Topic: "${userPrompt}", Chapter: "${chapterOutline.chapterTitle}", Lesson: "${lessonTitle}", Difficulty: ${difficulty}.
+                Generate a JSON object with this structure: { "content": "...", "quiz": { "questions": [ { "question": "...", "choices": ["...", "...", "...", "..."], "answer": "..." } ] } }
+                Instructions:
+                - The "content" must be detailed, 5-7 paragraphs long, and tailored for a ${difficulty} audience.
+                - The "quiz" must have at least one question with 4 choices.
+                - Output only the valid JSON object.
+            `;
+            
+            // A small delay to be extra safe with rate limits. 1.5 seconds between requests.
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            
+            const lessonChat = model.startChat({ generationConfig, safetySettings });
+            const result = await lessonChat.sendMessage(lessonPrompt);
+            const lessonText = result.response.text()
+            
+            try {
+              // --- START OF SANITIZED LESSON TEXT PARSING ---
+              const sanitizedLessonText = lessonText
+                  .replace(/^```json\n|\n```$/g, '') // Remove code block markers
+                  .replace(/[\x00-\x1F\x7F-\x9F]/g, '') // Remove control characters
+                  .replace(/\n/g, '\\n') // Escape newlines
+                  .replace(/\t/g, '\\t'); // Escape tabs
+              const lessonContent: LessonContent = JSON.parse(sanitizedLessonText);
+              generatedLessons.push({ title: lessonTitle, ...lessonContent });
+              // --- END OF SANITIZED LESSON TEXT PARSING ---
+          } catch (error) {
+              console.error(`Failed to parse content for lesson: "${lessonTitle}"`, error);
+              console.error(`Raw lesson text: ${lessonText}`); // Log raw response for debugging
+              generatedLessons.push({ title: lessonTitle, content: "Error: Failed to generate content for this lesson.", quiz: { questions: [] } });
           }
         }
-      ]
+        finalChapters.push({ title: chapterOutline.chapterTitle, lessons: generatedLessons });
     }
-  ]
-}
 
-Ensure:
-- Exactly ${chapters} chapters and ${lessons_per_chapter} lessons per chapter.
-- Lesson content is 2-3 paragraphs, suitable for ${difficulty} level.
-- At least 1 quiz question per lesson with 4 choices.
-- All strings are valid JSON (escape newlines as "\\n", quotes as "\\"", etc.).
-- Output ONLY valid JSON, no markdown, comments, or extra text.
-- Do not wrap output in quotes or backticks.
-`;
-
-    const chatSession = model.startChat({
-      generationConfig, // Ensure this has responseMimeType: "application/json"
-      safetySettings,
-      history: [],
-    });
-
-    const result = await chatSession.sendMessage(geminiPrompt);
-    const responseText = result.response.text();
-    
-    // Attempt to parse the JSON response from Gemini
-    // Gemini might sometimes return plain text even if JSON is requested, or the JSON might be wrapped in markdown ```json ... ```
-    
-    let responsePayload: GeneratedCoursePayload;
-    try {
-      // Clean potential markdown code block fences
-      const cleanedResponseText = responseText.replace(/^```json\n|\n```$/g, '');
-      const aiGeneratedOutput = JSON.parse(cleanedResponseText) as GeminiJsonOutput;
-
-      // Construct the final payload to return to the client
-      responsePayload = {
+    // ASSEMBLE FINAL PAYLOAD
+    const finalPayload = {
         originalPrompt: userPrompt,
         originalChapterCount: chapters,
         originalLessonsPerChapter: lessons_per_chapter,
-        difficulty: difficulty, // The original difficulty submitted by the user
-        aiGeneratedCourse: aiGeneratedOutput // The full structure returned by Gemini
-      };
-      return NextResponse.json(responsePayload, { status: 200 }); // Return on success
-    } catch (parseError) {
-      console.error('Error parsing Gemini JSON response:', parseError);
-      console.error('Raw Gemini response text:', responseText); // Log the raw response for debugging
-      return NextResponse.json({ error: 'Failed to parse course data from AI response. The response was not valid JSON.', rawResponse: responseText }, { status: 500 });
-    }
-    // If execution reaches here, it means an error occurred before or after parsing, handled by the outer catch.
+        difficulty: difficulty,
+        aiGeneratedCourse: { title: courseOutline.courseTitle, difficulty: difficulty, chapters: finalChapters }
+    };
+    
+    return NextResponse.json(finalPayload, { status: 200 });
 
   } catch (error) {
     console.error('Error in /api/generate-course:', error);
-    let errorMessage = 'Failed to generate course content.';
-    if (error instanceof Error) {
-      errorMessage = error.message;
-    }
-    return NextResponse.json({ error: errorMessage }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
+    return NextResponse.json({ error: `Failed to generate course content: ${errorMessage}` }, { status: 500 });
   }
 }

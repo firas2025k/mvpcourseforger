@@ -357,7 +357,7 @@ export default function CourseLayoutClient({ courseData }: CourseLayoutClientPro
                         <div dangerouslySetInnerHTML={{ __html: selectedLesson.content }} />
                       ) : (
                         <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
-                          {selectedLesson.content}
+                          {selectedLesson.content.split('. ').join('.\n\n')}
                         </ReactMarkdown>
                       )
                     ) : (

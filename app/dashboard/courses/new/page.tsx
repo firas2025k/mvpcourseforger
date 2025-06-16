@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { toast } from "sonner"; // Correct import for sonner's toast
+import { toast } from "sonner";
 
 export default function CreateCoursePage() {
   const [prompt, setPrompt] = useState('');
@@ -23,12 +23,20 @@ export default function CreateCoursePage() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
+
+    // --- NEW: Implement staged toast feedback ---
+    const toastId = toast.loading("Stage 1 of 2: Generating course outline...");
+
+    // This is an optimistic UI update. We assume after a few seconds
+    // that the outline is done and the more intensive lesson generation has begun.
+    setTimeout(() => {
+      toast.loading("Stage 2 of 2: Writing detailed lesson content... This may take a moment.", { id: toastId });
+    }, 4000); // 4 seconds, adjustable
+
     try {
       const response = await fetch('/api/generate-course', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           prompt,
           chapters: Number(numChapters),
@@ -37,32 +45,37 @@ export default function CreateCoursePage() {
         }),
       });
 
-      setIsLoading(false);
-
       if (!response.ok) {
         const errorData = await response.json();
-        console.error('Error generating course:', errorData);
-        toast.error(errorData.error || response.statusText, { // Using toast.error for destructive messages
-          description: "Please try again.",
-      });
-        return;
+        // Update the toast to show an error
+        toast.error(errorData.error || "An error occurred", {
+          id: toastId,
+          description: "Please check the form for errors and try again.",
+        });
+        return; // Stop execution
       }
 
       const courseData = await response.json();
-      console.log('Generated Course Data:', courseData);
-      // Store data in sessionStorage to pass to the preview page
       sessionStorage.setItem('generatedCourseData', JSON.stringify(courseData));
-      // Redirect to the preview page
-      router.push('/dashboard/courses/preview'); 
-      toast.success("Course generated successfully!"); // Success toast
+      
+      // Update the toast to show success before redirecting
+      toast.success("Course generated successfully!", {
+        id: toastId,
+        description: "Redirecting to the course preview page...",
+      });
 
+      router.push('/dashboard/courses/preview');
 
     } catch (error) {
-      setIsLoading(false);
       console.error('Error submitting form:', error);
+      // Update the toast to show an unexpected error
       toast.error("An unexpected error occurred.", {
-        description: "Please try again.",
-    });
+        id: toastId,
+        description: "Please check your connection and try again.",
+      });
+    } finally {
+      // This block will run regardless of success or failure
+      setIsLoading(false);
     }
   };
 
@@ -84,6 +97,7 @@ export default function CreateCoursePage() {
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
+          {/* --- No changes needed in the form itself --- */}
           <CardContent className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="prompt">Course Prompt</Label>
@@ -146,7 +160,7 @@ export default function CreateCoursePage() {
           </CardContent>
           <CardFooter className="border-t pt-6">
             <Button type="submit" className="w-full sm:w-auto" disabled={isLoading}>
-              {isLoading ? 'Generating Course...' : 'Generate Course Outline'}
+              {isLoading ? 'Generating, please wait...' : 'Generate Course'}
             </Button>
           </CardFooter>
         </form>
