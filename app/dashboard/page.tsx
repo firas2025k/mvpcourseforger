@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/card";
 import CourseCard, { type CourseForCard } from '@/components/dashboard/CourseCard';
 import UserPlanCard from '@/components/dashboard/UserPlanCard';
+import ManageSubscriptionButton from "@/components/dashboard/ManageSubscriptionButton";
 
 // --- Type Definitions ---
 // These types now correctly reflect the shape of data returned by Supabase joins.
@@ -259,6 +260,7 @@ export default async function DashboardPage({
         <UserPlanCard
           userPlan={userPlanForCard}
           hasActivePaidSubscription={hasActivePaidSubscription}
+          ManageSubscriptionButton={ManageSubscriptionButton}
         />
       </section>
 

@@ -51,8 +51,14 @@ export default function UserPlanCard({ userPlan, hasActivePaidSubscription, Mana
             background-color: #9333ea; /* Purple when normal */
           }
         `}</style>
-        {/* Render ManageSubscriptionButton when hasActivePaidSubscription is true */}
-        {hasActivePaidSubscription && ManageSubscriptionButton && <ManageSubscriptionButton />}
+       {/* Render ManageSubscriptionButton when hasActivePaidSubscription is true */}
+       {hasActivePaidSubscription && ManageSubscriptionButton && (
+          <ManageSubscriptionButton />
+        )}
+        {/* Fallback for debugging */}
+        {!hasActivePaidSubscription && !ManageSubscriptionButton && (
+          <p className="text-xs text-red-500 mt-2">Debug: No subscription button available.</p>
+        )}
         {/* Button to redirect to pricing page, shown if no active paid subscription */}
         {!hasActivePaidSubscription && (
           <Button
