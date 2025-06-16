@@ -1,0 +1,76 @@
+
+> build
+> next build
+
+  ▲ Next.js 14.2.29
+  - Environments: .env.local
+
+   Creating an optimized production build ...
+ ⚠ Compiled with warnings
+
+./node_modules/@supabase/realtime-js/dist/main/RealtimeClient.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@supabase/realtime-js/dist/main/RealtimeClient.js
+./node_modules/@supabase/realtime-js/dist/main/index.js
+./node_modules/@supabase/supabase-js/dist/module/index.js
+./node_modules/@supabase/ssr/dist/module/createBrowserClient.js
+./node_modules/@supabase/ssr/dist/module/index.js
+./app/actions/search.ts
+
+ ✓ Compiled successfully
+   Skipping validation of types
+   Skipping linting
+   Collecting page data ...
+[PDF Export] NODE_ENV: production
+[PDF Export] Using puppeteer-core and @sparticuz/chromium (Production)
+   Generating static pages (0/29) ...
+   Generating static pages (7/29) 
+   Generating static pages (14/29) 
+   Generating static pages (21/29) 
+ ✓ Generating static pages (29/29)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                              Size     First Load JS
+┌ ƒ /                                    3.56 kB         182 kB
+├ ○ /_not-found                          876 B          88.3 kB
+├ ƒ /api/complete-course                 0 B                0 B
+├ ƒ /api/course-details/[courseId]       0 B                0 B
+├ ƒ /api/course/[courseId]               0 B                0 B
+├ ƒ /api/export-course-pdf               0 B                0 B
+├ ƒ /api/generate-course                 0 B                0 B
+├ ƒ /api/lesson-content                  0 B                0 B
+├ ƒ /api/lesson-progress                 0 B                0 B
+├ ƒ /api/save-course                     0 B                0 B
+├ ƒ /api/stripe/create-checkout-session  0 B                0 B
+├ ƒ /api/stripe/create-portal-session    0 B                0 B
+├ ƒ /api/stripe/webhook                  0 B                0 B
+├ ƒ /auth/confirm                        0 B                0 B
+├ ƒ /auth/error                          143 B          87.6 kB
+├ ○ /auth/forgot-password                2.49 kB         147 kB
+├ ○ /auth/login                          4.34 kB         154 kB
+├ ○ /auth/sign-up                        4.43 kB         155 kB
+├ ○ /auth/sign-up-success                143 B          87.6 kB
+├ ○ /auth/update-password                2.9 kB          139 kB
+├ ƒ /dashboard                           5.08 kB         133 kB
+├ ƒ /dashboard/analytics                 109 kB          211 kB
+├ ƒ /dashboard/courses/[courseId]        220 kB          339 kB
+├ ○ /dashboard/courses/new               10.6 kB         145 kB
+├ ○ /dashboard/courses/preview           3.9 kB          124 kB
+├ ○ /dashboard/settings                  4.48 kB         154 kB
+├ ○ /opengraph-image.png                 0 B                0 B
+├ ƒ /pricing                             4.73 kB         140 kB
+└ ○ /twitter-image.png                   0 B                0 B
++ First Load JS shared by all            87.4 kB
+  ├ chunks/117-d4ba0fc0b7cf56fe.js       31.8 kB
+  ├ chunks/fd9d1056-e571b79b8e589920.js  53.6 kB
+  └ other shared chunks (total)          2.02 kB
+
+
+ƒ Middleware                             59.8 kB
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

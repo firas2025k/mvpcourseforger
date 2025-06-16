@@ -7,6 +7,7 @@ import { useEffect, useState, useRef } from "react";
 import { useDebounce } from "@/hooks/useDebounce";
 import { Input } from "@/components/ui/input";
 import { searchCourses } from "@/app/actions/search";
+import { Suspense } from "react";
 import Link from "next/link";
 
 // Define the shape of a search result
@@ -79,7 +80,8 @@ export function SearchInput() {
     }, []);
 
     return (
-        <div className="relative flex-1 md:grow-0" ref={searchContainerRef}>
+        <Suspense>
+ <div className="relative flex-1 md:grow-0" ref={searchContainerRef}>
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
                 type="search"
@@ -122,5 +124,7 @@ export function SearchInput() {
                 </div>
             )}
         </div>
+        </Suspense>
+       
     );
 }
