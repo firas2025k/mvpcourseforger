@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react'; // Added useEffect
+import { useState, useEffect } from 'react';
 import { loadStripe, Stripe } from '@stripe/stripe-js';
-import { createBrowserClient } from '@supabase/ssr'; // Use createBrowserClient for client components
-import { Plan } from '@/types'; // Plan type might be augmented later or a new Subscription type used
+import { createBrowserClient } from '@supabase/ssr';
+import { Plan } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle } from 'lucide-react';
-import type { User } from '@supabase/supabase-js'; // Added User type
+import type { User } from '@supabase/supabase-js';
 
 interface PricingClientPageProps {
   plans: Plan[];
@@ -24,45 +24,79 @@ const getStripe = (publishableKey: string) => {
 };
 
 export default function PricingClientPage({ plans, stripePublishableKey }: PricingClientPageProps) {
-  const [isLoading, setIsLoading] = useState<string | null>(null); // Store ID of plan being processed
+  const [isLoading, setIsLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [activeSubscription, setActiveSubscription] = useState<any | null>(null); // Using 'any' for now, will refine type later
+  const [activeSubscription, setActiveSubscription] = useState<any | null>(null);
   const [isFetchingSubscription, setIsFetchingSubscription] = useState<boolean>(true);
   const [isManagingSubscription, setIsManagingSubscription] = useState<boolean>(false);
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  ); // Initialize Supabase client for component-level interactions
+  );
 
   useEffect(() => {
     const fetchSubscription = async () => {
       setIsFetchingSubscription(true);
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        const { data: subscription, error: subError } = await supabase
+        // Fetch active subscription
+        let { data: subscription, error: subError } = await supabase
           .from('subscriptions')
-          .select('*, plans(*)') // Fetch plan details along with subscription
+          .select('*, plans(*)')
           .eq('user_id', user.id)
           .eq('is_active', true)
           .order('created_at', { ascending: false })
-          .limit(1)
-          .single();
-        
+          .limit(1);
+
         if (subError) {
-          console.error('Error fetching subscription:', subError.message);
+          console.error('Error fetching active subscription:', subError.message);
           setError('Could not load your subscription details.');
+          setActiveSubscription(null);
+        } else if (subscription && subscription.length > 0) {
+          setActiveSubscription(subscription[0]);
         } else {
-          setActiveSubscription(subscription);
+          // --- NEW: Check for Free plan subscription ---
+          const freePlan = plans.find(plan => plan.name === 'Free');
+          if (freePlan) {
+            // Query for Free plan subscription
+            const { data: freeSubscription, error: freeSubError } = await supabase
+              .from('subscriptions')
+              .select('*, plans(*)')
+              .eq('user_id', user.id)
+              .eq('plan_id', freePlan.id)
+              .eq('is_active', true)
+              .order('created_at', { ascending: false })
+              .limit(1);
+
+            if (freeSubError) {
+              console.error('Error fetching Free plan subscription:', freeSubError.message);
+              setError('Could not load Free plan details.');
+              setActiveSubscription(null);
+            } else if (freeSubscription && freeSubscription.length > 0) {
+              setActiveSubscription(freeSubscription[0]);
+            } else {
+              // Fallback: Assume Free plan if no subscription record
+              setActiveSubscription({ plan_id: freePlan.id, plans: freePlan });
+            }
+          } else {
+            setError('No Free plan available. Please contact support.');
+            setActiveSubscription(null);
+          }
         }
       } else {
-        // Not logged in, or user session not found
-        setActiveSubscription(null); 
+        // Not logged in, assume Free plan
+        const freePlan = plans.find(plan => plan.name === 'Free');
+        if (freePlan) {
+          setActiveSubscription({ plan_id: freePlan.id, plans: freePlan });
+        } else {
+          setActiveSubscription(null);
+        }
       }
       setIsFetchingSubscription(false);
     };
 
     fetchSubscription();
-  }, [supabase]);
+  }, [supabase, plans]);
 
   const handleManageSubscription = async () => {
     setIsManagingSubscription(true);
@@ -87,7 +121,7 @@ export default function PricingClientPage({ plans, stripePublishableKey }: Prici
 
   const handleCheckout = async (plan: Plan) => {
     if (!plan.stripe_price_id) {
-      setError('This plan cannot be subscribed to directly.'); // Should not happen for paid plans
+      setError('This plan cannot be subscribed to directly.');
       return;
     }
     setIsLoading(plan.id);
@@ -101,7 +135,7 @@ export default function PricingClientPage({ plans, stripePublishableKey }: Prici
         },
         body: JSON.stringify({
           stripe_price_id: plan.stripe_price_id,
-          app_plan_id: plan.id, // Your internal plan ID
+          app_plan_id: plan.id,
         }),
       });
 
@@ -188,7 +222,6 @@ export default function PricingClientPage({ plans, stripePublishableKey }: Prici
                   {isLoading === plan.id ? 'Processing...' : (plan.price_cents === 0 && activeSubscription ? 'Switch to Free' : 'Choose Plan')}
                 </Button>
               ) : (
-                // Fallback for plans without a stripe_price_id (e.g., a Free plan that's not the active one)
                 <Button className="w-full" variant="outline" disabled>
                   {plan.name === 'Free' && !activeSubscription ? 'Start with Free' : 'Details'}
                 </Button>
