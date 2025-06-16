@@ -1,3 +1,4 @@
+// app/dashboard/DashboardLayout.tsx
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
@@ -9,6 +10,7 @@ import type { User } from "@supabase/supabase-js";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { Button } from "@/components/ui/button";
 import logoIcon from "@/public/assets/images/logo.png";
+import { SearchInput } from "@/components/dashboard/SearchInput";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -86,42 +88,34 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <div className="flex min-h-screen w-full flex-col bg-background">
       <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
-        {/* Main desktop navigation - adjusted for better centering and larger icon */}
-        <nav className="hidden w-full md:flex md:items-center">
-          {/* Logo on the left */}
+        {/* Main desktop navigation */}
+        <nav className="hidden flex-1 items-center gap-6 md:flex">
           <Link
             href="/dashboard"
-            className="flex items-center gap-2 text-lg font-semibold md:text-base"
+            className="flex items-center gap-2 text-lg font-semibold"
           >
             <Image
               src={logoIcon}
               alt="Nexus Ed Logo"
-              width={132} // Increased size, e.g., 32px
-              height={32} // Increased size, e.g., 32px
-            // Corresponds to 32px (8*4)
+              width={132}
+              height={32}
             />
           </Link>
-
-          {/* Navigation links centered using auto margins */}
-          <div className=" flex-1 items-center justify-center hidden md:flex">
-            <div className="flex items-center gap-5 text-sm lg:gap-6">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={`transition-colors hover:text-foreground ${pathname === link.href
-                    ? "text-foreground"
-                    : "text-muted-foreground"
-                    }`}
-                >
-                  {link.label}
-                </Link>
-              ))}
-            </div>
-          </div>
+          {navLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={`text-sm font-medium transition-colors hover:text-foreground ${pathname === link.href
+                ? "text-foreground"
+                : "text-muted-foreground"
+                }`}
+            >
+              {link.label}
+            </Link>
+          ))}
         </nav>
 
-        {/* Mobile sheet navigation - icon size for mobile remains default as not specified by user */}
+        {/* Mobile sheet navigation */}
         <Sheet>
           <SheetTrigger asChild>
             <Button
@@ -138,15 +132,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <SheetTitle className="text-lg font-semibold">
                 <Link
                   href="/dashboard"
-                  className="flex items-center gap-2 text-lg font-semibold"
+                  className="flex items-center gap-2"
                 >
                   <Image
                     src={logoIcon}
                     alt="Nexus Ed Logo"
-                    width={124} // Keep default size for mobile
-                    height={24} // Keep default size for mobile
+                    width={124}
+                    height={24}
                   />
-                  
                 </Link>
               </SheetTitle>
               <SheetClose asChild className="ml-auto">
@@ -155,6 +148,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </Button>
               </SheetClose>
             </SheetHeader>
+            <div className="p-4 border-y">
+                <SearchInput />
+            </div>
             <nav className="grid gap-3 px-5 pt-2.5 text-lg font-medium">
               {navLinks.map((link) => (
                 <Link
@@ -172,11 +168,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </nav>
           </SheetContent>
         </Sheet>
+        
         {/* Right-aligned elements */}
-        <div className="flex items-center gap-4 md:gap-2 lg:gap-4">
-          <div className="ml-auto">
-            <ThemeSwitcher />
+        <div className="flex flex-1 items-center justify-end gap-4">
+          <div className="hidden md:block">
+            <SearchInput />
           </div>
+          <ThemeSwitcher />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="secondary" size="icon" className="rounded-full">

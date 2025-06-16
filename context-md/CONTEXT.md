@@ -119,6 +119,7 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 │   │   └── Navbar.tsx
 │   ├── next-logo.tsx
 │   ├── shared
+│   │   └── LanguageSwitcher.tsx
 │   ├── supabase-logo.tsx
 │   ├── theme-switcher.tsx
 │   └── ui
@@ -171,16 +172,22 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 │   └── utils.ts
 ├── middleware.ts
 ├── next-env.d.ts
+├── next-i18next.config.js
 ├── next.config.mjs
 ├── package-lock.json
 ├── package.json
 ├── postcss.config.mjs
 ├── public
-│   └── assets
-│       └── images
-│           ├── banner.png
-│           ├── logo-icon.png
-│           └── logo.png
+│   ├── assets
+│   │   └── images
+│   │       ├── banner.png
+│   │       ├── logo-icon.png
+│   │       └── logo.png
+│   └── locales
+│       ├── en
+│       │   └── common.json
+│       └── fr
+│           └── common.json
 ├── tailwind.config.ts
 ├── tsconfig.json
 ├── types
@@ -190,7 +197,6 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 ├── utils
 │   └── pdfExport.ts
 └── vercel.json
-
 ## Important notes
 
 - this setup has a template landing page ,supabase auth already implemented and a protected route (dashboard) for authentiticated users
