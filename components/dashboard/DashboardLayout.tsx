@@ -110,7 +110,7 @@ export default function DashboardLayout({
             href="/dashboard"
             className="flex items-center gap-2 text-lg font-semibold"
           >
-            <Image src={logoIcon} alt="Nexus Ed Logo" width={132} height={32} />
+            <Image src={logoIcon} alt="Nexable Logo" width={132} height={32} />
           </Link>
           {navLinks.map((link) => (
             <Link
@@ -145,7 +145,7 @@ export default function DashboardLayout({
                 <Link href="/dashboard" className="flex items-center gap-2">
                   <Image
                     src={logoIcon}
-                    alt="Nexus Ed Logo"
+                    alt="Nexable Logo"
                     width={124}
                     height={24}
                   />
@@ -239,7 +239,7 @@ export default function DashboardLayout({
       </main>
       <footer className="border-t">
         <div className="container mx-auto py-4 px-4 md:px-6 text-center text-sm text-muted-foreground">
-          &copy; {new Date().getFullYear()} Nexus Ed. All rights reserved.
+          &copy; {new Date().getFullYear()} Nexable. All rights reserved.
         </div>
       </footer>
     </div>

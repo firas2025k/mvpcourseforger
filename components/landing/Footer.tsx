@@ -6,7 +6,7 @@ export function Footer() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
-            <h3 className="text-lg font-semibold text-white mb-4">Nexus Ed</h3>
+            <h3 className="text-lg font-semibold text-white mb-4">Nexable</h3>
             <p className="text-sm">
               Revolutionizing course creation with the power of AI.
             </p>
