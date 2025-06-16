@@ -40,19 +40,10 @@ export default function UserPlanCard({ userPlan, hasActivePaidSubscription, Mana
         <Progress
           value={progress}
           className={`mt-2 w-full ${isLimitReached ? 'bg-red-500' : 'bg-gray-200'}`} // Background color
-          data-state={isLimitReached ? 'limit-reached' : 'normal'} // Custom state for styling
+          color={isLimitReached ? '#ef4444' : undefined} // Pass red color when limit is reached
         />
-        {/* Apply custom styles via a parent wrapper */}
-        <style jsx>{`
-          [data-state='limit-reached'] [role='progressbar'] {
-            background-color: #ef4444; /* Red when limit reached */
-          }
-          [data-state='normal'] [role='progressbar'] {
-            background-color: #9333ea; /* Purple when normal */
-          }
-        `}</style>
-       {/* Render ManageSubscriptionButton when hasActivePaidSubscription is true */}
-       {hasActivePaidSubscription && ManageSubscriptionButton && (
+        {/* Render ManageSubscriptionButton when hasActivePaidSubscription is true */}
+        {hasActivePaidSubscription && ManageSubscriptionButton && (
           <ManageSubscriptionButton />
         )}
         {/* Fallback for debugging */}

@@ -1,11 +1,14 @@
+/* globals.css */
 @import 'highlight.js/styles/github-dark.css';
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
 body {
   font-family: var(--font-geist-sans);
 }
+
 @layer base {
   :root {
     --font-geist-sans: 'Geist Sans', sans-serif;
@@ -18,8 +21,15 @@ body {
     --popover-foreground: 0 0% 3.9%;
     --primary: 271 81% 56%; /* Tailwind purple-600 */
     --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
+    
+    --secondary: 0 0% 96.1%; /* Current light gray secondary */
     --secondary-foreground: 0 0% 9%;
+    
+    /* --- NEW/MODIFIED FOR TOASTS --- */
+    --info-toast-bg: 270 50% 90%; /* A very light, muted purple for info toasts */
+    --info-toast-text: 270 50% 20%; /* Dark text for info toasts */
+    /* --- END NEW/MODIFIED --- */
+
     --muted: 0 0% 96.1%;
     --muted-foreground: 0 0% 45.1%;
     --accent: 0 0% 96.1%;
@@ -36,6 +46,7 @@ body {
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
   }
+
   .dark {
     --background: 0 0% 3.9%;
     --foreground: 0 0% 98%;
@@ -45,8 +56,15 @@ body {
     --popover-foreground: 0 0% 98%;
     --primary: 275 96% 76%; /* Tailwind purple-400 for dark mode */
     --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
+    
+    --secondary: 0 0% 14.9%; /* Current dark mode secondary */
     --secondary-foreground: 0 0% 98%;
+
+    /* --- NEW/MODIFIED FOR TOASTS --- */
+    --info-toast-bg: 270 50% 18%; /* A slightly darker, muted purple for dark mode info toasts */
+    --info-toast-text: 270 50% 85%; /* Light text for dark mode info toasts */
+    /* --- END NEW/MODIFIED --- */
+
     --muted: 0 0% 14.9%;
     --muted-foreground: 0 0% 63.9%;
     --accent: 0 0% 14.9%;
@@ -71,4 +89,13 @@ body {
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Custom styles for Progress component */
+.Progress.limit-reached .rt-ProgressIndicator {
+  background-color: #ef4444 !important; /* Red when limit reached */
+}
+
+.Progress .rt-ProgressIndicator {
+  background-color: #9333ea; /* Purple when normal */
 }
