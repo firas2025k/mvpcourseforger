@@ -25,10 +25,13 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
   - Free Plan → 1 course
   - Paid Plans → Multiple courses
 - 👤 **Profile & Settings:** User can manage their personal data and preferences
-
 .
 ├── README.md
+├── actions
+│   └── search.ts
 ├── app
+│   ├── actions
+│   │   └── search.ts
 │   ├── api
 │   │   ├── complete-course
 │   │   │   └── route.ts
@@ -109,6 +112,7 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 │   │   ├── CourseCard.tsx
 │   │   ├── DashboardLayout.tsx
 │   │   ├── ManageSubscriptionButton.tsx
+│   │   ├── SearchInput.tsx
 │   │   ├── UserPlanCard.tsx
 │   │   └── courses
 │   │       ├── CourseLayoutClient.tsx
@@ -160,7 +164,8 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 │   └── working-code.md
 ├── eslint.config.mjs
 ├── hooks
-│   └── useAutoSave.ts
+│   ├── useAutoSave.ts
+│   └── useDebounce.ts
 ├── html2pdf.d.ts
 ├── lib
 │   ├── gemini.ts
@@ -193,10 +198,12 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 ├── types
 │   ├── course.ts
 │   ├── index.ts
-│   └── pdf-types.ts
+│   ├── pdf-types.ts
+│   └── supabase.ts
 ├── utils
 │   └── pdfExport.ts
 └── vercel.json
+
 ## Important notes
 
 - this setup has a template landing page ,supabase auth already implemented and a protected route (dashboard) for authentiticated users
