@@ -6,8 +6,8 @@ import { createBrowserClient } from '@supabase/ssr';
 import { Plan } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle } from 'lucide-react';
-import type { User } from '@supabase/supabase-js';
+import { CheckCircle, ArrowLeft } from 'lucide-react';
+import Link from 'next/link';
 
 interface PricingClientPageProps {
   plans: Plan[];
@@ -39,7 +39,6 @@ export default function PricingClientPage({ plans, stripePublishableKey }: Prici
       setIsFetchingSubscription(true);
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        // Fetch active subscription
         let { data: subscription, error: subError } = await supabase
           .from('subscriptions')
           .select('*, plans(*)')
@@ -55,10 +54,8 @@ export default function PricingClientPage({ plans, stripePublishableKey }: Prici
         } else if (subscription && subscription.length > 0) {
           setActiveSubscription(subscription[0]);
         } else {
-          // --- NEW: Check for Free plan subscription ---
           const freePlan = plans.find(plan => plan.name === 'Free');
           if (freePlan) {
-            // Query for Free plan subscription
             const { data: freeSubscription, error: freeSubError } = await supabase
               .from('subscriptions')
               .select('*, plans(*)')
@@ -75,7 +72,6 @@ export default function PricingClientPage({ plans, stripePublishableKey }: Prici
             } else if (freeSubscription && freeSubscription.length > 0) {
               setActiveSubscription(freeSubscription[0]);
             } else {
-              // Fallback: Assume Free plan if no subscription record
               setActiveSubscription({ plan_id: freePlan.id, plans: freePlan });
             }
           } else {
@@ -84,7 +80,6 @@ export default function PricingClientPage({ plans, stripePublishableKey }: Prici
           }
         }
       } else {
-        // Not logged in, assume Free plan
         const freePlan = plans.find(plan => plan.name === 'Free');
         if (freePlan) {
           setActiveSubscription({ plan_id: freePlan.id, plans: freePlan });
@@ -171,6 +166,14 @@ export default function PricingClientPage({ plans, stripePublishableKey }: Prici
 
   return (
     <div className="container mx-auto px-4 py-12">
+      <div className="mb-6">
+        <Button variant="outline" size="sm" asChild>
+          <Link href="/dashboard">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Dashboard
+          </Link>
+        </Button>
+      </div>
       <h1 className="text-4xl font-bold text-center mb-4">Choose Your Plan</h1>
       <p className="text-xl text-muted-foreground text-center mb-12">
         Start creating and sharing your knowledge with the world. No credit card required for the Free plan.
@@ -186,7 +189,9 @@ export default function PricingClientPage({ plans, stripePublishableKey }: Prici
                   <span className="text-xs font-semibold px-2 py-1 rounded-full bg-green-100 text-green-700">Current Plan</span>
                 )}
               </div>
-              <CardDescription>{plan.description || `Access to ${plan.course_limit} course(s).`}</CardDescription>
+              <CardDescription>
+                {plan.description || `Create up to ${plan.course_limit} course${plan.course_limit !== 1 ? 's' : ''}, ${plan.max_chapters} chapter${plan.max_chapters !== 1 ? 's' : ''} per course, and ${plan.max_lessons_per_chapter} lesson${plan.max_lessons_per_chapter !== 1 ? 's' : ''} per chapter.`}
+              </CardDescription>
             </CardHeader>
             <CardContent className="flex-grow">
               <div className="mb-6">
@@ -196,7 +201,19 @@ export default function PricingClientPage({ plans, stripePublishableKey }: Prici
                 {plan.price_cents !== 0 && <span className="text-muted-foreground">/month</span>}
               </div>
               <ul className="space-y-2 mb-6">
-                {(plan.features && plan.features.length > 0 ? plan.features : [`Create up to ${plan.course_limit} course(s)`]).map((feature, index) => (
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
+                  <span>Create up to {plan.course_limit} course{plan.course_limit !== 1 ? 's' : ''}</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
+                  <span>Up to {plan.max_chapters} chapter{plan.max_chapters !== 1 ? 's' : ''} per course</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
+                  <span>Up to {plan.max_lessons_per_chapter} lesson{plan.max_lessons_per_chapter !== 1 ? 's' : ''} per chapter</span>
+                </li>
+                {(plan.features || []).map((feature, index) => (
                   <li key={index} className="flex items-center">
                     <CheckCircle className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
                     <span>{feature}</span>
@@ -206,17 +223,17 @@ export default function PricingClientPage({ plans, stripePublishableKey }: Prici
             </CardContent>
             <CardFooter>
               {activeSubscription && activeSubscription.plan_id === plan.id ? (
-                <Button 
+                <Button
                   className="w-full"
-                  onClick={handleManageSubscription} 
+                  onClick={handleManageSubscription}
                   disabled={isManagingSubscription}
                 >
                   {isManagingSubscription ? 'Processing...' : 'Manage Subscription'}
                 </Button>
               ) : plan.stripe_price_id ? (
-                <Button 
+                <Button
                   className="w-full"
-                  onClick={() => handleCheckout(plan)} 
+                  onClick={() => handleCheckout(plan)}
                   disabled={isLoading === plan.id || isManagingSubscription || !plan.stripe_price_id}
                 >
                   {isLoading === plan.id ? 'Processing...' : (plan.price_cents === 0 && activeSubscription ? 'Switch to Free' : 'Choose Plan')}

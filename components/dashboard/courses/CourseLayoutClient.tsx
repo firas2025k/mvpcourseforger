@@ -11,12 +11,13 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
-import { ChevronLeft, ChevronRight, BookOpen, HelpCircle, CheckCircle, XCircle, Edit3, Eye } from 'lucide-react'; // Added CheckCircle, XCircle, Edit3, Eye
+import { ChevronLeft, ChevronRight, BookOpen, HelpCircle, CheckCircle, XCircle, Edit3, Eye, ArrowLeft } from 'lucide-react'; // Added CheckCircle, XCircle, Edit3, Eye
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
 import { useRouter } from 'next/navigation';
 import LessonEditor from './LessonEditor';
+import Link from 'next/link';
 
 interface CourseLayoutClientProps {
   courseData: FullCourseData;
@@ -297,6 +298,14 @@ export default function CourseLayoutClient({ courseData }: CourseLayoutClientPro
       <ResizableHandle withHandle />
       <ResizablePanel defaultSize={75}>
         <div className="flex flex-col h-full">
+        <div className="p-4 border-b">
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/dashboard">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Dashboard
+              </Link>
+            </Button>
+          </div>
           <ScrollArea className="flex-grow p-6">
             {selectedLesson ? (
               <article>
