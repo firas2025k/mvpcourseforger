@@ -12,8 +12,8 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress'; // Placeholder for progress
-import { BookOpen, Trash2, FileDown, Loader2 } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { BookOpen, Trash2, FileDown, Loader2, Video } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,46 +27,40 @@ import {
 } from '@/components/ui/alert-dialog';
 import { handleSavePdf } from '@/utils/pdfExport';
 
-
-// Define the expected shape of a course object for this component
-// Ideally, this would come from a shared types/index.ts file
-
 interface Lesson {
   id: string;
   title: string;
-  content: string; // Full lesson content for PDF
-  order_index: number; // Renamed from lesson_number to match DB
-  // quizzes: Quiz[]; // Quizzes removed
+  content: string;
+  order_index: number;
 }
 
 interface Chapter {
   id: string;
   title: string;
-  order_index: number; // Renamed from chapter_number
+  order_index: number;
   lessons: Lesson[];
 }
 
-interface CourseDetail extends CourseForCard { // Extends base card info
-  description?: string | null; // Full description if available
+interface CourseDetail extends CourseForCard {
+  description?: string | null;
   chapters: Chapter[];
 }
 
 export interface CourseForCard {
   id: string;
   title: string;
-  prompt: string | null; // Using prompt as description for now
-  progress: number; // Percentage, 0-100
+  prompt: string | null;
+  progress: number;
   totalLessons: number;
   completedLessons: number;
-  // Add other relevant fields like difficulty, image_url if available and needed for card
 }
 
 interface CourseCardProps {
   course: CourseForCard;
-  isFreePlan:boolean;
+  isFreePlan: boolean;
 }
 
-export default function CourseCard({ course,isFreePlan }: CourseCardProps) {
+export default function CourseCard({ course, isFreePlan }: CourseCardProps) {
   const router = useRouter();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -88,44 +82,40 @@ export default function CourseCard({ course,isFreePlan }: CourseCardProps) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to delete course');
       }
-      // Deletion successful
       setIsDeleteDialogOpen(false);
-      router.refresh(); // Re-fetch data on the page
-      // TODO: Add a success toast notification here
+      router.refresh();
       console.log('Course deleted successfully');
     } catch (error) {
       console.error('Error deleting course:', error);
-      // TODO: Add an error toast notification here
     } finally {
       setIsDeleting(false);
     }
   };
 
-  // Simplified PDF export handler using the utility function
   const handleExportToPdf = async () => {
     setIsExportingPdf(true);
     try {
       await handleSavePdf({
         courseId: course.id,
-        onSuccess: () => {
-          console.log('PDF exported successfully');
-          // You could add a toast notification here
-        },
-        onError: (error) => {
-          console.error('PDF export failed:', error);
-          alert(`Failed to export to PDF: ${error}`);
-        },
+        onSuccess: () => console.log('PDF exported successfully'),
+        onError: (error) => alert(`Failed to export to PDF: ${error}`),
       });
     } finally {
       setIsExportingPdf(false);
     }
   };
 
+  // Determine course type icon (placeholder logic; adjust based on data)
+  const getCourseTypeIcon = () => {
+    // Assuming all courses have lessons for now; add logic for video courses if data exists
+    return <BookOpen className="mr-2 h-5 w-5 text-purple-600" />;
+  };
+
   return (
-    <Card className="group flex flex-col h-full shadow-lg hover:shadow-xl transition-shadow duration-300 relative">
+    <Card className="group flex flex-col h-full shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-[1.02] relative">
       <CardHeader className="relative">
         <CardTitle className="text-xl font-semibold leading-tight flex items-center">
-          <BookOpen className="mr-2 h-5 w-5 text-purple-600" />
+          {getCourseTypeIcon()}
           {course.title}
         </CardTitle>
         <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
@@ -134,7 +124,7 @@ export default function CourseCard({ course,isFreePlan }: CourseCardProps) {
               variant="ghost"
               size="icon"
               className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive-foreground hover:bg-destructive/80"
-              onClick={(e) => { e.stopPropagation(); setIsDeleteDialogOpen(true); }} // Stop propagation to prevent card click if any
+              onClick={(e) => { e.stopPropagation(); setIsDeleteDialogOpen(true); }}
             >
               <Trash2 className="h-4 w-4" />
             </Button>
@@ -159,13 +149,12 @@ export default function CourseCard({ course,isFreePlan }: CourseCardProps) {
         </CardDescription>
       </CardHeader>
       <CardContent className="flex-grow">
-        {/* Progress Bar Placeholder */}
         <div className="mb-2">
           <div className="flex justify-between text-xs text-muted-foreground mb-1">
             <span>{lessonsProgressText}</span>
             <span>{progressValue}%</span>
           </div>
-          <Progress value={progressValue} className="h-2" />
+          <Progress value={progressValue} className="h-3 bg-gray-200" style={{ '& .progress-bar': { backgroundColor: '#9333EA' } }} />
         </div>
       </CardContent>
       <CardFooter>
@@ -173,15 +162,15 @@ export default function CourseCard({ course,isFreePlan }: CourseCardProps) {
           <Button asChild className="flex-1 bg-purple-600 hover:bg-purple-700 text-white">
             <Link href={`/dashboard/courses/${course.id}`}>View Course</Link>
           </Button>
-          {!isFreePlan && ( // Hide Export PDF button for Free plan
+          {!isFreePlan && (
             <Button 
-              variant="outline" 
-              className="flex-1"
+              variant="ghost" 
+              size="icon"
+              className="flex-1 text-muted-foreground hover:text-foreground"
               onClick={handleExportToPdf} 
               disabled={isExportingPdf}
             >
-              {isExportingPdf ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileDown className="mr-2 h-4 w-4" />} 
-              {isExportingPdf ? 'Exporting...' : 'Export'}
+              {isExportingPdf ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />} 
             </Button>
           )}
         </div>
