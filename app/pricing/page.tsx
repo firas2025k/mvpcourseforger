@@ -22,8 +22,7 @@ async function getPlans(): Promise<Plan[]> {
 
   const { data, error } = await supabase
     .from('plans')
-    .select('id, name, course_limit, price_cents, stripe_price_id, description, features') 
-    .order('price_cents', { ascending: true });
+    .select('id, name, course_limit, max_chapters, max_lessons_per_chapter, price_cents, stripe_price_id, description, features')    .order('price_cents', { ascending: true });
 
   if (error) {
     console.error('Error fetching plans:', error);
