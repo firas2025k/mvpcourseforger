@@ -239,8 +239,26 @@ export default async function DashboardPage({
             <BarChart3 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{averageProgress}%</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="relative w-16 h-16">
+              <svg className="w-full h-full" viewBox="0 0 36 36">
+                <circle cx="18" cy="18" r="16" fill="none" stroke="#e0e0e0" strokeWidth="2" />
+                <circle
+                  cx="18"
+                  cy="18"
+                  r="16"
+                  fill="none"
+                  stroke="#9333EA"
+                  strokeWidth="2"
+                  strokeDasharray={100}
+                  strokeDashoffset={100 - averageProgress}
+                  transform="rotate(-90 18 18)"
+                />
+                <text x="18" y="20" textAnchor="middle" className="text-lg font-bold fill-current" style={{ fontSize: '12px' }}>
+                  {averageProgress}%
+                </text>
+              </svg>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">
               across all courses with lessons
             </p>
           </CardContent>

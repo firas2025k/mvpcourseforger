@@ -1,8 +1,7 @@
-// components/dashboard/courses/CourseLayoutClient.tsx
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
-import { FullCourseData, Chapter, Lesson, Quiz } from '@/types/course'; // Added Quiz
+import { FullCourseData, Chapter, Lesson, Quiz } from '@/types/course';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -11,13 +10,20 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
-import { ChevronLeft, ChevronRight, BookOpen, HelpCircle, CheckCircle, XCircle, Edit3, Eye, ArrowLeft } from 'lucide-react'; // Added CheckCircle, XCircle, Edit3, Eye
+import { ChevronLeft, ChevronRight, BookOpen, HelpCircle, CheckCircle, XCircle, Edit3, Eye, ArrowLeft } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
 import { useRouter } from 'next/navigation';
 import LessonEditor from './LessonEditor';
 import Link from 'next/link';
+import {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
 
 interface CourseLayoutClientProps {
   courseData: FullCourseData;
@@ -27,7 +33,7 @@ interface FlattenedLesson {
   chapterId: string;
   chapterOrderIndex: number;
   lessonId: string;
-  lessonOrderIndex: number; // Use order_index for consistency
+  lessonOrderIndex: number;
   lesson: Lesson;
 }
 
@@ -41,21 +47,19 @@ export default function CourseLayoutClient({ courseData }: CourseLayoutClientPro
   const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
   const [accordionDefaultValue, setAccordionDefaultValue] = useState<string | undefined>(undefined);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
-  const [quizFeedback, setQuizFeedback] = useState<Record<string, QuizFeedback | null>>({}); // State for quiz feedback
+  const [quizFeedback, setQuizFeedback] = useState<Record<string, QuizFeedback | null>>({});
   const [lessonCompletionStatus, setLessonCompletionStatus] = useState<Record<string, boolean>>({});
   const [isLoadingProgress, setIsLoadingProgress] = useState(true);
-  const [isEditMode, setIsEditMode] = useState(false); // Add edit mode state
-  const [lessonContent, setLessonContent] = useState<Record<string, string>>({}); // Track lesson content changes
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [lessonContent, setLessonContent] = useState<Record<string, string>>({});
   const router = useRouter();
 
   useEffect(() => {
-    // Reset feedback and selected answers when the selected lesson changes
     setQuizFeedback({});
     setSelectedAnswers({});
-  }, [selectedLessonId]); // Only depends on selectedLessonId
+  }, [selectedLessonId]);
 
-   useEffect(() => {
-    // Initialize with the first chapter/lesson or handle empty course
+  useEffect(() => {
     if (courseData?.chapters && courseData.chapters.length > 0) {
       const firstChapter = courseData.chapters[0];
       if (!selectedChapterId) setSelectedChapterId(firstChapter.id);
@@ -64,8 +68,7 @@ export default function CourseLayoutClient({ courseData }: CourseLayoutClientPro
         setSelectedLessonId(firstChapter.lessons[0].id);
       }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [courseData]); // Run once on mount or when courseData changes
+  }, [courseData]);
 
   useEffect(() => {
     const fetchLessonProgress = async () => {
@@ -80,7 +83,6 @@ export default function CourseLayoutClient({ courseData }: CourseLayoutClientPro
         setLessonCompletionStatus(progressData);
       } catch (error) {
         console.error("Error fetching lesson progress:", error);
-        // Optionally, set some error state to display to the user
       } finally {
         setIsLoadingProgress(false);
       }
@@ -91,11 +93,11 @@ export default function CourseLayoutClient({ courseData }: CourseLayoutClientPro
 
   const handleLessonClick = (chapterId: string, lessonId: string) => {
     if (selectedLessonId !== lessonId || selectedChapterId !== chapterId) {
-        setSelectedChapterId(chapterId);
-        setSelectedLessonId(lessonId); // This will trigger the useEffect above to reset feedback
-        if (selectedChapterId !== chapterId) {
-            setAccordionDefaultValue(`chapter-${chapterId}`);
-        }
+      setSelectedChapterId(chapterId);
+      setSelectedLessonId(lessonId);
+      if (selectedChapterId !== chapterId) {
+        setAccordionDefaultValue(`chapter-${chapterId}`);
+      }
     }
   };
 
@@ -109,13 +111,13 @@ export default function CourseLayoutClient({ courseData }: CourseLayoutClientPro
       .sort((a, b) => (a.order_index || 0) - (b.order_index || 0))
       .forEach(chapter => {
         (chapter.lessons || [])
-          .sort((a, b) => (a.order_index || 0) - (b.order_index || 0)) // CORRECTED SORT KEY
+          .sort((a, b) => (a.order_index || 0) - (b.order_index || 0))
           .forEach(lesson => {
             lessons.push({
               chapterId: chapter.id,
               chapterOrderIndex: chapter.order_index,
               lessonId: lesson.id,
-              lessonOrderIndex: lesson.order_index, // Use order_index
+              lessonOrderIndex: lesson.order_index,
               lesson: lesson,
             });
           });
@@ -143,32 +145,25 @@ export default function CourseLayoutClient({ courseData }: CourseLayoutClientPro
     if (selectedLessonId && !lessonCompletionStatus[selectedLessonId]) {
       await handleToggleLessonComplete(selectedLessonId);
     }
-
-    //  Mark the entire course as complete in the database
     try {
       const response = await fetch('/api/complete-course', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ courseId: courseData.id }),
       });
-
       if (!response.ok) {
         console.error('Failed to update course completion:', await response.text());
-        // Optionally, show an error to the user
       }
     } catch (error) {
       console.error('Error updating course completion:', error);
     }
-
     router.push('/dashboard');
   };
 
   const handleNextLesson = async () => {
     if (currentFlattenedLessonIndex !== -1 && currentFlattenedLessonIndex < flattenedLessons.length - 1) {
-      if(selectedLessonId && !lessonCompletionStatus[selectedLessonId]){
-        await handleToggleLessonComplete(selectedLessonId)
+      if (selectedLessonId && !lessonCompletionStatus[selectedLessonId]) {
+        await handleToggleLessonComplete(selectedLessonId);
       }
       const nextFlattenedLesson = flattenedLessons[currentFlattenedLessonIndex + 1];
       handleLessonClick(nextFlattenedLesson.chapterId, nextFlattenedLesson.lessonId);
@@ -177,37 +172,19 @@ export default function CourseLayoutClient({ courseData }: CourseLayoutClientPro
 
   const handleToggleLessonComplete = async (lessonId: string) => {
     const currentStatus = !!lessonCompletionStatus[lessonId];
-    const newStatus = !currentStatus;
-
-    // Optimistic update
-    setLessonCompletionStatus(prev => ({
-      ...prev,
-      [lessonId]: newStatus
-    }));
-
+    setLessonCompletionStatus(prev => ({ ...prev, [lessonId]: !currentStatus }));
     try {
       const response = await fetch('/api/lesson-progress', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ lessonId, isCompleted: newStatus, courseId: courseData.id }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lessonId, isCompleted: !currentStatus, courseId: courseData.id }),
       });
-
       if (!response.ok) {
-        // Revert optimistic update on failure
-        setLessonCompletionStatus(prev => ({
-          ...prev,
-          [lessonId]: currentStatus 
-        }));
+        setLessonCompletionStatus(prev => ({ ...prev, [lessonId]: currentStatus }));
         console.error('Failed to update lesson progress:', await response.text());
       }
     } catch (error) {
-      // Revert optimistic update on network error
-      setLessonCompletionStatus(prev => ({
-        ...prev,
-        [lessonId]: currentStatus
-      }));
+      setLessonCompletionStatus(prev => ({ ...prev, [lessonId]: currentStatus }));
       console.error('Error updating lesson progress:', error);
     }
   };
@@ -265,7 +242,7 @@ export default function CourseLayoutClient({ courseData }: CourseLayoutClientPro
                   <AccordionContent>
                     <ul className="space-y-1">
                       {(chapter.lessons || [])
-                        ?.sort((a, b) => (a.order_index || 0) - (b.order_index || 0)) // CORRECTED SORT KEY
+                        ?.sort((a, b) => (a.order_index || 0) - (b.order_index || 0))
                         ?.map((lesson) => (
                         <li key={lesson.id}>
                           <Button
@@ -277,7 +254,7 @@ export default function CourseLayoutClient({ courseData }: CourseLayoutClientPro
                               <CheckCircle className="h-4 w-4 mr-2 text-green-500 flex-shrink-0" />
                             )}
                             <span className="flex-grow">
-                              Lesson {lesson.order_index}: {lesson.title} {/* Display order_index */}
+                              Lesson {lesson.order_index}: {lesson.title}
                             </span>
                           </Button>
                         </li>
@@ -298,13 +275,24 @@ export default function CourseLayoutClient({ courseData }: CourseLayoutClientPro
       <ResizableHandle withHandle />
       <ResizablePanel defaultSize={75}>
         <div className="flex flex-col h-full">
-        <div className="p-4 border-b">
+          <div className="p-4 border-b">
             <Button variant="outline" size="sm" asChild>
               <Link href="/dashboard">
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back to Dashboard
               </Link>
             </Button>
+            <Breadcrumb className='mt-4 text-black'>
+              <BreadcrumbList>
+                <BreadcrumbItem>
+                  <BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbLink href={`/dashboard/courses/${courseData.id}`}>{courseData.title}</BreadcrumbLink>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
           </div>
           <ScrollArea className="flex-grow p-6">
             {selectedLesson ? (
@@ -336,7 +324,7 @@ export default function CourseLayoutClient({ courseData }: CourseLayoutClientPro
                     id={`complete-${selectedLesson.id}`}
                     checked={!!lessonCompletionStatus[selectedLesson.id]}
                     onCheckedChange={() => handleToggleLessonComplete(selectedLesson.id)}
-                    disabled={isLoadingProgress} // Disable while initially loading progress
+                    disabled={isLoadingProgress}
                   />
                   <Label htmlFor={`complete-${selectedLesson.id}`} className="text-sm font-medium text-muted-foreground cursor-pointer">
                     Mark lesson as complete
@@ -361,7 +349,6 @@ export default function CourseLayoutClient({ courseData }: CourseLayoutClientPro
                     {lessonContent[selectedLesson.id] ? (
                       <div dangerouslySetInnerHTML={{ __html: lessonContent[selectedLesson.id] }} />
                     ) : selectedLesson.content ? (
-                      // Check if content is HTML or Markdown
                       selectedLesson.content.includes('<') && selectedLesson.content.includes('>') ? (
                         <div dangerouslySetInnerHTML={{ __html: selectedLesson.content }} />
                       ) : (
@@ -457,31 +444,31 @@ export default function CourseLayoutClient({ courseData }: CourseLayoutClientPro
             )}
           </ScrollArea>
           {selectedLesson && (
-              <div className="p-4 border-t bg-background flex justify-between items-center sticky bottom-0">
-                  <Button 
-                    variant="outline" 
-                    onClick={handlePreviousLesson}
-                    disabled={currentFlattenedLessonIndex <= 0}
-                  >
-                      <ChevronLeft className="mr-2 h-4 w-4" /> Previous
-                  </Button>
-                  <span className="text-sm text-muted-foreground">
-                     Chapter {selectedChapter?.order_index} - Lesson {selectedLesson.order_index}
-                  </span>
-                  {isLastLesson ? (
-                    <Button variant="outline" onClick={handleCompleteCourse}>
-                      Finish <CheckCircle className="ml-2 h-4 w-4" />
-                    </Button>
-                  ) : (
-                    <Button
-                      variant="outline"
-                      onClick={handleNextLesson}
-                      disabled={currentFlattenedLessonIndex === -1 || currentFlattenedLessonIndex >= flattenedLessons.length - 1}
-                    >
-                      Next <ChevronRight className="ml-2 h-4 w-4" />
-                    </Button>
-                  )}
-              </div>
+            <div className="p-4 border-t bg-background flex justify-between items-center sticky bottom-0">
+              <Button 
+                variant="outline" 
+                onClick={handlePreviousLesson}
+                disabled={currentFlattenedLessonIndex <= 0}
+              >
+                <ChevronLeft className="mr-2 h-4 w-4" /> Previous
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                Chapter {selectedChapter?.order_index} - Lesson {selectedLesson.order_index}
+              </span>
+              {isLastLesson ? (
+                <Button variant="outline" onClick={handleCompleteCourse}>
+                  Finish <CheckCircle className="ml-2 h-4 w-4" />
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  onClick={handleNextLesson}
+                  disabled={currentFlattenedLessonIndex === -1 || currentFlattenedLessonIndex >= flattenedLessons.length - 1}
+                >
+                  Next <ChevronRight className="ml-2 h-4 w-4" />
+                </Button>
+              )}
+            </div>
           )}
         </div>
       </ResizablePanel>
