@@ -25,32 +25,30 @@ interface AiLesson {
 }
 
 interface AiChapter {
-  title:string;
+  title: string;
   lessons: AiLesson[];
 }
 
 interface CourseOutline {
-    courseTitle: string;
-    chapters: {
-        chapterTitle: string;
-        lessonTitles: string[];
-    }[];
+  courseTitle: string;
+  chapters: {
+    chapterTitle: string;
+    lessonTitles: string[];
+  }[];
 }
 
 interface LessonContent {
-    content: string;
-    quiz: {
-        questions: {
-            question: string;
-            choices: string[];
-            answer: string;
-        }[];
-    };
+  content: string;
+  quiz: {
+    questions: {
+      question: string;
+      choices: string[];
+      answer: string;
+    }[];
+  };
 }
 
-
 export async function POST(request: NextRequest) {
-  // CORRECTED: Supabase client initialization for Route Handlers
   const cookieStore = cookies();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -63,18 +61,12 @@ export async function POST(request: NextRequest) {
         set(name: string, value: string, options: CookieOptions) {
           try {
             cookieStore.set({ name, value, ...options });
-          } catch (error) {
-            // The `set` method was called from a Server Component.
-            // This can be ignored if you have middleware refreshing user sessions.
-          }
+          } catch (error) {}
         },
         remove(name: string, options: CookieOptions) {
           try {
             cookieStore.set({ name, value: '', ...options });
-          } catch (error) {
-            // The `delete` method was called from a Server Component.
-            // This can be ignored if you have middleware refreshing user sessions.
-          }
+          } catch (error) {}
         },
       },
     }
@@ -86,8 +78,8 @@ export async function POST(request: NextRequest) {
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized: User not authenticated.' }, { status: 401 });
     }
-    
-    // User and course limit checks
+
+    // Fetch user profile and plan details
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('course_limit')
@@ -95,13 +87,37 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (profileError || !profile) {
-      console.error('Error fetching profile or profile not found:', profileError?.message);
+      console.error('Error fetching profile:', profileError?.message);
       return NextResponse.json({ error: 'Could not retrieve user profile.' }, { status: 500 });
     }
-    
-    let effectiveCourseLimit = profile.course_limit;
-     if (effectiveCourseLimit < 1) {
-      console.warn(`User ${user.id} has profile.course_limit: ${profile.course_limit} in DB. API applying effective limit of 1 for Free Plan check.`);
+
+    // Fetch plan details for max chapters and lessons
+    const { data: subscription, error: subscriptionError } = await supabase
+      .from('subscriptions')
+      .select('plan_id')
+      .eq('user_id', user.id)
+      .eq('is_active', true)
+      .single();
+
+    if (subscriptionError || !subscription) {
+      console.error('Error fetching subscription:', subscriptionError?.message);
+      return NextResponse.json({ error: 'Could not retrieve user subscription.' }, { status: 500 });
+    }
+
+    const { data: plan, error: planError } = await supabase
+      .from('plans')
+      .select('course_limit, max_chapters, max_lessons_per_chapter')
+      .eq('id', subscription.plan_id)
+      .single();
+
+    if (planError || !plan) {
+      console.error('Error fetching plan:', planError?.message);
+      return NextResponse.json({ error: 'Could not retrieve plan details.' }, { status: 500 });
+    }
+
+    let effectiveCourseLimit = plan.course_limit;
+    if (effectiveCourseLimit < 1) {
+      console.warn(`User ${user.id} has course_limit: ${plan.course_limit}. Applying effective limit of 1.`);
       effectiveCourseLimit = 1;
     }
 
@@ -116,15 +132,28 @@ export async function POST(request: NextRequest) {
     }
 
     if (courseCount !== null && courseCount >= effectiveCourseLimit) {
-      return NextResponse.json({ error: 'Course limit reached. Please upgrade your plan to create more courses.' }, { status: 403 });
+      return NextResponse.json({ error: 'Course limit reached. Please upgrade your plan.' }, { status: 403 });
     }
-
 
     const body = await request.json() as GenerateCourseRequestBody;
     const { prompt: userPrompt, chapters, lessons_per_chapter, difficulty } = body;
 
     if (!userPrompt || !chapters || !lessons_per_chapter || !difficulty) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    // Check plan-based chapter and lesson limits
+    if (chapters > plan.max_chapters) {
+      return NextResponse.json(
+        { error: `Requested chapters (${chapters}) exceed plan limit (${plan.max_chapters}).` },
+        { status: 403 }
+      );
+    }
+    if (lessons_per_chapter > plan.max_lessons_per_chapter) {
+      return NextResponse.json(
+        { error: `Requested lessons per chapter (${lessons_per_chapter}) exceed plan limit (${plan.max_lessons_per_chapter}).` },
+        { status: 403 }
+      );
     }
 
     // STAGE 1 - GENERATE COURSE OUTLINE
@@ -143,66 +172,59 @@ export async function POST(request: NextRequest) {
     let courseOutline: CourseOutline;
 
     try {
-        courseOutline = JSON.parse(outlineText);
+      courseOutline = JSON.parse(outlineText);
     } catch (e) {
-        console.error("Failed to parse course outline JSON:", e);
-        console.error("Raw outline response from Gemini:", outlineText);
-        return NextResponse.json({ error: "Failed to generate a valid course outline from AI." }, { status: 500 });
+      console.error("Failed to parse course outline JSON:", e);
+      console.error("Raw outline response from Gemini:", outlineText);
+      return NextResponse.json({ error: "Failed to generate a valid course outline from AI." }, { status: 500 });
     }
 
-
-    // STAGE 2 - GENERATE CONTENT FOR EACH LESSON (SEQUENTIALLY TO AVOID RATE LIMITS)
+    // STAGE 2 - GENERATE CONTENT FOR EACH LESSON
     const finalChapters: AiChapter[] = [];
 
     for (const chapterOutline of courseOutline.chapters) {
-        const generatedLessons: AiLesson[] = [];
-        // Using a for...of loop to process lessons one by one
-        for (const lessonTitle of chapterOutline.lessonTitles) {
-            const lessonPrompt = `
-                You are an AI educator creating content for a single lesson.
-                Course Topic: "${userPrompt}", Chapter: "${chapterOutline.chapterTitle}", Lesson: "${lessonTitle}", Difficulty: ${difficulty}.
-                Generate a JSON object with this structure: { "content": "...", "quiz": { "questions": [ { "question": "...", "choices": ["...", "...", "...", "..."], "answer": "..." } ] } }
-                Instructions:
-                - The "content" must be detailed, 5-7 paragraphs long, and tailored for a ${difficulty} audience.
-                - The "quiz" must have at least one question with 4 choices.
-                - Output only the valid JSON object.
-            `;
-            
-            // A small delay to be extra safe with rate limits. 1.5 seconds between requests.
-            await new Promise(resolve => setTimeout(resolve, 1500));
-            
-            const lessonChat = model.startChat({ generationConfig, safetySettings });
-            const result = await lessonChat.sendMessage(lessonPrompt);
-            const lessonText = result.response.text()
-            
-            try {
-              // --- START OF SANITIZED LESSON TEXT PARSING ---
-              const sanitizedLessonText = lessonText
-                  .replace(/^```json\n|\n```$/g, '') // Remove code block markers
-                  .replace(/[\x00-\x1F\x7F-\x9F]/g, '') // Remove control characters
-                  .replace(/\n/g, '\\n') // Escape newlines
-                  .replace(/\t/g, '\\t'); // Escape tabs
-              const lessonContent: LessonContent = JSON.parse(sanitizedLessonText);
-              generatedLessons.push({ title: lessonTitle, ...lessonContent });
-              // --- END OF SANITIZED LESSON TEXT PARSING ---
-          } catch (error) {
-              console.error(`Failed to parse content for lesson: "${lessonTitle}"`, error);
-              console.error(`Raw lesson text: ${lessonText}`); // Log raw response for debugging
-              generatedLessons.push({ title: lessonTitle, content: "Error: Failed to generate content for this lesson.", quiz: { questions: [] } });
-          }
+      const generatedLessons: AiLesson[] = [];
+      for (const lessonTitle of chapterOutline.lessonTitles) {
+        const lessonPrompt = `
+          You are an AI educator creating content for a single lesson.
+          Course Topic: "${userPrompt}", Chapter: "${chapterOutline.chapterTitle}", Lesson: "${lessonTitle}", Difficulty: ${difficulty}.
+          Generate a JSON object with this structure: { "content": "...", "quiz": { "questions": [ { "question": "...", "choices": ["...", "...", "...", "..."], "answer": "..." } ] } }
+          Instructions:
+          - The "content" must be detailed, 5-7 paragraphs long, and tailored for a ${difficulty} audience.
+          - The "quiz" must have at least one question with 4 choices.
+          - Output only the valid JSON object.
+        `;
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        const lessonChat = model.startChat({ generationConfig, safetySettings });
+        const result = await lessonChat.sendMessage(lessonPrompt);
+        const lessonText = result.response.text();
+
+        try {
+          const sanitizedLessonText = lessonText
+            .replace(/^```json\n|\n```$/g, '')
+            .replace(/[\x00-\x1F\x7F-\x9F]/g, '')
+            .replace(/\n/g, '\\n')
+            .replace(/\t/g, '\\t');
+          const lessonContent: LessonContent = JSON.parse(sanitizedLessonText);
+          generatedLessons.push({ title: lessonTitle, ...lessonContent });
+        } catch (error) {
+          console.error(`Failed to parse content for lesson: "${lessonTitle}"`, error);
+          console.error(`Raw lesson text: ${lessonText}`);
+          generatedLessons.push({ title: lessonTitle, content: "Error: Failed to generate content for this lesson.", quiz: { questions: [] } });
         }
-        finalChapters.push({ title: chapterOutline.chapterTitle, lessons: generatedLessons });
+      }
+      finalChapters.push({ title: chapterOutline.chapterTitle, lessons: generatedLessons });
     }
 
     // ASSEMBLE FINAL PAYLOAD
     const finalPayload = {
-        originalPrompt: userPrompt,
-        originalChapterCount: chapters,
-        originalLessonsPerChapter: lessons_per_chapter,
-        difficulty: difficulty,
-        aiGeneratedCourse: { title: courseOutline.courseTitle, difficulty: difficulty, chapters: finalChapters }
+      originalPrompt: userPrompt,
+      originalChapterCount: chapters,
+      originalLessonsPerChapter: lessons_per_chapter,
+      difficulty: difficulty,
+      aiGeneratedCourse: { title: courseOutline.courseTitle, difficulty: difficulty, chapters: finalChapters }
     };
-    
+
     return NextResponse.json(finalPayload, { status: 200 });
 
   } catch (error) {

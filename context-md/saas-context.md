@@ -51,3 +51,10 @@ This file documents the available pricing plans our project. Each plan includes 
 
 
 ---
+
+| Plan Name    | Max Courses | Max Chapters          | Max LEssons per chapter
+| ------------ | ----------- | --------------------- | --------------------- | 
+| **Free**     | 1           | **3**                 | **3**                 |
+| **Basic**    | 5           | **5**                 | **4**                 | 
+| **Pro**      | 15          | **10**                 | **5**                 | 
+| **Ultimate** | 50          | **20**                | **10**                 |

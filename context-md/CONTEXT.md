@@ -96,6 +96,7 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 │   │   ├── PricingClientPage.tsx
 │   │   └── page.tsx
 │   └── twitter-image.png
+├── build.log
 ├── components
 │   ├── analytics
 │   │   ├── CourseProgressPieChart.tsx
@@ -113,6 +114,7 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 │   │   ├── DashboardLayout.tsx
 │   │   ├── ManageSubscriptionButton.tsx
 │   │   ├── SearchInput.tsx
+│   │   ├── SearchInputLoading.tsx
 │   │   ├── UserPlanCard.tsx
 │   │   └── courses
 │   │       ├── CourseLayoutClient.tsx
@@ -203,7 +205,6 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 ├── utils
 │   └── pdfExport.ts
 └── vercel.json
-
 ## Important notes
 
 - this setup has a template landing page ,supabase auth already implemented and a protected route (dashboard) for authentiticated users
