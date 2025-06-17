@@ -1,4 +1,3 @@
-// app/dashboard/page.tsx
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { cookies } from 'next/headers';
@@ -25,9 +24,6 @@ import CourseCard, { type CourseForCard } from '@/components/dashboard/CourseCar
 import UserPlanCard from '@/components/dashboard/UserPlanCard';
 import ManageSubscriptionButton from "@/components/dashboard/ManageSubscriptionButton";
 
-// --- Type Definitions ---
-// These types now correctly reflect the shape of data returned by Supabase joins.
-// Supabase returns an array for linked tables, even for to-one relationships.
 interface Course {
   id: string;
   title: string;
@@ -51,14 +47,12 @@ interface SubscriptionWithPlan {
   plans: Plan | null;
 }
 
-// Accept searchParams for filtering
 export default async function DashboardPage({
   searchParams,
 }: {
   searchParams?: { [key: string]: string | undefined };
 }) {
   const cookieStore = cookies();
-  // Use the generated Database type for improved type safety
   const supabase = createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -77,8 +71,6 @@ export default async function DashboardPage({
   }
 
   const searchQuery = searchParams?.q || '';
-
-  // --- Data Fetching ---
 
   const { data: allPlans, error: plansError } = await supabase
     .from('plans')
@@ -152,7 +144,6 @@ export default async function DashboardPage({
   if (userCourses.length > 0) {
     const courseIds = userCourses.map(c => c.id);
 
-    // Fetch lessons with their related chapter's course_id
     const { data: lessonsData, error: lessonsError } = await supabase
       .from('lessons')
       .select('id, chapters(course_id)')
@@ -162,7 +153,6 @@ export default async function DashboardPage({
       console.error('Error fetching lessons:', lessonsError.message);
     } else if (lessonsData) {
       for (const lesson of lessonsData) {
-        // The related chapter is an object, not an array, for a to-one join.
         if (lesson.chapters?.course_id) {
           const courseId = lesson.chapters.course_id;
           totalLessonsByCourse[courseId] = (totalLessonsByCourse[courseId] || 0) + 1;
@@ -170,7 +160,6 @@ export default async function DashboardPage({
       }
     }
 
-    // Fetch progress with nested lesson and chapter data
     const { data: progressData, error: progressError } = await supabase
       .from('progress')
       .select('lessons(id, chapters(course_id))')
@@ -182,7 +171,6 @@ export default async function DashboardPage({
       console.error('Error fetching progress:', progressError.message);
     } else if (progressData) {
       for (const progressItem of progressData) {
-        // Check nested data exists before accessing it
         if (progressItem.lessons?.chapters?.course_id) {
           const courseId = progressItem.lessons.chapters.course_id;
           completedLessonsByCourse[courseId] = (completedLessonsByCourse[courseId] || 0) + 1;
@@ -230,7 +218,7 @@ export default async function DashboardPage({
         </p>
       </header>
 
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 px-4 md:px-0">
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 px-4 md:px-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Courses</CardTitle>
@@ -264,7 +252,7 @@ export default async function DashboardPage({
         />
       </section>
 
-      <section className="px-4 md:px-0">
+      <section className="px-4 md:px-6">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-semibold flex items-center">
             <LayoutGrid className="mr-3 h-6 w-6 text-purple-600" /> My Courses
@@ -285,7 +273,7 @@ export default async function DashboardPage({
         </div>
 
         {courses.length > 0 ? (
-          <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
             {courses.map((course) => (
               <CourseCard key={course.id} course={course} isFreePlan={isFreePlan} />
             ))}

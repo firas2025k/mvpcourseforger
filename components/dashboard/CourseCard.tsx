@@ -181,7 +181,7 @@ export default function CourseCard({ course,isFreePlan }: CourseCardProps) {
               disabled={isExportingPdf}
             >
               {isExportingPdf ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileDown className="mr-2 h-4 w-4" />} 
-              {isExportingPdf ? 'Exporting...' : 'Export PDF'}
+              {isExportingPdf ? 'Exporting...' : 'Export'}
             </Button>
           )}
         </div>

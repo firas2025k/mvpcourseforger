@@ -1,4 +1,3 @@
-// app/dashboard/DashboardLayout.tsx
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
@@ -12,6 +11,19 @@ import { Button } from "@/components/ui/button";
 import logoIcon from "@/public/assets/images/logo.png";
 import { SearchInput } from "@/components/dashboard/SearchInput";
 import {
+  CircleUser,
+  Menu,
+  X,
+  LogOut,
+  LayoutDashboard,
+  Settings,
+  BookMarked,
+  PlusCircle,
+  DollarSign,
+} from "lucide-react";
+import Image from "next/image";
+import { cn } from "@/lib/utils";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -19,24 +31,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-  SheetHeader,
-  SheetTitle,
-  SheetClose,
-} from "@/components/ui/sheet";
-import {
-  CircleUser,
-  Menu,
-  LogOut,
-  LayoutDashboard,
-  Settings,
-  BookMarked,
-  BriefcaseBusiness,
-} from "lucide-react";
-import Image from "next/image";
 
 interface NavLink {
   href: string;
@@ -48,6 +42,7 @@ const navLinks: NavLink[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/dashboard/analytics", label: "Analytics", icon: BookMarked },
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
+  { href: "/pricing", label: "Pricing", icon: DollarSign },
 ];
 
 export default function DashboardLayout({
@@ -63,12 +58,12 @@ export default function DashboardLayout({
   );
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const showSearch = pathname === "/dashboard";
+
   useEffect(() => {
     const getUser = async () => {
-      const {
-        data: { user: currentUser },
-      } = await supabase.auth.getUser();
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
       setUser(currentUser);
       setLoading(false);
     };
@@ -80,126 +75,96 @@ export default function DashboardLayout({
     router.push("/auth/login");
   };
 
-  const UserAvatar = () => <CircleUser className="h-5 w-5" />;
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
 
+  const UserAvatar = () => <CircleUser className={cn("h-5 w-5", !isSidebarOpen && "h-6 w-6")} />;
+  const UserName = () => <span className="font-medium">{user?.user_metadata?.name || "User"}</span>;
   const UserEmail = () => {
-    if (loading)
-      return <span className="text-sm text-muted-foreground">Loading...</span>;
+    if (loading) return <span className="text-sm text-muted-foreground">Loading...</span>;
     return (
-      <span className="text-sm font-medium truncate">
+      <span className="text-sm text-muted-foreground truncate max-w-[120px]">
         {user?.email || "User"}
       </span>
     );
   };
 
-  const UserName = () => {
-    if (loading) return null;
-    return (
-      <span className="text-xs text-muted-foreground truncate">
-        {user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User"}
-      </span>
-    );
-  };
-
   return (
-    <div className="flex min-h-screen w-full flex-col bg-background">
-      <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
-        {/* Main desktop navigation */}
-        <nav className="hidden flex-1 items-center gap-6 md:flex">
-          <Link
-            href="/dashboard"
-            className="flex items-center gap-2 text-lg font-semibold"
+    <div className="flex min-h-screen w-full flex-row bg-background">
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-50 flex flex-col border-r bg-background transition-all duration-300",
+          isSidebarOpen ? "w-64" : "w-16"
+        )}
+      >
+        <div className="flex items-center justify-between p-4 border-b">
+          {isSidebarOpen && (
+            <Link href="/dashboard" className="flex items-center gap-2">
+              <Image src={logoIcon} alt="Nexable Logo" width={132} height={32} />
+            </Link>
+          )}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleSidebar}
+            className="ml-auto"
           >
-            <Image src={logoIcon} alt="Nexable Logo" width={132} height={32} />
-          </Link>
+            {isSidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </Button>
+        </div>
+        <nav className="flex flex-col flex-1 gap-2 p-4">
           {navLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className={`text-sm font-medium transition-colors hover:text-foreground ${
+              className={cn(
+                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                 pathname === link.href
-                  ? "text-foreground"
-                  : "text-muted-foreground"
-              }`}
+                  ? "bg-secondary text-primary"
+                  : "text-muted-foreground hover:bg-secondary hover:text-primary",
+                !isSidebarOpen && "justify-center"
+              )}
             >
-              {link.label}
+              <link.icon className="h-5 w-5 flex-shrink-0" />
+              {isSidebarOpen && <span>{link.label}</span>}
             </Link>
           ))}
-        </nav>
-
-        {/* Mobile sheet navigation */}
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button
-              variant="outline"
-              size="icon"
-              className="shrink-0 md:hidden"
-            >
-              <Menu className="h-5 w-5" />
-              <span className="sr-only">Toggle navigation menu</span>
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="flex flex-col">
-            <SheetHeader className="px-5 pt-5 pb-2.5">
-              <SheetTitle className="text-lg font-semibold">
-                <Link href="/dashboard" className="flex items-center gap-2">
-                  <Image
-                    src={logoIcon}
-                    alt="Nexable Logo"
-                    width={124}
-                    height={24}
-                  />
-                </Link>
-              </SheetTitle>
-              <SheetClose asChild className="ml-auto">
-                <Button variant="ghost" size="sm" className="rounded-md">
-                  Close
-                </Button>
-              </SheetClose>
-            </SheetHeader>
-            <div className="p-4 border-y">
-              {showSearch && (
-                <div className="hidden md:block">
-                  <Suspense>
-                    <SearchInput />
-                  </Suspense>
-                </div>
-              )}
-            </div>
-            <nav className="grid gap-3 px-5 pt-2.5 text-lg font-medium">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={`flex items-center gap-3 rounded-md px-3 py-2 transition-all hover:bg-secondary hover:text-primary ${
-                    pathname === link.href
-                      ? "bg-secondary text-primary"
-                      : "text-black"
-                  }`}
-                >
-                  <link.icon className="h-4 w-4" />
-                  {link.label}
-                </Link>
-              ))}
-            </nav>
-          </SheetContent>
-        </Sheet>
-
-        {/* Right-aligned elements */}
-        <div className="flex flex-1 items-center justify-end gap-4">
-          <div className="hidden md:block">
-            {showSearch && (
-              <div className="hidden md:block">
-                <Suspense>
-                  <SearchInput />
-                </Suspense>
-              </div>
+          <Link
+            href="/dashboard/courses/new"
+            className={cn(
+              "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors bg-purple-600 text-white hover:bg-purple-700",
+              !isSidebarOpen && "justify-center"
             )}
-          </div>
-          <ThemeSwitcher />
+          >
+            <PlusCircle className="h-5 w-5 flex-shrink-0" />
+            {isSidebarOpen && <span>Create New Course</span>}
+          </Link>
+        </nav>
+        
+      </aside>
+      <div
+        className={cn(
+          "flex flex-col flex-1 transition-all duration-300",
+          isSidebarOpen ? "ml-64" : "ml-16"
+        )}
+      >
+        <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
+          <div className="flex flex-1 items-center justify-end gap-4">
+            {showSearch && (
+              <Suspense>
+                <SearchInput />
+              </Suspense>
+            )}
+            <ThemeSwitcher />
+            <div className="border-t p-4">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="secondary" size="icon" className="rounded-full">
+              <Button
+                variant="secondary"
+                size="icon"
+                className={cn("rounded-full", !isSidebarOpen && "p-1")}
+              >
                 <UserAvatar />
                 <span className="sr-only">Toggle user menu</span>
               </Button>
@@ -232,16 +197,19 @@ export default function DashboardLayout({
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          
         </div>
-      </header>
-      <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8 px-6 sm:px-8">
-        {children}
-      </main>
-      <footer className="border-t">
-        <div className="container mx-auto py-4 px-4 md:px-6 text-center text-sm text-muted-foreground">
-          &copy; {new Date().getFullYear()} Nexable. All rights reserved.
-        </div>
-      </footer>
+          </div>
+        </header>
+        <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-6" data-sidebar-open={isSidebarOpen.toString()}>
+          {children}
+        </main>
+        <footer className="border-t">
+          <div className="container mx-auto py-4 px-4 md:px-6 text-center text-sm text-muted-foreground">
+            © {new Date().getFullYear()} Nexable. All rights reserved.
+          </div>
+        </footer>
+      </div>
     </div>
   );
 }
