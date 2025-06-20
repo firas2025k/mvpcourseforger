@@ -16,167 +16,194 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 
 ## ✨ MVP Features (Single Role)
 
-- ✅ **Authentication:** Email and Google SSO via Supabase Auth
-- 🧠 **AI Course Generation:** Prompt-based Multi-langual course creation using Gemini API
-- 🗃️ **Course Management:** Create, edit, delete courses
-- 📚 **Learning Interface:** Dashboard with progress tracking and quizzes
-- 📊 **Admin Dashboard:** Basic analytics for users with active subscriptions
-- 💳 **Payments Integration:** Stripe checkout with course limits enforced
-  - Free Plan → 1 course
-  - Paid Plans → Multiple courses
-- 👤 **Profile & Settings:** User can manage their personal data and preferences
+- ✅ Authentication: Email and Google SSO via Supabase Auth
+
+- 🧠 AI Course Generation: Prompt-based multilingual course creation using Gemini API
+
+- 🗃️ Course Management: Create, edit, delete, preview, archive courses
+
+- ✍️ Lesson Editor: Notion-style rich-text editor with autosave
+
+- 📚 Learning Interface: Dashboard with enrolled courses, progress tracking, lesson completion, and quizzes
+
+- 📊 Admin Dashboard: Basic analytics for users with active subscriptions (lesson completion, course progress)
+
+- 💳 Payments Integration: Stripe checkout with course/chapter/lesson limits enforced based on plan
+
+Free Plan → 1 course, 3 chapters, 3 lessons/chapter
+
+Basic → 5 courses, 5 chapters, 4 lessons/chapter
+
+Pro → 15 courses, 8 chapters, 5 lessons/chapter
+
+Ultimate → 50 courses, 10 chapters, 6 lessons/chapter
+
+- 📂 PDF Export: Users can export courses as PDF
+
+- 🔍 Search & Filtering: Search courses and lessons, with loading fallback
+
+- 🌍 Internationalization: Language switcher and i18n support
+
+- 🧾 Profile & Settings: Manage user info and subscription details
+
+- 🧠 Plan Enforcement (Frontend + API): Validates limits before course generation
+
 .
 ├── README.md
 ├── actions
-│   └── search.ts
+│   └── search.ts
 ├── app
-│   ├── actions
-│   │   └── search.ts
-│   ├── api
-│   │   ├── complete-course
-│   │   │   └── route.ts
-│   │   ├── course
-│   │   │   └── [courseId]
-│   │   │       └── route.ts
-│   │   ├── course-details
-│   │   │   └── [courseId]
-│   │   │       └── route.ts
-│   │   ├── export-course-pdf
-│   │   │   └── route.ts
-│   │   ├── generate-course
-│   │   │   └── route.ts
-│   │   ├── lesson-content
-│   │   │   └── route.ts
-│   │   ├── lesson-progress
-│   │   │   └── route.ts
-│   │   ├── save-course
-│   │   │   └── route.ts
-│   │   └── stripe
-│   │       ├── create-checkout-session
-│   │       │   └── route.ts
-│   │       ├── create-portal-session
-│   │       │   └── route.ts
-│   │       └── webhook
-│   │           └── route.ts
-│   ├── auth
-│   │   ├── confirm
-│   │   │   └── route.ts
-│   │   ├── error
-│   │   │   └── page.tsx
-│   │   ├── forgot-password
-│   │   │   └── page.tsx
-│   │   ├── login
-│   │   │   └── page.tsx
-│   │   ├── sign-up
-│   │   │   └── page.tsx
-│   │   ├── sign-up-success
-│   │   │   └── page.tsx
-│   │   └── update-password
-│   │       └── page.tsx
-│   ├── dashboard
-│   │   ├── analytics
-│   │   │   └── page.tsx
-│   │   ├── courses
-│   │   │   ├── [courseId]
-│   │   │   │   └── page.tsx
-│   │   │   ├── new
-│   │   │   │   └── page.tsx
-│   │   │   └── preview
-│   │   │       └── page.tsx
-│   │   ├── layout.tsx
-│   │   ├── page.tsx
-│   │   └── settings
-│   │       └── page.tsx
-│   ├── favicon.ico
-│   ├── globals.css
-│   ├── layout.tsx
-│   ├── opengraph-image.png
-│   ├── page.tsx
-│   ├── pricing
-│   │   ├── PricingClientPage.tsx
-│   │   └── page.tsx
-│   └── twitter-image.png
+│   ├── actions
+│   │   └── search.ts
+│   ├── api
+│   │   ├── complete-course
+│   │   │   └── route.ts
+│   │   ├── course
+│   │   │   └── [courseId]
+│   │   │   └── route.ts
+│   │   ├── course-details
+│   │   │   └── [courseId]
+│   │   │   └── route.ts
+│   │   ├── export-course-pdf
+│   │   │   └── route.ts
+│   │   ├── generate-course
+│   │   │   └── route.ts
+│   │   ├── lesson-content
+│   │   │   └── route.ts
+│   │   ├── lesson-progress
+│   │   │   └── route.ts
+│   │   ├── save-course
+│   │   │   └── route.ts
+│   │   └── stripe
+│   │   ├── create-checkout-session
+│   │   │   └── route.ts
+│   │   ├── create-portal-session
+│   │   │   └── route.ts
+│   │   └── webhook
+│   │   └── route.ts
+│   ├── auth
+│   │   ├── confirm
+│   │   │   └── route.ts
+│   │   ├── error
+│   │   │   └── page.tsx
+│   │   ├── forgot-password
+│   │   │   └── page.tsx
+│   │   ├── login
+│   │   │   └── page.tsx
+│   │   ├── sign-up
+│   │   │   └── page.tsx
+│   │   ├── sign-up-success
+│   │   │   └── page.tsx
+│   │   └── update-password
+│   │   └── page.tsx
+│   ├── dashboard
+│   │   ├── analytics
+│   │   │   └── page.tsx
+│   │   ├── courses
+│   │   │   ├── [courseId]
+│   │   │   │   └── page.tsx
+│   │   │   ├── new
+│   │   │   │   └── page.tsx
+│   │   │   └── preview
+│   │   │   └── page.tsx
+│   │   ├── dashboard.css
+│   │   ├── layout.tsx
+│   │   ├── page.tsx
+│   │   └── settings
+│   │   └── page.tsx
+│   ├── favicon.ico
+│   ├── globals.css
+│   ├── layout.tsx
+│   ├── opengraph-image.png
+│   ├── page.tsx
+│   ├── pricing
+│   │   ├── PricingClientPage.tsx
+│   │   └── page.tsx
+│   └── twitter-image.png
 ├── build.log
 ├── components
-│   ├── analytics
-│   │   ├── CourseProgressPieChart.tsx
-│   │   └── LessonsCompletionBarChart.tsx
-│   ├── auth
-│   │   ├── AuthPageLayout.tsx
-│   │   ├── auth-button.tsx
-│   │   ├── forgot-password-form.tsx
-│   │   ├── login-form.tsx
-│   │   ├── logout-button.tsx
-│   │   ├── sign-up-form.tsx
-│   │   └── update-password-form.tsx
-│   ├── dashboard
-│   │   ├── CourseCard.tsx
-│   │   ├── DashboardLayout.tsx
-│   │   ├── ManageSubscriptionButton.tsx
-│   │   ├── SearchInput.tsx
-│   │   ├── SearchInputLoading.tsx
-│   │   ├── UserPlanCard.tsx
-│   │   └── courses
-│   │       ├── CourseLayoutClient.tsx
-│   │       ├── LessonEditor.tsx
-│   │       └── RichTextEditor.tsx
-│   ├── landing
-│   │   ├── Footer.tsx
-│   │   └── Navbar.tsx
-│   ├── next-logo.tsx
-│   ├── shared
-│   │   └── LanguageSwitcher.tsx
-│   ├── supabase-logo.tsx
-│   ├── theme-switcher.tsx
-│   └── ui
-│       ├── accordion.tsx
-│       ├── alert-dialog.tsx
-│       ├── avatar.tsx
-│       ├── badge.tsx
-│       ├── button.tsx
-│       ├── card.tsx
-│       ├── checkbox.tsx
-│       ├── dialog.tsx
-│       ├── dropdown-menu.tsx
-│       ├── input.tsx
-│       ├── label.tsx
-│       ├── progress.tsx
-│       ├── radio-group.tsx
-│       ├── resizable.tsx
-│       ├── scroll-area.tsx
-│       ├── select.tsx
-│       ├── separator.tsx
-│       ├── sheet.tsx
-│       ├── sonner.tsx
-│       ├── tabs.tsx
-│       ├── textarea.tsx
-│       └── tooltip.tsx
+│   ├── analytics
+│   │   ├── CourseProgressPieChart.tsx
+│   │   └── LessonsCompletionBarChart.tsx
+│   ├── auth
+│   │   ├── AuthPageLayout.tsx
+│   │   ├── auth-button.tsx
+│   │   ├── forgot-password-form.tsx
+│   │   ├── login-form.tsx
+│   │   ├── logout-button.tsx
+│   │   ├── sign-up-form.tsx
+│   │   └── update-password-form.tsx
+│   ├── dashboard
+│   │   ├── CourseCard.tsx
+│   │   ├── DashboardLayout.tsx
+│   │   ├── ManageSubscriptionButton.tsx
+│   │   ├── SearchInput.tsx
+│   │   ├── SearchInputLoading.tsx
+│   │   ├── UserPlanCard.tsx
+│   │   └── courses
+│   │   ├── CourseLayoutClient.tsx
+│   │   ├── LessonEditor.tsx
+│   │   └── RichTextEditor.tsx
+│   ├── landing
+│   │   ├── Footer.tsx
+│   │   └── Navbar.tsx
+│   ├── next-logo.tsx
+│   ├── shared
+│   │   └── LanguageSwitcher.tsx
+│   ├── supabase-logo.tsx
+│   ├── theme-switcher.tsx
+│   └── ui
+│   ├── accordion.tsx
+│   ├── alert-dialog.tsx
+│   ├── avatar.tsx
+│   ├── badge.tsx
+│   ├── breadcrumb.tsx
+│   ├── button.tsx
+│   ├── card.tsx
+│   ├── checkbox.tsx
+│   ├── dialog.tsx
+│   ├── dropdown-menu.tsx
+│   ├── input.tsx
+│   ├── label.tsx
+│   ├── progress.tsx
+│   ├── radio-group.tsx
+│   ├── resizable.tsx
+│   ├── scroll-area.tsx
+│   ├── select.tsx
+│   ├── separator.tsx
+│   ├── sheet.tsx
+│   ├── sonner.tsx
+│   ├── tabs.tsx
+│   ├── textarea.tsx
+│   └── tooltip.tsx
 ├── components.json
 ├── context-md
-│   ├── Analytics_page.md
-│   ├── CONTEXT.md
-│   ├── DEPLOYMENT.md
-│   ├── USER_FLOW.md
-│   ├── course-gen-context.md
-│   ├── database.md
-│   ├── errors.md
-│   ├── query.md
-│   ├── results.md
-│   ├── saas-context.md
-│   └── working-code.md
+│   ├── Analytics_page.md
+│   ├── CONTEXT.md
+│   ├── DEPLOYMENT.md
+│   ├── USER_FLOW.md
+│   ├── course-gen-context.md
+│   ├── database.md
+│   ├── errors.md
+│   ├── nexable-context.md
+│   ├── nexable-userflow.md
+│   ├── query.md
+│   ├── results.md
+│   ├── saas-context.md
+│   └── working-code.md
 ├── eslint.config.mjs
 ├── hooks
-│   ├── useAutoSave.ts
-│   └── useDebounce.ts
+│   ├── useAutoSave.ts
+│   └── useDebounce.ts
 ├── html2pdf.d.ts
 ├── lib
-│   ├── gemini.ts
-│   ├── stripe.ts
-│   ├── supabase
-│   │   ├── client.ts
-│   │   ├── middleware.ts
-│   │   └── server.ts
-│   └── utils.ts
+│   ├── gemini.ts
+│   ├── stripe.ts
+│   ├── supabase
+│   │   ├── client.ts
+│   │   ├── middleware.ts
+│   │   └── server.ts
+│   └── utils.ts
 ├── middleware.ts
 ├── next-env.d.ts
 ├── next-i18next.config.js
@@ -185,26 +212,27 @@ This project is a SaaS-based Learning Management System (LMS) MVP . It supports 
 ├── package.json
 ├── postcss.config.mjs
 ├── public
-│   ├── assets
-│   │   └── images
-│   │       ├── banner.png
-│   │       ├── logo-icon.png
-│   │       └── logo.png
-│   └── locales
-│       ├── en
-│       │   └── common.json
-│       └── fr
-│           └── common.json
+│   ├── assets
+│   │   └── images
+│   │   ├── banner.png
+│   │   ├── logo-icon.png
+│   │   └── logo.png
+│   └── locales
+│   ├── en
+│   │   └── common.json
+│   └── fr
+│   └── common.json
 ├── tailwind.config.ts
 ├── tsconfig.json
 ├── types
-│   ├── course.ts
-│   ├── index.ts
-│   ├── pdf-types.ts
-│   └── supabase.ts
+│   ├── course.ts
+│   ├── index.ts
+│   ├── pdf-types.ts
+│   └── supabase.ts
 ├── utils
-│   └── pdfExport.ts
+│   └── pdfExport.ts
 └── vercel.json
+
 ## Important notes
 
 - this setup has a template landing page ,supabase auth already implemented and a protected route (dashboard) for authentiticated users

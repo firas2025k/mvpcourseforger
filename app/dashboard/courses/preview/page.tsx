@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation"; // Or next/router if using Pages Router
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -25,11 +25,15 @@ import {
   FileText,
   Save,
   ChevronRight,
+  File,
+  User,
+  Hash,
+  Sparkles,
 } from "lucide-react";
 import Link from "next/link";
-import { toast } from "sonner"; // Import toast from sonner
+import { toast } from "sonner";
 
-// Interfaces matching the structure from /api/generate-course
+// Enhanced interfaces to support PDF-sourced courses
 interface QuizQuestion {
   question: string;
   choices: string[];
@@ -38,9 +42,8 @@ interface QuizQuestion {
 
 interface AiLesson {
   title: string;
-  content: string; // We might not display full content here, but it's part of the structure
+  content: string;
   quiz?: {
-    // Quiz is optional
     questions: QuizQuestion[];
   };
 }
@@ -50,55 +53,49 @@ interface AiChapter {
   lessons: AiLesson[];
 }
 
-// This is the structure of the AI-generated part of the course
 interface GeminiJsonOutput {
-  title: string; // Title from AI
-  difficulty: "beginner" | "intermediate" | "advanced"; // Difficulty from AI (echoed)
+  title: string;
+  difficulty: "beginner" | "intermediate" | "advanced";
   chapters: AiChapter[];
 }
 
-// This is the full payload expected from sessionStorage
+// Enhanced interface to support PDF source information
 interface GeneratedCoursePayload {
   originalPrompt: string;
   originalChapterCount: number;
   originalLessonsPerChapter: number;
-  difficulty: "beginner" | "intermediate" | "advanced"; // Original difficulty from user form
+  difficulty: "beginner" | "intermediate" | "advanced";
+  sourceDocument?: {
+    filename: string;
+    title?: string;
+    author?: string;
+    pageCount: number;
+  };
   aiGeneratedCourse: GeminiJsonOutput;
 }
 
-// Mock data has been removed as the page now fetches data from sessionStorage.
-
-export default function CoursePreviewPage() {
+export default function EnhancedCoursePreviewPage() {
   const router = useRouter();
-  // In a real scenario, this data would come from props, context, or a store
   const [courseData, setCourseData] = useState<GeneratedCoursePayload | null>(
     null
-  ); // Initialize with null
+  );
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    // Retrieve course data from sessionStorage
     const storedData = sessionStorage.getItem("generatedCourseData");
     if (storedData) {
       try {
         const parsedData = JSON.parse(storedData) as GeneratedCoursePayload;
         setCourseData(parsedData);
-        // Optional: Clean up sessionStorage after retrieving the data
-        // sessionStorage.removeItem('generatedCourseData');
       } catch (error) {
         console.error(
           "Failed to parse course data from sessionStorage:",
           error
         );
-        // Handle error, e.g., redirect or show an error message
-        setCourseData(null); // Or set to MOCK_COURSE_DATA for fallback during dev
+        setCourseData(null);
       }
     } else {
-      // Handle case where no data is found, maybe redirect or show placeholder
-      console.warn(
-        "No course data found in sessionStorage. Displaying mock data or empty state."
-      );
-      // setCourseData(MOCK_COURSE_DATA); // Fallback to mock data if needed for development
+      console.warn("No course data found in sessionStorage.");
     }
   }, []);
 
@@ -126,11 +123,8 @@ export default function CoursePreviewPage() {
         toast.success(`Course saved successfully!`, {
           description: `Course ID: ${result.courseId}`,
         });
-        // Optionally, redirect the user, e.g., to the dashboard or the new course page
-        // router.push('/dashboard/courses');
-        // Or clear sessionStorage and allow generating a new course
         sessionStorage.removeItem("generatedCourseData");
-        router.push("/dashboard"); // Redirect to create new after saving
+        router.push("/dashboard");
       } else {
         console.error("Failed to save course:", result);
         toast.error(`Error saving course:`, {
@@ -145,6 +139,9 @@ export default function CoursePreviewPage() {
     }
     setIsSaving(false);
   };
+
+  const isPdfSourced = courseData?.sourceDocument !== undefined;
+  const isPromptSourced = !isPdfSourced;
 
   if (!courseData) {
     return (
@@ -167,15 +164,36 @@ export default function CoursePreviewPage() {
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back
         </Button>
-        {/* Add other actions if needed, e.g., Edit button */}
       </div>
 
       <Card className="shadow-lg">
         <CardHeader className="pb-4">
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
-            <CardTitle className="text-3xl font-bold tracking-tight">
-              {courseData.aiGeneratedCourse.title}
-            </CardTitle>
+            <div className="flex-1">
+              <CardTitle className="text-3xl font-bold tracking-tight">
+                {courseData.aiGeneratedCourse.title}
+              </CardTitle>
+
+              {/* Source Information */}
+              <div className="mt-3 space-y-2">
+                {isPdfSourced && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <File className="h-4 w-4" />
+                    <span>
+                      Generated from PDF: {courseData.sourceDocument!.filename}
+                    </span>
+                  </div>
+                )}
+
+                {isPromptSourced && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Sparkles className="h-4 w-4" />
+                    <span>Generated from prompt</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
             <Badge
               variant={
                 courseData.difficulty === "beginner"
@@ -186,10 +204,10 @@ export default function CoursePreviewPage() {
               }
               className="capitalize text-sm whitespace-nowrap"
             >
-              {courseData.difficulty}{" "}
-              {/* Displaying original difficulty from form */}
+              {courseData.difficulty}
             </Badge>
           </div>
+
           <CardDescription className="mt-1 text-muted-foreground">
             Review the generated course structure below. You can save it once
             you are satisfied.
@@ -197,6 +215,74 @@ export default function CoursePreviewPage() {
         </CardHeader>
 
         <CardContent className="pt-2">
+          {/* PDF Source Metadata */}
+          {isPdfSourced && courseData.sourceDocument && (
+            <>
+              <Card className="bg-muted/30 mb-6">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <File className="h-5 w-5" />
+                    Source Document
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                    <div className="flex items-center gap-2">
+                      <FileText className="h-4 w-4 text-muted-foreground" />
+                      <div>
+                        <p className="font-medium">Filename</p>
+                        <p className="text-muted-foreground">
+                          {courseData.sourceDocument.filename}
+                        </p>
+                      </div>
+                    </div>
+
+                    {courseData.sourceDocument.author && (
+                      <div className="flex items-center gap-2">
+                        <User className="h-4 w-4 text-muted-foreground" />
+                        <div>
+                          <p className="font-medium">Author</p>
+                          <p className="text-muted-foreground">
+                            {courseData.sourceDocument.author}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex items-center gap-2">
+                      <Hash className="h-4 w-4 text-muted-foreground" />
+                      <div>
+                        <p className="font-medium">Pages</p>
+                        <p className="text-muted-foreground">
+                          {courseData.sourceDocument.pageCount}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </>
+          )}
+
+          {/* Original Prompt for prompt-based courses */}
+          {isPromptSourced && (
+            <>
+              <Card className="bg-muted/30 mb-6">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Sparkles className="h-5 w-5" />
+                    Original Prompt
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <p className="text-sm text-muted-foreground italic">
+                    "{courseData.originalPrompt}"
+                  </p>
+                </CardContent>
+              </Card>
+            </>
+          )}
+
           <Separator className="my-4" />
           <h3 className="text-xl font-semibold mb-3 text-foreground">
             Course Outline
@@ -243,6 +329,52 @@ export default function CoursePreviewPage() {
               )
             )}
           </Accordion>
+
+          {/* Course Statistics */}
+          <Card className="bg-muted/30 mt-6">
+            <CardContent className="pt-6">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                <div>
+                  <p className="text-2xl font-bold text-primary">
+                    {courseData.aiGeneratedCourse.chapters.length}
+                  </p>
+                  <p className="text-sm text-muted-foreground">Chapters</p>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-primary">
+                    {courseData.aiGeneratedCourse.chapters.reduce(
+                      (total, chapter) => total + chapter.lessons.length,
+                      0
+                    )}
+                  </p>
+                  <p className="text-sm text-muted-foreground">Lessons</p>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-primary">
+                    {courseData.aiGeneratedCourse.chapters.reduce(
+                      (total, chapter) =>
+                        total +
+                        chapter.lessons.reduce(
+                          (lessonTotal, lesson) =>
+                            lessonTotal + (lesson.quiz?.questions.length || 0),
+                          0
+                        ),
+                      0
+                    )}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Quiz Questions
+                  </p>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-primary capitalize">
+                    {courseData.difficulty}
+                  </p>
+                  <p className="text-sm text-muted-foreground">Difficulty</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </CardContent>
 
         <CardFooter className="border-t pt-6 mt-4 flex-col items-stretch gap-3 sm:flex-row sm:justify-end">
