@@ -24,6 +24,9 @@ lessons_per_chapter integer,
 is_published boolean DEFAULT false,
 is_archived boolean DEFAULT false,
 created_at timestamp with time zone DEFAULT now(),
+source_type character varying DEFAULT 'prompt'::character varying,
+source_document_name character varying,
+source_document_metadata jsonb,
 CONSTRAINT courses_pkey PRIMARY KEY (id),
 CONSTRAINT courses_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
 );

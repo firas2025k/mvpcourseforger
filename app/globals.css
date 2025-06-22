@@ -1,6 +1,6 @@
 /* globals.css */
-@import 'highlight.js/styles/github-dark.css';
-
+@import "highlight.js/styles/github-dark.css";
+@import "./course-content-styles.css";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -11,8 +11,8 @@ body {
 
 @layer base {
   :root {
-    --font-geist-sans: 'Geist Sans', sans-serif;
-    --font-geist-mono: 'Geist Mono', monospace;
+    --font-geist-sans: "Geist Sans", sans-serif;
+    --font-geist-mono: "Geist Mono", monospace;
     --background: 0 0% 100%;
     --foreground: 0 0% 3.9%;
     --card: 0 0% 100%;
@@ -21,10 +21,10 @@ body {
     --popover-foreground: 0 0% 3.9%;
     --primary: 271 81% 56%; /* Tailwind purple-600 */
     --primary-foreground: 0 0% 98%;
-    
+
     --secondary: 0 0% 96.1%; /* Current light gray secondary */
     --secondary-foreground: 0 0% 9%;
-    
+
     /* --- NEW/MODIFIED FOR TOASTS --- */
     --info-toast-bg: 270 50% 90%; /* A very light, muted purple for info toasts */
     --info-toast-text: 270 50% 20%; /* Dark text for info toasts */
@@ -56,7 +56,7 @@ body {
     --popover-foreground: 0 0% 98%;
     --primary: 275 96% 76%; /* Tailwind purple-400 for dark mode */
     --primary-foreground: 0 0% 9%;
-    
+
     --secondary: 0 0% 14.9%; /* Current dark mode secondary */
     --secondary-foreground: 0 0% 98%;
 
