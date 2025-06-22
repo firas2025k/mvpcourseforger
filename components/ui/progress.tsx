@@ -1,18 +1,18 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import * as ProgressPrimitive from "@radix-ui/react-progress"
+import * as React from "react";
+import * as ProgressPrimitive from "@radix-ui/react-progress";
+import { cn } from "@/lib/utils";
 
-import { cn } from "@/lib/utils"
-
+// 1. Add 'indicatorClassName' to your props type
 type ProgressProps = React.ComponentProps<typeof ProgressPrimitive.Root> & {
-  color?: string; // Add optional color prop to override the default
+  indicatorClassName?: string;
 };
 
 function Progress({
   className,
   value,
-  color,
+  indicatorClassName, // 2. Destructure the new prop
   ...props
 }: ProgressProps) {
   return (
@@ -26,14 +26,15 @@ function Progress({
     >
       <ProgressPrimitive.Indicator
         data-slot="progress-indicator"
+        // 3. Merge the new prop with the existing classes
         className={cn(
-          "h-full w-full flex-1 transition-all",
-          color ? `bg-[${color}]` : "bg-primary" // Use color prop or fallback to bg-primary
+          "h-full w-full flex-1 bg-primary transition-all",
+          indicatorClassName // This will add your "bg-purple-600" class
         )}
         style={{ transform: `translateX(-${100 - (value || 0)}%)` }}
       />
     </ProgressPrimitive.Root>
-  )
+  );
 }
 
-export { Progress }
+export { Progress };

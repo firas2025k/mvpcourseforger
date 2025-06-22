@@ -20,6 +20,7 @@ import {
   BookMarked,
   PlusCircle,
   DollarSign,
+  Search,
 } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
@@ -63,7 +64,9 @@ export default function DashboardLayout({
 
   useEffect(() => {
     const getUser = async () => {
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      const {
+        data: { user: currentUser },
+      } = await supabase.auth.getUser();
       setUser(currentUser);
       setLoading(false);
     };
@@ -79,10 +82,15 @@ export default function DashboardLayout({
     setIsSidebarOpen(!isSidebarOpen);
   };
 
-  const UserAvatar = () => <CircleUser className={cn("h-5 w-5", !isSidebarOpen && "h-6 w-6")} />;
-  const UserName = () => <span className="font-medium">{user?.user_metadata?.name || "User"}</span>;
+  const UserAvatar = () => (
+    <CircleUser className={cn("h-5 w-5", !isSidebarOpen && "h-6 w-6")} />
+  );
+  const UserName = () => (
+    <span className="font-medium">{user?.user_metadata?.name || "User"}</span>
+  );
   const UserEmail = () => {
-    if (loading) return <span className="text-sm text-muted-foreground">Loading...</span>;
+    if (loading)
+      return <span className="text-sm text-muted-foreground">Loading...</span>;
     return (
       <span className="text-sm text-muted-foreground truncate max-w-[120px]">
         {user?.email || "User"}
@@ -101,7 +109,12 @@ export default function DashboardLayout({
         <div className="flex items-center justify-between p-4 border-b">
           {isSidebarOpen && (
             <Link href="/dashboard" className="flex items-center gap-2">
-              <Image src={logoIcon} alt="Nexable Logo" width={132} height={32} />
+              <Image
+                src={logoIcon}
+                alt="Nexable Logo"
+                width={132}
+                height={32}
+              />
             </Link>
           )}
           <Button
@@ -110,7 +123,11 @@ export default function DashboardLayout({
             onClick={toggleSidebar}
             className="ml-auto"
           >
-            {isSidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            {isSidebarOpen ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Menu className="h-5 w-5" />
+            )}
           </Button>
         </div>
         <nav className="flex flex-col flex-1 gap-2 p-4">
@@ -133,7 +150,7 @@ export default function DashboardLayout({
           <Link
             href="/dashboard/courses/new"
             className={cn(
-              "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors bg-purple-600 text-white hover:bg-purple-700",
+              "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors bg-purple-600 text-white hover:bg-purple-700 mt-auto",
               !isSidebarOpen && "justify-center"
             )}
           >
@@ -141,7 +158,6 @@ export default function DashboardLayout({
             {isSidebarOpen && <span>Create New Course</span>}
           </Link>
         </nav>
-        
       </aside>
       <div
         className={cn(
@@ -153,55 +169,61 @@ export default function DashboardLayout({
           <div className="flex flex-1 items-center justify-end gap-4">
             {showSearch && (
               <Suspense>
-                <SearchInput />
+                <div className="relative flex-1 md:grow-0">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <SearchInput />
+                </div>
               </Suspense>
             )}
             <ThemeSwitcher />
-            <div className="border-t p-4">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="secondary"
-                size="icon"
-                className={cn("rounded-full", !isSidebarOpen && "p-1")}
-              >
-                <UserAvatar />
-                <span className="sr-only">Toggle user menu</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel className="flex flex-col">
-                <UserName />
-                <UserEmail />
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link href="/dashboard" className="flex items-center">
-                  <LayoutDashboard className="mr-2 h-4 w-4" />
-                  Dashboard
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/dashboard/settings" className="flex items-center">
-                  <Settings className="mr-2 h-4 w-4" />
-                  Settings
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={handleLogout}
-                className="cursor-pointer flex items-center"
-              >
-                <LogOut className="mr-2 h-4 w-4" />
-                Logout
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          
-        </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  className="rounded-full"
+                >
+                  <UserAvatar />
+                  <span className="sr-only">Toggle user menu</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel className="flex flex-col">
+                  <UserName />
+                  <UserEmail />
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/dashboard" className="flex items-center">
+                    <LayoutDashboard className="mr-2 h-4 w-4" />
+                    Dashboard
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link
+                    href="/dashboard/settings"
+                    className="flex items-center"
+                  >
+                    <Settings className="mr-2 h-4 w-4" />
+                    Settings
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={handleLogout}
+                  className="cursor-pointer flex items-center"
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </header>
-        <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-6" data-sidebar-open={isSidebarOpen.toString()}>
+        <main
+          className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-6"
+          data-sidebar-open={isSidebarOpen.toString()}
+        >
           {children}
         </main>
         <footer className="border-t">
