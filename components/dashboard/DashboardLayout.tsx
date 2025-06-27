@@ -21,6 +21,12 @@ import {
   PlusCircle,
   DollarSign,
   Search,
+  Sparkles,
+  Zap,
+  TrendingUp,
+  Star,
+  Crown,
+  GraduationCap,
 } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
@@ -37,13 +43,34 @@ interface NavLink {
   href: string;
   label: string;
   icon: React.ElementType;
+  gradient?: string;
 }
 
 const navLinks: NavLink[] = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/dashboard/analytics", label: "Analytics", icon: BookMarked },
-  { href: "/dashboard/settings", label: "Settings", icon: Settings },
-  { href: "/pricing", label: "Pricing", icon: DollarSign },
+  { 
+    href: "/dashboard", 
+    label: "Dashboard", 
+    icon: LayoutDashboard,
+    gradient: "from-blue-500 to-purple-600"
+  },
+  { 
+    href: "/dashboard/analytics", 
+    label: "Analytics", 
+    icon: TrendingUp,
+    gradient: "from-green-500 to-blue-600"
+  },
+  { 
+    href: "/dashboard/settings", 
+    label: "Settings", 
+    icon: Settings,
+    gradient: "from-slate-500 to-slate-700"
+  },
+  { 
+    href: "/pricing", 
+    label: "Pricing", 
+    icon: Crown,
+    gradient: "from-yellow-500 to-orange-600"
+  },
 ];
 
 export default function DashboardLayout({
@@ -83,14 +110,21 @@ export default function DashboardLayout({
   };
 
   const UserAvatar = () => (
-    <CircleUser className={cn("h-5 w-5", !isSidebarOpen && "h-6 w-6")} />
+    <div className="relative">
+      <CircleUser className={cn("h-5 w-5", !isSidebarOpen && "h-6 w-6")} />
+      <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full blur opacity-20 animate-pulse"></div>
+    </div>
   );
+  
   const UserName = () => (
-    <span className="font-medium">{user?.user_metadata?.name || "User"}</span>
+    <span className="font-semibold bg-gradient-to-r from-slate-900 to-blue-900 dark:from-slate-100 dark:to-blue-100 bg-clip-text text-transparent">
+      {user?.user_metadata?.name || "User"}
+    </span>
   );
+  
   const UserEmail = () => {
     if (loading)
-      return <span className="text-sm text-muted-foreground">Loading...</span>;
+      return <span className="text-sm text-muted-foreground animate-pulse">Loading...</span>;
     return (
       <span className="text-sm text-muted-foreground truncate max-w-[120px]">
         {user?.email || "User"}
@@ -99,29 +133,33 @@ export default function DashboardLayout({
   };
 
   return (
-    <div className="flex min-h-screen w-full flex-row bg-background">
+    <div className="flex min-h-screen w-full flex-row bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-slate-950 dark:via-slate-900 dark:to-blue-950">
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex flex-col border-r bg-background transition-all duration-300",
+          "fixed inset-y-0 left-0 z-50 flex flex-col border-r border-slate-200/60 dark:border-slate-700/60 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md transition-all duration-300 shadow-xl",
           isSidebarOpen ? "w-64" : "w-16"
         )}
       >
-        <div className="flex items-center justify-between p-4 border-b">
+        <div className="flex items-center justify-between p-4 border-b border-slate-200/60 dark:border-slate-700/60">
           {isSidebarOpen && (
-            <Link href="/dashboard" className="flex items-center gap-2">
-              <Image
-                src={logoIcon}
-                alt="Nexable Logo"
-                width={132}
-                height={32}
-              />
+            <Link href="/dashboard" className="flex items-center gap-3 group">
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-500 rounded-lg blur opacity-20 group-hover:opacity-40 transition-opacity duration-300"></div>
+                <Image
+                  src={logoIcon}
+                  alt="Nexable Logo"
+                  width={132}
+                  height={32}
+                  className="relative"
+                />
+              </div>
             </Link>
           )}
           <Button
             variant="ghost"
             size="icon"
             onClick={toggleSidebar}
-            className="ml-auto"
+            className="ml-auto hover:bg-slate-200/80 dark:hover:bg-slate-700/80 hover:scale-110 transition-all duration-200 rounded-full"
           >
             {isSidebarOpen ? (
               <X className="h-5 w-5" />
@@ -130,48 +168,77 @@ export default function DashboardLayout({
             )}
           </Button>
         </div>
-        <nav className="flex flex-col flex-1 gap-2 p-4">
-          {navLinks.map((link) => (
+        
+        <nav className="flex flex-col flex-1 gap-3 p-4">
+          {navLinks.map((link) => {
+            const isActive = pathname === link.href;
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={cn(
+                  "flex items-center gap-4 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-300 group hover:scale-[1.02]",
+                  isActive
+                    ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
+                    : "text-slate-700 dark:text-slate-300 hover:bg-slate-100/80 dark:hover:bg-slate-700/80 hover:shadow-md",
+                  !isSidebarOpen && "justify-center px-3"
+                )}
+              >
+                <div className="relative">
+                  <link.icon className="h-5 w-5 flex-shrink-0" />
+                  {isActive && (
+                    <div className="absolute inset-0 bg-white rounded-full blur opacity-30 animate-pulse"></div>
+                  )}
+                </div>
+                {isSidebarOpen && (
+                  <span className="flex items-center gap-2">
+                    {link.label}
+                    {isActive && <Sparkles className="h-3 w-3 text-yellow-300 animate-pulse" />}
+                  </span>
+                )}
+              </Link>
+            );
+          })}
+          
+          <div className="mt-auto">
             <Link
-              key={link.href}
-              href={link.href}
+              href="/dashboard/courses/new"
               className={cn(
-                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                pathname === link.href
-                  ? "bg-secondary text-primary"
-                  : "text-muted-foreground hover:bg-secondary hover:text-primary",
-                !isSidebarOpen && "justify-center"
+                "flex items-center gap-4 rounded-xl px-4 py-4 text-sm font-semibold transition-all duration-300 bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 shadow-lg hover:shadow-xl hover:scale-[1.02] group",
+                !isSidebarOpen && "justify-center px-3"
               )}
             >
-              <link.icon className="h-5 w-5 flex-shrink-0" />
-              {isSidebarOpen && <span>{link.label}</span>}
+              <div className="relative">
+                <PlusCircle className="h-5 w-5 flex-shrink-0 group-hover:rotate-90 transition-transform duration-300" />
+                <div className="absolute inset-0 bg-white rounded-full blur opacity-20 animate-pulse"></div>
+              </div>
+              {isSidebarOpen && (
+                <span className="flex items-center gap-2">
+                  Create New Course
+                  <Zap className="h-3 w-3 text-yellow-300" />
+                </span>
+              )}
             </Link>
-          ))}
-          <Link
-            href="/dashboard/courses/new"
-            className={cn(
-              "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors bg-purple-600 text-white hover:bg-purple-700 mt-auto",
-              !isSidebarOpen && "justify-center"
-            )}
-          >
-            <PlusCircle className="h-5 w-5 flex-shrink-0" />
-            {isSidebarOpen && <span>Create New Course</span>}
-          </Link>
+          </div>
         </nav>
       </aside>
+      
       <div
         className={cn(
           "flex flex-col flex-1 transition-all duration-300",
           isSidebarOpen ? "ml-64" : "ml-16"
         )}
       >
-        <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
+        <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b border-slate-200/60 dark:border-slate-700/60 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-4 md:px-6 shadow-sm">
           <div className="flex flex-1 items-center justify-end gap-4">
             {showSearch && (
               <Suspense>
-                <div className="relative flex-1 md:grow-0">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <SearchInput />
+                <div className="relative flex-1 md:grow-0 max-w-md">
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-400/10 to-purple-400/10 rounded-xl blur"></div>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-slate-500 dark:text-slate-400" />
+                    <SearchInput />
+                  </div>
                 </div>
               </Suspense>
             )}
@@ -181,57 +248,64 @@ export default function DashboardLayout({
                 <Button
                   variant="secondary"
                   size="icon"
-                  className="rounded-full"
+                  className="rounded-full hover:scale-110 transition-all duration-200 bg-slate-100/80 dark:bg-slate-800/80 hover:bg-slate-200/80 dark:hover:bg-slate-700/80 border border-slate-200/50 dark:border-slate-700/50"
                 >
                   <UserAvatar />
                   <span className="sr-only">Toggle user menu</span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel className="flex flex-col">
+              <DropdownMenuContent align="end" className="w-56 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/50 dark:border-slate-700/50 shadow-xl">
+                <DropdownMenuLabel className="flex flex-col p-4">
                   <UserName />
                   <UserEmail />
                 </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/dashboard" className="flex items-center">
-                    <LayoutDashboard className="mr-2 h-4 w-4" />
+                <DropdownMenuSeparator className="bg-slate-200/50 dark:bg-slate-700/50" />
+                <DropdownMenuItem asChild className="hover:bg-slate-100/80 dark:hover:bg-slate-800/80 transition-colors duration-200">
+                  <Link href="/dashboard" className="flex items-center gap-3 p-3">
+                    <LayoutDashboard className="h-4 w-4" />
                     Dashboard
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
+                <DropdownMenuItem asChild className="hover:bg-slate-100/80 dark:hover:bg-slate-800/80 transition-colors duration-200">
                   <Link
                     href="/dashboard/settings"
-                    className="flex items-center"
+                    className="flex items-center gap-3 p-3"
                   >
-                    <Settings className="mr-2 h-4 w-4" />
+                    <Settings className="h-4 w-4" />
                     Settings
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuSeparator />
+                <DropdownMenuSeparator className="bg-slate-200/50 dark:bg-slate-700/50" />
                 <DropdownMenuItem
                   onClick={handleLogout}
-                  className="cursor-pointer flex items-center"
+                  className="cursor-pointer flex items-center gap-3 p-3 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors duration-200"
                 >
-                  <LogOut className="mr-2 h-4 w-4" />
+                  <LogOut className="h-4 w-4" />
                   Logout
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
         </header>
+        
         <main
           className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-6"
           data-sidebar-open={isSidebarOpen.toString()}
         >
           {children}
         </main>
-        <footer className="border-t">
-          <div className="container mx-auto py-4 px-4 md:px-6 text-center text-sm text-muted-foreground">
-            © {new Date().getFullYear()} Nexable. All rights reserved.
+        
+        <footer className="border-t border-slate-200/60 dark:border-slate-700/60 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm">
+          <div className="container mx-auto py-6 px-4 md:px-6 text-center">
+            <div className="flex items-center justify-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+              <GraduationCap className="h-4 w-4" />
+              <span>© {new Date().getFullYear()} Nexable. All rights reserved.</span>
+              <Star className="h-4 w-4 text-yellow-500" />
+            </div>
           </div>
         </footer>
       </div>
     </div>
   );
 }
+

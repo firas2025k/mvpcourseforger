@@ -12,6 +12,16 @@ import {
   LayoutGrid,
   AlertTriangle,
   ArrowRight,
+  TrendingUp,
+  Target,
+  Sparkles,
+  Star,
+  Trophy,
+  Zap,
+  GraduationCap,
+  Brain,
+  Lightbulb,
+  Rocket,
 } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -233,102 +243,165 @@ export default async function DashboardPage({
 
   return (
     <div className="flex-1 w-full flex flex-col gap-8 py-8 md:py-12">
-      <header className="px-4 md:px-0">
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground">
-          {searchQuery
-            ? `Showing results for "${searchQuery}"`
-            : "Manage your courses and track progress."}
-        </p>
+      {/* Enhanced Header */}
+      <header className="px-4 md:px-0 relative">
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-400/10 to-purple-400/10 rounded-3xl blur-2xl"></div>
+        <div className="relative">
+          <div className="flex items-center gap-4 mb-4">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
+              <GraduationCap className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-900 via-blue-900 to-purple-900 dark:from-slate-100 dark:via-blue-100 dark:to-purple-100 bg-clip-text text-transparent">
+                Dashboard
+              </h1>
+              <p className="text-lg text-slate-600 dark:text-slate-400 flex items-center gap-2">
+                {searchQuery ? (
+                  <>
+                    <Target className="h-4 w-4" />
+                    Showing results for "{searchQuery}"
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-4 w-4" />
+                    Manage your courses and track progress
+                  </>
+                )}
+              </p>
+            </div>
+          </div>
+        </div>
       </header>
 
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 px-4 md:px-6">
-        <Card className="flex flex-col justify-between">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Courses</CardTitle>
-            <BookOpen className="h-4 w-4 text-muted-foreground" />
+      {/* Enhanced Statistics Cards */}
+      <section className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 px-4 md:px-6">
+        {/* Total Courses Card */}
+        <Card className="relative overflow-hidden bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 shadow-lg hover:shadow-xl transition-all duration-300 group hover:scale-[1.02]">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-400/10 to-purple-400/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <CardHeader className="relative flex flex-row items-center justify-between space-y-0 pb-3">
+            <CardTitle className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+              Total Courses
+            </CardTitle>
+            <div className="relative">
+              <BookOpen className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              <div className="absolute inset-0 bg-blue-400 rounded-full blur opacity-20 animate-pulse"></div>
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalCourses}</div>
-            <p className="text-xs text-muted-foreground">
+          <CardContent className="relative">
+            <div className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
+              {totalCourses}
+            </div>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
               courses you have created
             </p>
-          </CardContent>
-          <div className="p-4 pt-0">
             <Link
               href="/dashboard/courses/new"
-              className="text-sm font-medium text-purple-600 hover:underline flex items-center"
+              className="inline-flex items-center gap-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors duration-200 group/link"
             >
-              Create New Course <ArrowRight className="ml-1 h-4 w-4" />
+              Create New Course 
+              <ArrowRight className="h-4 w-4 group-hover/link:translate-x-1 transition-transform duration-200" />
             </Link>
-          </div>
+          </CardContent>
         </Card>
-        <Card className="flex flex-col justify-between">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+
+        {/* Average Progress Card */}
+        <Card className="relative overflow-hidden bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 shadow-lg hover:shadow-xl transition-all duration-300 group hover:scale-[1.02]">
+          <div className="absolute inset-0 bg-gradient-to-br from-green-400/10 to-blue-400/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <CardHeader className="relative flex flex-row items-center justify-between space-y-0 pb-3">
+            <CardTitle className="text-sm font-semibold text-slate-700 dark:text-slate-300">
               Average Progress
             </CardTitle>
-            <BarChart3 className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <Progress
-                value={averageProgress}
-                className="w-full h-2 bg-gray-200"
-                indicatorClassName="bg-purple-600"
-              />
-              <span className="text-sm font-medium">{averageProgress}%</span>
+            <div className="relative">
+              <TrendingUp className="h-5 w-5 text-green-600 dark:text-green-400" />
+              <div className="absolute inset-0 bg-green-400 rounded-full blur opacity-20 animate-pulse"></div>
             </div>
-            <p className="text-xs text-muted-foreground mt-2">
+          </CardHeader>
+          <CardContent className="relative">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="relative flex-1">
+                <Progress
+                  value={averageProgress}
+                  className="h-3 bg-slate-200 dark:bg-slate-700 rounded-full"
+                />
+                <div 
+                  className="absolute inset-0 bg-gradient-to-r from-green-500 to-blue-600 rounded-full opacity-20 blur-sm transition-all duration-500"
+                  style={{ width: `${averageProgress}%` }}
+                ></div>
+              </div>
+              <span className="text-2xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
+                {averageProgress}%
+              </span>
+            </div>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
               across all courses with lessons
             </p>
-          </CardContent>
-          <div className="p-4 pt-0">
             <Link
               href="/dashboard/analytics"
-              className="text-sm font-medium text-purple-600 hover:underline flex items-center"
+              className="inline-flex items-center gap-2 text-sm font-medium text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 transition-colors duration-200 group/link"
             >
-              View Analytics <ArrowRight className="ml-1 h-4 w-4" />
+              View Analytics 
+              <ArrowRight className="h-4 w-4 group-hover/link:translate-x-1 transition-transform duration-200" />
             </Link>
-          </div>
+          </CardContent>
         </Card>
-        <UserPlanCard
-          userPlan={userPlanForCard}
-          hasActivePaidSubscription={hasActivePaidSubscription}
-          ManageSubscriptionButton={ManageSubscriptionButton}
-        />
+
+        {/* Enhanced User Plan Card */}
+        <div className="relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-400/20 to-pink-400/20 rounded-2xl blur-xl"></div>
+          <UserPlanCard
+            userPlan={userPlanForCard}
+            hasActivePaidSubscription={hasActivePaidSubscription}
+            ManageSubscriptionButton={ManageSubscriptionButton}
+          />
+        </div>
       </section>
 
+      {/* Enhanced Courses Section */}
       <section className="px-4 md:px-6">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-semibold flex items-center">
-            <LayoutGrid className="mr-3 h-6 w-6 text-purple-600" /> My Courses
-          </h2>
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-purple-500 to-pink-600 flex items-center justify-center shadow-lg">
+              <LayoutGrid className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <h2 className="text-3xl font-bold bg-gradient-to-r from-slate-900 to-purple-900 dark:from-slate-100 dark:to-purple-100 bg-clip-text text-transparent">
+                My Courses
+              </h2>
+              <p className="text-slate-600 dark:text-slate-400">
+                Continue your learning journey
+              </p>
+            </div>
+          </div>
+          
           {userPlanForCard.coursesCreated < userPlanForCard.courseLimit ? (
             <Button
               asChild
               variant="default"
-              className="bg-purple-600 hover:bg-purple-700 text-white"
+              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 group"
             >
-              <Link href="/dashboard/courses/new">
-                <PlusCircle className="mr-2 h-4 w-4" /> Create New Course
+              <Link href="/dashboard/courses/new" className="flex items-center gap-2">
+                <PlusCircle className="h-4 w-4 group-hover:rotate-90 transition-transform duration-300" />
+                Create New Course
+                <Sparkles className="h-3 w-3 text-yellow-300" />
               </Link>
             </Button>
           ) : (
             <Button
               asChild
               variant="default"
-              className="bg-orange-500 hover:bg-orange-600 text-white"
+              className="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 group"
             >
-              <Link href="/pricing">
-                <Crown className="mr-2 h-4 w-4" /> Upgrade to Create More
+              <Link href="/pricing" className="flex items-center gap-2">
+                <Crown className="h-4 w-4 group-hover:scale-110 transition-transform duration-300" />
+                Upgrade to Create More
+                <Zap className="h-3 w-3 text-yellow-300" />
               </Link>
             </Button>
           )}
         </div>
 
         {courses.length > 0 ? (
-          <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
+          <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {courses.map((course) => (
               <CourseCard
                 key={course.id}
@@ -338,39 +411,49 @@ export default async function DashboardPage({
             ))}
           </div>
         ) : (
-          <Card className="col-span-full">
-            <CardContent className="flex flex-col items-center justify-center gap-4 p-8 text-center">
-              <AlertTriangle className="h-12 w-12 text-muted-foreground/50" />
-              <h3 className="text-xl font-semibold">
-                {searchQuery ? "No Courses Found" : "No Courses Yet!"}
-              </h3>
-              <p className="text-muted-foreground">
-                {searchQuery
-                  ? `Your search for "${searchQuery}" did not match any courses.`
-                  : "It looks like you haven't created any courses. Get started by creating your first one."}
-              </p>
+          <Card className="relative overflow-hidden bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 shadow-xl">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-400/5 to-purple-400/5"></div>
+            <CardContent className="relative flex flex-col items-center justify-center gap-6 p-12 text-center">
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full blur-2xl opacity-20"></div>
+                <AlertTriangle className="relative h-20 w-20 text-slate-400 dark:text-slate-500" />
+              </div>
+              
+              <div className="space-y-3">
+                <h3 className="text-2xl font-bold bg-gradient-to-r from-slate-700 to-blue-700 dark:from-slate-300 dark:to-blue-300 bg-clip-text text-transparent">
+                  {searchQuery ? "No Courses Found" : "Ready to Start Learning?"}
+                </h3>
+                <p className="text-lg text-slate-600 dark:text-slate-400 max-w-md">
+                  {searchQuery
+                    ? `Your search for "${searchQuery}" did not match any courses.`
+                    : "Create your first course and begin an amazing learning journey!"}
+                </p>
+              </div>
+              
               {!searchQuery &&
                 (userPlanForCard.coursesCreated <
                 userPlanForCard.courseLimit ? (
                   <Button
                     asChild
                     size="lg"
-                    className="mt-4 bg-purple-600 hover:bg-purple-700 text-white"
+                    className="mt-6 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 group px-8 py-3"
                   >
-                    <Link href="/dashboard/courses/new">
-                      <PlusCircle className="mr-2 h-5 w-5" /> Create Your First
-                      Course
+                    <Link href="/dashboard/courses/new" className="flex items-center gap-3">
+                      <Rocket className="h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
+                      Create Your First Course
+                      <Sparkles className="h-4 w-4 text-yellow-300" />
                     </Link>
                   </Button>
                 ) : (
                   <Button
                     asChild
                     size="lg"
-                    className="mt-4 bg-orange-500 hover:bg-orange-600 text-white"
+                    className="mt-6 bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 group px-8 py-3"
                   >
-                    <Link href="/pricing">
-                      <Crown className="mr-2 h-5 w-5" /> Upgrade to Create
-                      Courses
+                    <Link href="/pricing" className="flex items-center gap-3">
+                      <Crown className="h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
+                      Upgrade to Create Courses
+                      <Star className="h-4 w-4 text-yellow-300" />
                     </Link>
                   </Button>
                 ))}
@@ -381,3 +464,4 @@ export default async function DashboardPage({
     </div>
   );
 }
+

@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect, notFound } from 'next/navigation';
 import { CoursePageProps, FullCourseData, Chapter, Lesson, Quiz } from '@/types/course';
 import { Button } from '@/components/ui/button';
-import { BookOpen } from 'lucide-react';
+import { BookOpen, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import CourseLayoutClient from '@/components/dashboard/courses/CourseLayoutClient';
 
@@ -91,14 +91,22 @@ export default async function CourseDisplayPage({ params, searchParams }: Course
 
   if (!courseData) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen text-center p-4">
-        <BookOpen className="w-16 h-16 mb-4 text-destructive" />
-        <h1 className="text-2xl font-semibold mb-2">Course Not Found</h1>
-        <p className="text-muted-foreground mb-4">
+      <div className="flex flex-col items-center justify-center h-screen text-center p-4 bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-blue-950">
+        <div className="relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full blur-xl opacity-20 animate-pulse"></div>
+          <BookOpen className="relative w-20 h-20 mb-6 text-blue-600 dark:text-blue-400" />
+        </div>
+        <h1 className="text-3xl font-bold mb-3 bg-gradient-to-r from-slate-900 to-slate-600 dark:from-slate-100 dark:to-slate-400 bg-clip-text text-transparent">
+          Course Not Found
+        </h1>
+        <p className="text-lg text-slate-600 dark:text-slate-400 mb-8 max-w-md leading-relaxed">
           We couldn't find the course you're looking for, or you may not have permission to view it.
         </p>
-        <Button asChild variant="outline">
-          <Link href="/dashboard">Go to Dashboard</Link>
+        <Button asChild variant="outline" size="lg" className="group hover:shadow-lg transition-all duration-300">
+          <Link href="/dashboard" className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 group-hover:rotate-12 transition-transform duration-300" />
+            Go to Dashboard
+          </Link>
         </Button>
       </div>
     );
@@ -107,3 +115,4 @@ export default async function CourseDisplayPage({ params, searchParams }: Course
   // Pass the fetched data to the client component
   return <CourseLayoutClient courseData={courseData} />;
 }
+
