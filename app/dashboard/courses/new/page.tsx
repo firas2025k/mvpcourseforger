@@ -33,9 +33,14 @@ import {
   CheckCircle,
   Loader2,
   X,
+  Zap,
+  Star,
+  Crown,
+  GraduationCap,
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 interface GenerationProgress {
   stage: string;
@@ -310,286 +315,398 @@ export default function EnhancedCourseGenerationPage() {
   };
 
   return (
-    <div className="flex flex-1 flex-col gap-6 p-4 md:gap-8 md:p-8 max-w-4xl mx-auto">
-      <div className="flex items-center justify-between">
-        <Button variant="outline" size="sm" asChild>
-          <Link href="/dashboard">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Dashboard
-          </Link>
-        </Button>
-      </div>
-
-      <Card className="shadow-lg">
-        <CardHeader className="pb-4">
-          <CardTitle className="text-3xl font-bold tracking-tight">
-            Create New Course
-          </CardTitle>
-          <CardDescription>
-            Generate a course from a text prompt or upload a PDF document to
-            create structured learning content.
-          </CardDescription>
-        </CardHeader>
-
-        <CardContent className="space-y-6">
-          {/* Generation Mode Tabs */}
-          <Tabs
-            value={generationMode}
-            onValueChange={(value) =>
-              setGenerationMode(value as "prompt" | "pdf")
-            }
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-slate-950 dark:via-slate-900 dark:to-blue-950">
+      <div className="flex flex-1 flex-col gap-6 p-4 md:gap-8 md:p-8 max-w-4xl mx-auto">
+        {/* Header with Back Button */}
+        <div className="flex items-center justify-between">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            asChild
+            className="hover:scale-105 transition-all duration-200 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200/50 dark:border-slate-700/50 hover:bg-slate-100/80 dark:hover:bg-slate-800/80"
           >
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="prompt" className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4" />
-                Create from Prompt
-              </TabsTrigger>
-              <TabsTrigger value="pdf" className="flex items-center gap-2">
-                <Upload className="h-4 w-4" />
-                Create from PDF
-              </TabsTrigger>
-            </TabsList>
+            <Link href="/dashboard">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Dashboard
+            </Link>
+          </Button>
+        </div>
 
-            {/* Prompt-based Generation */}
-            <TabsContent value="prompt" className="space-y-4 mt-6">
-              <div className="space-y-2">
-                <Label htmlFor="prompt">Course Description</Label>
-                <Textarea
-                  id="prompt"
-                  placeholder="Describe the course you want to create. For example: 'A comprehensive introduction to machine learning covering supervised and unsupervised learning algorithms, neural networks, and practical applications.'"
-                  value={prompt}
-                  onChange={(e) => setPrompt(e.target.value)}
-                  className="min-h-[120px]"
-                  disabled={isGenerating}
-                />
-              </div>
-            </TabsContent>
-
-            {/* PDF-based Generation */}
-            <TabsContent value="pdf" className="space-y-4 mt-6">
-              <div className="space-y-2">
-                <Label>PDF Document</Label>
-                <div
-                  className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-                    isDragOver
-                      ? "border-primary bg-primary/5"
-                      : selectedFile
-                      ? "border-green-500 bg-green-50 dark:bg-green-950/20"
-                      : "border-muted-foreground/25 hover:border-muted-foreground/50"
-                  }`}
-                  onDrop={handleDrop}
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                >
-                  {selectedFile ? (
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-center">
-                        <CheckCircle className="h-12 w-12 text-green-500" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-green-700 dark:text-green-400">
-                          {selectedFile.name}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
-                        </p>
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={removeSelectedFile}
-                        disabled={isGenerating}
-                      >
-                        <X className="h-4 w-4 mr-2" />
-                        Remove File
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-center">
-                        <FileText className="h-12 w-12 text-muted-foreground" />
-                      </div>
-                      <div>
-                        <p className="text-lg font-medium">
-                          Drop your PDF here or click to browse
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          Maximum file size: 10MB
-                        </p>
-                      </div>
-                      <Button
-                        variant="outline"
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={isGenerating}
-                      >
-                        <Upload className="h-4 w-4 mr-2" />
-                        Choose File
-                      </Button>
-                    </div>
-                  )}
+        {/* Main Card with Enhanced Styling */}
+        <Card className="shadow-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/50 dark:border-slate-700/50 hover:shadow-2xl transition-all duration-300">
+          <CardHeader className="pb-6 relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-400/5 to-purple-400/5 rounded-t-lg"></div>
+            <div className="relative">
+              <CardTitle className="text-3xl font-bold tracking-tight bg-gradient-to-r from-slate-900 to-blue-900 dark:from-slate-100 dark:to-blue-100 bg-clip-text text-transparent flex items-center gap-3">
+                <div className="relative">
+                  <GraduationCap className="h-8 w-8 text-blue-600" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full blur opacity-20 animate-pulse"></div>
                 </div>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".pdf"
-                  onChange={handleFileInputChange}
-                  className="hidden"
-                />
-              </div>
-            </TabsContent>
-          </Tabs>
-
-          {/* Course Parameters */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="chapters">Number of Chapters</Label>
-              <Select
-                value={chapters}
-                onValueChange={setChapters}
-                disabled={isGenerating}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
-                    <SelectItem key={num} value={num.toString()}>
-                      {num} Chapter{num !== 1 ? "s" : ""}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                Create New Course
+                <Sparkles className="h-6 w-6 text-yellow-500 animate-pulse" />
+              </CardTitle>
+              <CardDescription className="text-lg mt-2">
+                Generate a course from a text prompt or upload a PDF document to
+                create structured learning content with AI-powered insights.
+              </CardDescription>
             </div>
+          </CardHeader>
 
-            <div className="space-y-2">
-              <Label htmlFor="lessons">Lessons per Chapter</Label>
-              <Select
-                value={lessonsPerChapter}
-                onValueChange={setLessonsPerChapter}
-                disabled={isGenerating}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {[1, 2, 3, 4, 5, 6].map((num) => (
-                    <SelectItem key={num} value={num.toString()}>
-                      {num} Lesson{num !== 1 ? "s" : ""}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="difficulty">Difficulty Level</Label>
-              <Select
-                value={difficulty}
-                onValueChange={(value) =>
-                  setDifficulty(value as typeof difficulty)
-                }
-                disabled={isGenerating}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="beginner">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="default" className="text-xs">
-                        Beginner
-                      </Badge>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="intermediate">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="secondary" className="text-xs">
-                        Intermediate
-                      </Badge>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="advanced">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="destructive" className="text-xs">
-                        Advanced
-                      </Badge>
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Generation Progress */}
-          {isGenerating && (
-            <Card className="bg-muted/30">
-              <CardContent className="pt-6">
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium">
-                      {generationProgress.stage}
-                    </span>
-                    <span className="text-sm text-muted-foreground">
-                      {Math.round(generationProgress.progress)}%
-                    </span>
+          <CardContent className="space-y-8">
+            {/* Generation Mode Tabs with Enhanced Styling */}
+            <Tabs
+              value={generationMode}
+              onValueChange={(value) =>
+                setGenerationMode(value as "prompt" | "pdf")
+              }
+            >
+              <TabsList className="grid w-full grid-cols-2 bg-slate-100/80 dark:bg-slate-800/80 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50">
+                <TabsTrigger 
+                  value="prompt" 
+                  className={cn(
+                    "flex items-center gap-2 transition-all duration-300 hover:scale-[1.02]",
+                    generationMode === "prompt" && "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
+                  )}
+                >
+                  <div className="relative">
+                    <Sparkles className="h-4 w-4" />
+                    {generationMode === "prompt" && (
+                      <div className="absolute inset-0 bg-white rounded-full blur opacity-30 animate-pulse"></div>
+                    )}
                   </div>
-                  <Progress
-                    value={generationProgress.progress}
-                    className="w-full"
+                  Create from Prompt
+                  {generationMode === "prompt" && <Zap className="h-3 w-3 text-yellow-300" />}
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="pdf" 
+                  className={cn(
+                    "flex items-center gap-2 transition-all duration-300 hover:scale-[1.02]",
+                    generationMode === "pdf" && "bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg"
+                  )}
+                >
+                  <div className="relative">
+                    <Upload className="h-4 w-4" />
+                    {generationMode === "pdf" && (
+                      <div className="absolute inset-0 bg-white rounded-full blur opacity-30 animate-pulse"></div>
+                    )}
+                  </div>
+                  Create from PDF
+                  {generationMode === "pdf" && <Star className="h-3 w-3 text-yellow-300" />}
+                </TabsTrigger>
+              </TabsList>
+
+              {/* Prompt-based Generation */}
+              <TabsContent value="prompt" className="space-y-6 mt-8">
+                <div className="space-y-3">
+                  <Label htmlFor="prompt" className="text-base font-semibold flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-blue-600" />
+                    Course Description
+                  </Label>
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-400/10 to-purple-400/10 rounded-xl blur"></div>
+                    <Textarea
+                      id="prompt"
+                      placeholder="Describe the course you want to create. For example: 'A comprehensive introduction to machine learning covering supervised and unsupervised learning algorithms, neural networks, and practical applications.'"
+                      value={prompt}
+                      onChange={(e) => setPrompt(e.target.value)}
+                      className="relative min-h-[140px] bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 focus:border-blue-500/50 transition-all duration-300"
+                      disabled={isGenerating}
+                    />
+                  </div>
+                </div>
+              </TabsContent>
+
+              {/* PDF-based Generation */}
+              <TabsContent value="pdf" className="space-y-6 mt-8">
+                <div className="space-y-3">
+                  <Label className="text-base font-semibold flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-purple-600" />
+                    PDF Document
+                  </Label>
+                  <div
+                    className={cn(
+                      "border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 relative overflow-hidden",
+                      isDragOver
+                        ? "border-primary bg-gradient-to-r from-blue-500/10 to-purple-500/10 scale-[1.02]"
+                        : selectedFile
+                        ? "border-green-500 bg-gradient-to-r from-green-500/10 to-emerald-500/10"
+                        : "border-slate-300/50 dark:border-slate-600/50 hover:border-slate-400/50 dark:hover:border-slate-500/50 hover:bg-slate-50/50 dark:hover:bg-slate-800/50"
+                    )}
+                    onDrop={handleDrop}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-slate-100/20 to-blue-100/20 dark:from-slate-800/20 dark:to-blue-900/20"></div>
+                    {selectedFile ? (
+                      <div className="space-y-4 relative">
+                        <div className="flex items-center justify-center">
+                          <div className="relative">
+                            <CheckCircle className="h-16 w-16 text-green-500" />
+                            <div className="absolute inset-0 bg-green-400 rounded-full blur opacity-20 animate-pulse"></div>
+                          </div>
+                        </div>
+                        <div>
+                          <p className="font-semibold text-green-700 dark:text-green-400 text-lg">
+                            {selectedFile.name}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                          </p>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={removeSelectedFile}
+                          disabled={isGenerating}
+                          className="hover:scale-105 transition-all duration-200 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm"
+                        >
+                          <X className="h-4 w-4 mr-2" />
+                          Remove File
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-4 relative">
+                        <div className="flex items-center justify-center">
+                          <div className="relative">
+                            <FileText className="h-16 w-16 text-slate-400 dark:text-slate-500" />
+                            <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full blur opacity-10 animate-pulse"></div>
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-xl font-semibold bg-gradient-to-r from-slate-700 to-blue-700 dark:from-slate-300 dark:to-blue-300 bg-clip-text text-transparent">
+                            Drop your PDF here or click to browse
+                          </p>
+                          <p className="text-sm text-muted-foreground mt-2">
+                            Maximum file size: 10MB • Supported format: PDF
+                          </p>
+                        </div>
+                        <Button
+                          variant="outline"
+                          onClick={() => fileInputRef.current?.click()}
+                          disabled={isGenerating}
+                          className="hover:scale-105 transition-all duration-200 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50"
+                        >
+                          <Upload className="h-4 w-4 mr-2" />
+                          Choose File
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".pdf"
+                    onChange={handleFileInputChange}
+                    className="hidden"
                   />
-                  <p className="text-sm text-muted-foreground">
-                    {generationProgress.message}
+                </div>
+              </TabsContent>
+            </Tabs>
+
+            {/* Course Parameters with Enhanced Styling */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <Crown className="h-5 w-5 text-yellow-600" />
+                Course Configuration
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="space-y-3">
+                  <Label htmlFor="chapters" className="font-medium">Number of Chapters</Label>
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-400/5 to-purple-400/5 rounded-lg blur"></div>
+                    <Select
+                      value={chapters}
+                      onValueChange={setChapters}
+                      disabled={isGenerating}
+                    >
+                      <SelectTrigger className="relative bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 hover:border-blue-500/50 transition-all duration-300">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/50 dark:border-slate-700/50">
+                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
+                          <SelectItem key={num} value={num.toString()}>
+                            {num} Chapter{num !== 1 ? "s" : ""}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <Label htmlFor="lessons" className="font-medium">Lessons per Chapter</Label>
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-gradient-to-r from-green-400/5 to-blue-400/5 rounded-lg blur"></div>
+                    <Select
+                      value={lessonsPerChapter}
+                      onValueChange={setLessonsPerChapter}
+                      disabled={isGenerating}
+                    >
+                      <SelectTrigger className="relative bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 hover:border-green-500/50 transition-all duration-300">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/50 dark:border-slate-700/50">
+                        {[1, 2, 3, 4, 5, 6].map((num) => (
+                          <SelectItem key={num} value={num.toString()}>
+                            {num} Lesson{num !== 1 ? "s" : ""}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <Label htmlFor="difficulty" className="font-medium">Difficulty Level</Label>
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-gradient-to-r from-purple-400/5 to-pink-400/5 rounded-lg blur"></div>
+                    <Select
+                      value={difficulty}
+                      onValueChange={(value) =>
+                        setDifficulty(value as typeof difficulty)
+                      }
+                      disabled={isGenerating}
+                    >
+                      <SelectTrigger className="relative bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 hover:border-purple-500/50 transition-all duration-300">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/50 dark:border-slate-700/50">
+                        <SelectItem value="beginner">
+                          <div className="flex items-center gap-2">
+                            <Badge variant="default" className="text-xs bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                              Beginner
+                            </Badge>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="intermediate">
+                          <div className="flex items-center gap-2">
+                            <Badge variant="default" className="text-xs bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+                              Intermediate
+                            </Badge>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="advanced">
+                          <div className="flex items-center gap-2">
+                            <Badge variant="default" className="text-xs bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
+                              Advanced
+                            </Badge>
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Generation Progress */}
+            {isGenerating && (
+              <Card className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/50 dark:to-purple-950/50 border border-blue-200/50 dark:border-blue-700/50">
+                <CardContent className="pt-6">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="relative">
+                          <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
+                          <div className="absolute inset-0 bg-blue-400 rounded-full blur opacity-20 animate-pulse"></div>
+                        </div>
+                        <div>
+                          <p className="font-semibold text-blue-900 dark:text-blue-100">
+                            {generationProgress.stage}
+                          </p>
+                          <p className="text-sm text-blue-700 dark:text-blue-300">
+                            {generationProgress.message}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                          {Math.round(generationProgress.progress)}%
+                        </p>
+                      </div>
+                    </div>
+                    <div className="relative">
+                      <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-purple-400/20 rounded-full blur"></div>
+                      <Progress 
+                        value={generationProgress.progress} 
+                        className="relative h-3 bg-blue-100 dark:bg-blue-900/50"
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </CardContent>
+
+          <CardFooter className="pt-6">
+            <Button
+              onClick={handleGenerate}
+              disabled={
+                isGenerating ||
+                (generationMode === "prompt" && !prompt.trim()) ||
+                (generationMode === "pdf" && !selectedFile)
+              }
+              className={cn(
+                "w-full py-6 text-lg font-semibold transition-all duration-300 hover:scale-[1.02] shadow-lg hover:shadow-xl",
+                "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white",
+                "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+              )}
+            >
+              {isGenerating ? (
+                <div className="flex items-center gap-3">
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  Generating Course...
+                  <Sparkles className="h-4 w-4 animate-pulse" />
+                </div>
+              ) : (
+                <div className="flex items-center gap-3">
+                  <Zap className="h-5 w-5" />
+                  {generationMode === "prompt" ? "Generate Course from Prompt" : "Generate Course from PDF"}
+                  <Star className="h-4 w-4 text-yellow-300" />
+                </div>
+              )}
+            </Button>
+          </CardFooter>
+        </Card>
+
+        {/* Additional Info Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/50 dark:to-indigo-950/50 border border-blue-200/50 dark:border-blue-700/50 hover:shadow-lg transition-all duration-300">
+            <CardContent className="pt-6">
+              <div className="flex items-start gap-4">
+                <div className="relative">
+                  <Sparkles className="h-8 w-8 text-blue-600" />
+                  <div className="absolute inset-0 bg-blue-400 rounded-full blur opacity-20 animate-pulse"></div>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">AI-Powered Generation</h3>
+                  <p className="text-sm text-blue-700 dark:text-blue-300">
+                    Our advanced AI creates comprehensive courses with structured lessons, quizzes, and learning objectives tailored to your specifications.
                   </p>
                 </div>
-              </CardContent>
-            </Card>
-          )}
+              </div>
+            </CardContent>
+          </Card>
 
-          {/* Validation Messages */}
-          {generationMode === "prompt" && !prompt.trim() && (
-            <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
-              <AlertCircle className="h-4 w-4" />
-              <span className="text-sm">
-                Please enter a course description to continue.
-              </span>
-            </div>
-          )}
-
-          {generationMode === "pdf" && !selectedFile && (
-            <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
-              <AlertCircle className="h-4 w-4" />
-              <span className="text-sm">
-                Please select a PDF file to continue.
-              </span>
-            </div>
-          )}
-        </CardContent>
-
-        <CardFooter className="border-t pt-6">
-          <Button
-            onClick={handleGenerate}
-            disabled={
-              isGenerating ||
-              (generationMode === "prompt" && !prompt.trim()) ||
-              (generationMode === "pdf" && !selectedFile)
-            }
-            className="w-full bg-purple-600 hover:bg-purple-700 text-white"
-            size="lg"
-          >
-            {isGenerating ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Generating Course...
-              </>
-            ) : (
-              <>
-                <Sparkles className="mr-2 h-4 w-4" />
-                Generate Course
-              </>
-            )}
-          </Button>
-        </CardFooter>
-      </Card>
+          <Card className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/50 dark:to-pink-950/50 border border-purple-200/50 dark:border-purple-700/50 hover:shadow-lg transition-all duration-300">
+            <CardContent className="pt-6">
+              <div className="flex items-start gap-4">
+                <div className="relative">
+                  <Crown className="h-8 w-8 text-purple-600" />
+                  <div className="absolute inset-0 bg-purple-400 rounded-full blur opacity-20 animate-pulse"></div>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-purple-900 dark:text-purple-100 mb-2">Professional Quality</h3>
+                  <p className="text-sm text-purple-700 dark:text-purple-300">
+                    Generate courses that meet professional standards with proper structure, engaging content, and assessment materials.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }
+

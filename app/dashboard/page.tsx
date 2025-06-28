@@ -347,7 +347,7 @@ export default async function DashboardPage({
 
         {/* Enhanced User Plan Card */}
         <div className="relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-400/20 to-pink-400/20 rounded-2xl blur-xl"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-400/20 to-pink-400/20 rounded-2xl blur-xl pointer-events-none"></div>
           <UserPlanCard
             userPlan={userPlanForCard}
             hasActivePaidSubscription={hasActivePaidSubscription}

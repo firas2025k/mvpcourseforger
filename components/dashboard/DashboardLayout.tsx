@@ -87,6 +87,7 @@ export default function DashboardLayout({
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const showSearch = pathname === "/dashboard";
 
   useEffect(() => {
@@ -100,6 +101,23 @@ export default function DashboardLayout({
     getUser();
   }, [supabase]);
 
+  // Close mobile menu when route changes
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [pathname]);
+
+  // Handle window resize to close mobile menu on desktop
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     router.push("/auth/login");
@@ -107,6 +125,14 @@ export default function DashboardLayout({
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
+  };
+
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false);
   };
 
   const UserAvatar = () => (
@@ -132,12 +158,103 @@ export default function DashboardLayout({
     );
   };
 
+  // Mobile Navigation Component
+  const MobileNavigation = () => (
+    <nav className="flex flex-col gap-2 p-4">
+      {navLinks.map((link) => {
+        const isActive = pathname === link.href;
+        return (
+          <Link
+            key={link.href}
+            href={link.href}
+            onClick={closeMobileMenu}
+            className={cn(
+              "flex items-center gap-4 rounded-xl px-4 py-4 text-base font-medium transition-all duration-300 group hover:scale-[1.02]",
+              isActive
+                ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
+                : "text-slate-700 dark:text-slate-300 hover:bg-slate-100/80 dark:hover:bg-slate-700/80 hover:shadow-md"
+            )}
+          >
+            <div className="relative">
+              <link.icon className="h-6 w-6 flex-shrink-0" />
+              {isActive && (
+                <div className="absolute inset-0 bg-white rounded-full blur opacity-30 animate-pulse"></div>
+              )}
+            </div>
+            <span className="flex items-center gap-2">
+              {link.label}
+              {isActive && <Sparkles className="h-4 w-4 text-yellow-300 animate-pulse" />}
+            </span>
+          </Link>
+        );
+      })}
+      
+      <div className="mt-6">
+        <Link
+          href="/dashboard/courses/new"
+          onClick={closeMobileMenu}
+          className="flex items-center gap-4 rounded-xl px-4 py-4 text-base font-semibold transition-all duration-300 bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 shadow-lg hover:shadow-xl hover:scale-[1.02] group"
+        >
+          <div className="relative">
+            <PlusCircle className="h-6 w-6 flex-shrink-0 group-hover:rotate-90 transition-transform duration-300" />
+            <div className="absolute inset-0 bg-white rounded-full blur opacity-20 animate-pulse"></div>
+          </div>
+          <span className="flex items-center gap-2">
+            Create New Course
+            <Zap className="h-4 w-4 text-yellow-300" />
+          </span>
+        </Link>
+      </div>
+
+      {/* Mobile User Section */}
+      <div className="mt-8 pt-6 border-t border-slate-200/60 dark:border-slate-700/60">
+        <div className="flex items-center gap-3 p-4 rounded-xl bg-slate-50/80 dark:bg-slate-800/80">
+          <UserAvatar />
+          <div className="flex flex-col">
+            <UserName />
+            <UserEmail />
+          </div>
+        </div>
+        
+        <div className="mt-4 space-y-2">
+          <Link
+            href="/dashboard"
+            onClick={closeMobileMenu}
+            className="flex items-center gap-3 p-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100/80 dark:hover:bg-slate-700/80 transition-colors duration-200"
+          >
+            <LayoutDashboard className="h-5 w-5" />
+            Dashboard
+          </Link>
+          <Link
+            href="/dashboard/settings"
+            onClick={closeMobileMenu}
+            className="flex items-center gap-3 p-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100/80 dark:hover:bg-slate-700/80 transition-colors duration-200"
+          >
+            <Settings className="h-5 w-5" />
+            Settings
+          </Link>
+          <button
+            onClick={() => {
+              handleLogout();
+              closeMobileMenu();
+            }}
+            className="w-full flex items-center gap-3 p-3 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors duration-200"
+          >
+            <LogOut className="h-5 w-5" />
+            Logout
+          </button>
+        </div>
+      </div>
+    </nav>
+  );
+
   return (
     <div className="flex min-h-screen w-full flex-row bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-slate-950 dark:via-slate-900 dark:to-blue-950">
+      {/* Desktop Sidebar */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex flex-col border-r border-slate-200/60 dark:border-slate-700/60 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md transition-all duration-300 shadow-xl",
-          isSidebarOpen ? "w-64" : "w-16"
+          "hidden md:fixed md:inset-y-0 md:left-0 md:z-50 md:flex md:flex-col border-r border-slate-200/60 dark:border-slate-700/60 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md transition-all duration-300 shadow-xl",
+          isSidebarOpen ? "md:w-64" : "md:w-16"
         )}
       >
         <div className="flex items-center justify-between p-4 border-b border-slate-200/60 dark:border-slate-700/60">
@@ -222,14 +339,70 @@ export default function DashboardLayout({
           </div>
         </nav>
       </aside>
+
+      {/* Mobile Menu Overlay */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 z-50 md:hidden"
+          onClick={closeMobileMenu}
+        >
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+        </div>
+      )}
+
+      {/* Mobile Menu Sidebar */}
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-50 w-80 flex flex-col border-r border-slate-200/60 dark:border-slate-700/60 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-2xl transition-transform duration-300 md:hidden",
+          isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+        )}
+      >
+        <div className="flex items-center justify-between p-4 border-b border-slate-200/60 dark:border-slate-700/60">
+          <Link href="/dashboard" className="flex items-center gap-3 group" onClick={closeMobileMenu}>
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-500 rounded-lg blur opacity-20 group-hover:opacity-40 transition-opacity duration-300"></div>
+              <Image
+                src={logoIcon}
+                alt="Nexable Logo"
+                width={132}
+                height={32}
+                className="relative"
+              />
+            </div>
+          </Link>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={closeMobileMenu}
+            className="hover:bg-slate-200/80 dark:hover:bg-slate-700/80 hover:scale-110 transition-all duration-200 rounded-full"
+          >
+            <X className="h-6 w-6" />
+          </Button>
+        </div>
+        
+        <div className="flex-1 overflow-y-auto">
+          <MobileNavigation />
+        </div>
+      </aside>
       
       <div
         className={cn(
           "flex flex-col flex-1 transition-all duration-300",
-          isSidebarOpen ? "ml-64" : "ml-16"
+          "md:ml-64", // Default desktop margin
+          !isSidebarOpen && "md:ml-16" // Collapsed desktop margin
         )}
       >
         <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b border-slate-200/60 dark:border-slate-700/60 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-4 md:px-6 shadow-sm">
+          {/* Mobile Menu Button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleMobileMenu}
+            className="md:hidden hover:bg-slate-200/80 dark:hover:bg-slate-700/80 hover:scale-110 transition-all duration-200 rounded-full"
+          >
+            <Menu className="h-6 w-6" />
+          </Button>
+
           <div className="flex flex-1 items-center justify-end gap-4">
             {showSearch && (
               <Suspense>
@@ -243,6 +416,8 @@ export default function DashboardLayout({
               </Suspense>
             )}
             <ThemeSwitcher />
+            
+            {/* Desktop User Menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
