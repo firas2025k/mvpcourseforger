@@ -119,7 +119,8 @@ export async function POST(request: Request) {
       metadata: {
         supabase_user_id: user.id,
         app_plan_id: clientPlanId, // Pass your app's plan_id to webhook
-      }
+      },
+      allow_promotion_codes: true,
     });
 
     if (!session.id) {
