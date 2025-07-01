@@ -6,7 +6,24 @@ import { createBrowserClient } from '@supabase/ssr';
 import { Plan } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle, ArrowLeft } from 'lucide-react';
+import { 
+  CheckCircle, 
+  ArrowLeft, 
+  Crown, 
+  Zap, 
+  Star, 
+  Sparkles, 
+  Loader2, 
+  CreditCard,
+  Gift,
+  Rocket,
+  Shield,
+  Users,
+  BookOpen,
+  Target,
+  Award,
+  TrendingUp
+} from 'lucide-react';
 import Link from 'next/link';
 
 interface PricingClientPageProps {
@@ -21,6 +38,30 @@ const getStripe = (publishableKey: string) => {
     stripePromise = loadStripe(publishableKey);
   }
   return stripePromise;
+};
+
+// Plan icons mapping
+const planIcons = {
+  'Free': Gift,
+  'Basic': BookOpen,
+  'Pro': Crown,
+  'Enterprise': Rocket,
+  'Premium': Star,
+  'Starter': Target,
+  'Advanced': Award,
+  'Ultimate': TrendingUp
+};
+
+// Plan colors mapping
+const planColors = {
+  'Free': 'from-green-500 to-emerald-600',
+  'Basic': 'from-blue-500 to-cyan-600',
+  'Pro': 'from-purple-500 to-pink-600',
+  'Enterprise': 'from-orange-500 to-red-600',
+  'Premium': 'from-yellow-500 to-orange-600',
+  'Starter': 'from-teal-500 to-blue-600',
+  'Advanced': 'from-indigo-500 to-purple-600',
+  'Ultimate': 'from-pink-500 to-rose-600'
 };
 
 export default function PricingClientPage({ plans, stripePublishableKey }: PricingClientPageProps) {
@@ -156,96 +197,249 @@ export default function PricingClientPage({ plans, stripePublishableKey }: Prici
     setIsLoading(null);
   };
 
+  const getPlanIcon = (planName: string) => {
+    return planIcons[planName as keyof typeof planIcons] || BookOpen;
+  };
+
+  const getPlanColor = (planName: string) => {
+    return planColors[planName as keyof typeof planColors] || 'from-blue-500 to-purple-600';
+  };
+
+  const isPopularPlan = (plan: Plan) => {
+    return plan.name === 'Pro' || plan.name === 'Premium';
+  };
+
   if (isFetchingSubscription) {
     return (
-      <div className="container mx-auto px-4 py-12 text-center">
-        <p>Loading subscription details...</p>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-blue-900">
+        <div className="relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full blur-xl opacity-20 animate-pulse"></div>
+          <div className="relative flex items-center gap-3 px-6 py-3 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-2xl border border-slate-200/50 dark:border-slate-700/50 shadow-lg">
+            <Loader2 className="h-5 w-5 animate-spin text-blue-600 dark:text-blue-400" />
+            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+              Loading subscription details...
+            </span>
+            <Sparkles className="h-4 w-4 text-yellow-500 animate-pulse" />
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-12">
-      <div className="mb-6">
-        <Button variant="outline" size="sm" asChild>
-          <Link href="/dashboard">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Dashboard
-          </Link>
-        </Button>
-      </div>
-      <h1 className="text-4xl font-bold text-center mb-4">Choose Your Plan</h1>
-      <p className="text-xl text-muted-foreground text-center mb-12">
-        Start creating and sharing your knowledge with the world. No credit card required for the Free plan.
-      </p>
-      {error && <p className="text-red-500 text-center mb-4">Error: {error}</p>}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-        {plans.map((plan) => (
-          <Card key={plan.id} className={`flex flex-col ${activeSubscription && activeSubscription.plan_id === plan.id ? 'border-green-500 shadow-lg' : (plan.name === 'Pro' ? 'border-purple-500' : '')}`}>
-            <CardHeader className="pb-4">
-              <div className="flex justify-between items-center">
-                <CardTitle className="text-2xl font-semibold">{plan.name}</CardTitle>
-                {activeSubscription && activeSubscription.plan_id === plan.id && (
-                  <span className="text-xs font-semibold px-2 py-1 rounded-full bg-green-100 text-green-700">Current Plan</span>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 dark:from-slate-900 dark:via-blue-900 dark:to-purple-900">
+      <div className="container mx-auto px-4 py-8 md:py-12">
+        {/* Back Button */}
+        <div className="mb-6">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            asChild
+            className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border border-slate-200 dark:border-slate-700 hover:bg-white dark:hover:bg-slate-800 transition-all duration-200"
+          >
+            <Link href="/dashboard" className="flex items-center gap-2">
+              <ArrowLeft className="h-4 w-4" />
+              Back to Dashboard
+            </Link>
+          </Button>
+        </div>
+
+        {/* Header */}
+        <header className="text-center mb-12">
+          <div className="flex items-center justify-center mb-4">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
+              <CreditCard className="h-6 w-6 text-white" />
+            </div>
+          </div>
+          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-slate-900 via-blue-900 to-purple-900 dark:from-slate-100 dark:via-blue-100 dark:to-purple-100 bg-clip-text text-transparent mb-4">
+            Choose Your Plan
+          </h1>
+          <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto flex items-center justify-center gap-2">
+            <Shield className="h-5 w-5 flex-shrink-0" />
+            Start creating and sharing your knowledge with the world. No credit card required for the Free plan.
+          </p>
+        </header>
+
+        {/* Error Message */}
+        {error && (
+          <div className="mb-8 max-w-md mx-auto">
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+              <p className="text-red-700 dark:text-red-300 text-center text-sm">
+                {error}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Pricing Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto mb-12">
+          {plans.map((plan) => {
+            const PlanIcon = getPlanIcon(plan.name);
+            const isActive = activeSubscription && activeSubscription.plan_id === plan.id;
+            const isPopular = isPopularPlan(plan);
+            const planColor = getPlanColor(plan.name);
+
+            return (
+              <div key={plan.id} className="relative h-full">
+                {/* Popular Badge */}
+                {isPopular && (
+                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10">
+                    <div className="bg-gradient-to-r from-purple-500 to-pink-600 text-white px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1 shadow-lg">
+                      <Star className="h-3 w-3" />
+                      Most Popular
+                    </div>
+                  </div>
                 )}
-              </div>
-              <CardDescription>
-                {plan.description || `Create up to ${plan.course_limit} course${plan.course_limit !== 1 ? 's' : ''}, ${plan.max_chapters} chapter${plan.max_chapters !== 1 ? 's' : ''} per course, and ${plan.max_lessons_per_chapter} lesson${plan.max_lessons_per_chapter !== 1 ? 's' : ''} per chapter.`}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex-grow">
-              <div className="mb-6">
-                <span className="text-4xl font-bold">
-                  {plan.price_cents === 0 ? 'Free' : `€${plan.price_cents / 100}`}
-                </span>
-                {plan.price_cents !== 0 && <span className="text-muted-foreground">/month</span>}
-              </div>
-              <ul className="space-y-2 mb-6">
-                <li className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
-                  <span>Create up to {plan.course_limit} course{plan.course_limit !== 1 ? 's' : ''}</span>
-                </li>
-                <li className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
-                  <span>Up to {plan.max_chapters} chapter{plan.max_chapters !== 1 ? 's' : ''} per course</span>
-                </li>
-                <li className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
-                  <span>Up to {plan.max_lessons_per_chapter} lesson{plan.max_lessons_per_chapter !== 1 ? 's' : ''} per chapter</span>
-                </li>
-                {(plan.features || []).map((feature, index) => (
-                  <li key={index} className="flex items-center">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-            <CardFooter>
-              {activeSubscription && activeSubscription.plan_id === plan.id ? (
-                <Button
-                  className="w-full"
-                  onClick={handleManageSubscription}
-                  disabled={isManagingSubscription}
+
+                {/* Current Plan Badge */}
+                {isActive && (
+                  <div className="absolute -top-3 right-0 z-10">
+                    <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1 shadow-lg">
+                      <CheckCircle className="h-3 w-3" />
+                      Current
+                    </div>
+                  </div>
+                )}
+
+                <Card 
+                  className={`h-full bg-white dark:bg-slate-800 border transition-all duration-300 hover:shadow-lg group flex flex-col ${
+                    isActive 
+                      ? 'border-green-500/50 shadow-green-500/10 shadow-lg' 
+                      : isPopular 
+                        ? 'border-purple-500/50 shadow-purple-500/10 shadow-md' 
+                        : 'border-slate-200 dark:border-slate-700'
+                  }`}
                 >
-                  {isManagingSubscription ? 'Processing...' : 'Manage Subscription'}
-                </Button>
-              ) : plan.stripe_price_id ? (
-                <Button
-                  className="w-full"
-                  onClick={() => handleCheckout(plan)}
-                  disabled={isLoading === plan.id || isManagingSubscription || !plan.stripe_price_id}
-                >
-                  {isLoading === plan.id ? 'Processing...' : (plan.price_cents === 0 && activeSubscription ? 'Switch to Free' : 'Choose Plan')}
-                </Button>
-              ) : (
-                <Button className="w-full" variant="outline" disabled>
-                  {plan.name === 'Free' && !activeSubscription ? 'Start with Free' : 'Details'}
-                </Button>
-              )}
-            </CardFooter>
-          </Card>
-        ))}
+                  <CardHeader className="pb-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className={`w-10 h-10 rounded-lg bg-gradient-to-r ${planColor} flex items-center justify-center`}>
+                        <PlanIcon className="h-5 w-5 text-white" />
+                      </div>
+                      {plan.name === 'Pro' && <Crown className="h-5 w-5 text-purple-500" />}
+                    </div>
+                    <CardTitle className="text-xl font-bold text-slate-900 dark:text-slate-100">
+                      {plan.name}
+                    </CardTitle>
+                    <CardDescription className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2">
+                      {plan.description || `Perfect for ${plan.name.toLowerCase()} users`}
+                    </CardDescription>
+                  </CardHeader>
+
+                  <CardContent className="space-y-4 flex-grow">
+                    {/* Price */}
+                    <div className="text-center">
+                      <div className="flex items-baseline justify-center gap-1">
+                        <span className="text-3xl font-bold text-slate-900 dark:text-slate-100">
+                          {plan.price_cents === 0 ? 'Free' : `€${plan.price_cents / 100}`}
+                        </span>
+                        {plan.price_cents !== 0 && (
+                          <span className="text-slate-500 dark:text-slate-400 text-sm">/month</span>
+                        )}
+                      </div>
+                      {plan.price_cents === 0 && (
+                        <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                          Forever free
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Features */}
+                    <div className="space-y-2">
+                      <div className="flex items-center text-sm">
+                        <CheckCircle className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
+                        <span className="text-slate-700 dark:text-slate-300">
+                          {plan.course_limit} course{plan.course_limit !== 1 ? 's' : ''}
+                        </span>
+                      </div>
+                      <div className="flex items-center text-sm">
+                        <CheckCircle className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
+                        <span className="text-slate-700 dark:text-slate-300">
+                          {plan.max_chapters} chapter{plan.max_chapters !== 1 ? 's' : ''} per course
+                        </span>
+                      </div>
+                      <div className="flex items-center text-sm">
+                        <CheckCircle className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
+                        <span className="text-slate-700 dark:text-slate-300">
+                          {plan.max_lessons_per_chapter} lesson{plan.max_lessons_per_chapter !== 1 ? 's' : ''} per chapter
+                        </span>
+                      </div>
+                      {(plan.features || []).slice(0, 3).map((feature, index) => (
+                        <div key={index} className="flex items-center text-sm">
+                          <CheckCircle className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
+                          <span className="text-slate-700 dark:text-slate-300">{feature}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+
+                  <CardFooter className="pt-0 mt-auto">
+                    {isActive ? (
+                      <Button
+                        className="w-full bg-green-600 hover:bg-green-700 text-white"
+                        onClick={handleManageSubscription}
+                        disabled={isManagingSubscription}
+                      >
+                        {isManagingSubscription ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Loading...
+                          </>
+                        ) : (
+                          <>
+                            <Users className="h-4 w-4 mr-2" />
+                            Manage Subscription
+                          </>
+                        )}
+                      </Button>
+                    ) : plan.stripe_price_id ? (
+                      <Button
+                        className={`w-full bg-gradient-to-r ${planColor} hover:opacity-90 text-white`}
+                        onClick={() => handleCheckout(plan)}
+                        disabled={isLoading === plan.id}
+                      >
+                        {isLoading === plan.id ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Processing...
+                          </>
+                        ) : (
+                          <>
+                            <Zap className="h-4 w-4 mr-2" />
+                            Choose Plan
+                          </>
+                        )}
+                      </Button>
+                    ) : (
+                      <Button 
+                        className="w-full" 
+                        variant="outline" 
+                        disabled
+                      >
+                        <BookOpen className="h-4 w-4 mr-2" />
+                        Details
+                      </Button>
+                    )}
+                  </CardFooter>
+                </Card>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Money-Back Guarantee */}
+        <div className="max-w-2xl mx-auto">
+          <div className="p-6 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-xl border border-slate-200 dark:border-slate-700 text-center">
+            <div className="flex items-center justify-center gap-2 mb-3">
+              <Shield className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                30-Day Money-Back Guarantee
+              </h3>
+            </div>
+            <p className="text-slate-600 dark:text-slate-400 text-sm">
+              Try any paid plan risk-free. If you're not completely satisfied, we'll refund your money within 30 days.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );
