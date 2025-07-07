@@ -36,8 +36,8 @@ CREATE TABLE public.enrollments (
   enrolled_at timestamp with time zone DEFAULT now(),
   is_completed boolean DEFAULT false,
   CONSTRAINT enrollments_pkey PRIMARY KEY (id),
-  CONSTRAINT enrollments_course_id_fkey FOREIGN KEY (course_id) REFERENCES public.courses(id),
-  CONSTRAINT enrollments_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+  CONSTRAINT enrollments_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id),
+  CONSTRAINT enrollments_course_id_fkey FOREIGN KEY (course_id) REFERENCES public.courses(id)
 );
 CREATE TABLE public.lessons (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -62,7 +62,39 @@ CREATE TABLE public.plans (
   features ARRAY,
   max_chapters integer NOT NULL DEFAULT 3,
   max_lessons_per_chapter integer NOT NULL DEFAULT 3,
+  max_presentations integer DEFAULT 1,
+  max_slides_per_presentation integer DEFAULT 10,
   CONSTRAINT plans_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.presentation_progress (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid,
+  slide_id uuid,
+  is_viewed boolean DEFAULT false,
+  viewed_at timestamp with time zone,
+  CONSTRAINT presentation_progress_pkey PRIMARY KEY (id),
+  CONSTRAINT presentation_progress_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id),
+  CONSTRAINT presentation_progress_slide_id_fkey FOREIGN KEY (slide_id) REFERENCES public.slides(id)
+);
+CREATE TABLE public.presentations (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid,
+  title text NOT NULL,
+  prompt text,
+  difficulty text CHECK (difficulty = ANY (ARRAY['beginner'::text, 'intermediate'::text, 'advanced'::text])),
+  slide_count integer,
+  is_published boolean DEFAULT false,
+  is_archived boolean DEFAULT false,
+  created_at timestamp with time zone DEFAULT now(),
+  source_type character varying DEFAULT 'prompt'::character varying,
+  source_document_name character varying,
+  source_document_metadata jsonb,
+  theme text DEFAULT 'default'::text,
+  background_color text DEFAULT '#ffffff'::text,
+  text_color text DEFAULT '#000000'::text,
+  accent_color text DEFAULT '#3b82f6'::text,
+  CONSTRAINT presentations_pkey PRIMARY KEY (id),
+  CONSTRAINT presentations_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
 );
 CREATE TABLE public.profiles (
   id uuid NOT NULL,
@@ -72,6 +104,8 @@ CREATE TABLE public.profiles (
   created_at timestamp with time zone DEFAULT now(),
   course_limit integer DEFAULT 0,
   courses_created_count integer DEFAULT 0,
+  presentation_limit integer DEFAULT 0,
+  presentations_created_count integer DEFAULT 0,
   CONSTRAINT profiles_pkey PRIMARY KEY (id),
   CONSTRAINT profiles_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id)
 );
@@ -95,6 +129,21 @@ CREATE TABLE public.quizzes (
   CONSTRAINT quizzes_pkey PRIMARY KEY (id),
   CONSTRAINT quizzes_lesson_id_fkey FOREIGN KEY (lesson_id) REFERENCES public.lessons(id)
 );
+CREATE TABLE public.slides (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  presentation_id uuid,
+  title text NOT NULL,
+  content text,
+  type text DEFAULT 'content'::text CHECK (type = ANY (ARRAY['title'::text, 'content'::text, 'image'::text, 'chart'::text, 'conclusion'::text])),
+  layout text DEFAULT 'default'::text CHECK (layout = ANY (ARRAY['default'::text, 'title-only'::text, 'two-column'::text, 'image-left'::text, 'image-right'::text, 'full-image'::text])),
+  background_image_url text,
+  order_index integer NOT NULL,
+  speaker_notes text,
+  animation_type text DEFAULT 'fade'::text,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT slides_pkey PRIMARY KEY (id),
+  CONSTRAINT slides_presentation_id_fkey FOREIGN KEY (presentation_id) REFERENCES public.presentations(id)
+);
 CREATE TABLE public.subscriptions (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   user_id uuid UNIQUE,
@@ -107,6 +156,6 @@ CREATE TABLE public.subscriptions (
   created_at timestamp with time zone DEFAULT now(),
   stripe_current_period_end timestamp with time zone,
   CONSTRAINT subscriptions_pkey PRIMARY KEY (id),
-  CONSTRAINT subscriptions_plan_id_fkey FOREIGN KEY (plan_id) REFERENCES public.plans(id),
-  CONSTRAINT subscriptions_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+  CONSTRAINT subscriptions_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id),
+  CONSTRAINT subscriptions_plan_id_fkey FOREIGN KEY (plan_id) REFERENCES public.plans(id)
 );

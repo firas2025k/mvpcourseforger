@@ -7,14 +7,14 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import {
-  Plus,
-  Search,
-  Filter,
+import { 
+  Plus, 
+  Search, 
+  Filter, 
   Presentation,
   Loader2,
   AlertCircle,
-  Sparkles,
+  Sparkles
 } from "lucide-react";
 import {
   Select,
@@ -24,12 +24,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import PresentationCard from "@/components/dashboard/PresentationCard";
-import { createBrowserClient } from "@supabase/ssr";
+import { createBrowserClient } from '@supabase/ssr';
 
 interface PresentationData {
   id: string;
   title: string;
-  difficulty: "beginner" | "intermediate" | "advanced";
+  difficulty: 'beginner' | 'intermediate' | 'advanced';
   slide_count: number;
   theme: string;
   created_at: string;
@@ -38,12 +38,10 @@ interface PresentationData {
   slides?: any[];
 }
 
-export default function PresentationsPage() {
+function PresentationsPage() {
   const router = useRouter();
   const [presentations, setPresentations] = useState<PresentationData[]>([]);
-  const [filteredPresentations, setFilteredPresentations] = useState<
-    PresentationData[]
-  >([]);
+  const [filteredPresentations, setFilteredPresentations] = useState<PresentationData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -68,19 +66,15 @@ export default function PresentationsPage() {
       setIsLoading(true);
       setError(null);
 
-      const {
-        data: { user },
-        error: authError,
-      } = await supabase.auth.getUser();
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
       if (authError || !user) {
-        setError("Please log in to view your presentations.");
+        setError('Please log in to view your presentations.');
         return;
       }
 
       const { data, error: fetchError } = await supabase
-        .from("presentations")
-        .select(
-          `
+        .from('presentations')
+        .select(`
           id,
           title,
           difficulty,
@@ -90,21 +84,20 @@ export default function PresentationsPage() {
           is_published,
           is_archived,
           slides (id)
-        `
-        )
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
+        `)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
 
       if (fetchError) {
-        console.error("Error fetching presentations:", fetchError);
-        setError("Failed to load presentations. Please try again.");
+        console.error('Error fetching presentations:', fetchError);
+        setError('Failed to load presentations. Please try again.');
         return;
       }
 
       setPresentations(data || []);
     } catch (err) {
-      console.error("Error in fetchPresentations:", err);
-      setError("An unexpected error occurred.");
+      console.error('Error in fetchPresentations:', err);
+      setError('An unexpected error occurred.');
     } finally {
       setIsLoading(false);
     }
@@ -115,23 +108,19 @@ export default function PresentationsPage() {
 
     // Search filter
     if (searchQuery.trim()) {
-      filtered = filtered.filter((presentation) =>
+      filtered = filtered.filter(presentation =>
         presentation.title.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 
     // Difficulty filter
     if (difficultyFilter !== "all") {
-      filtered = filtered.filter(
-        (presentation) => presentation.difficulty === difficultyFilter
-      );
+      filtered = filtered.filter(presentation => presentation.difficulty === difficultyFilter);
     }
 
     // Theme filter
     if (themeFilter !== "all") {
-      filtered = filtered.filter(
-        (presentation) => presentation.theme === themeFilter
-      );
+      filtered = filtered.filter(presentation => presentation.theme === themeFilter);
     }
 
     setFilteredPresentations(filtered);
@@ -139,54 +128,51 @@ export default function PresentationsPage() {
 
   const handleDeletePresentation = async (presentationId: string) => {
     try {
-      const response = await fetch(
-        `/api/presentation-details/${presentationId}`,
-        {
-          method: "DELETE",
-        }
-      );
+      const response = await fetch(`/api/presentation-details/${presentationId}`, {
+        method: 'DELETE',
+      });
 
       if (!response.ok) {
-        throw new Error("Failed to delete presentation");
+        throw new Error('Failed to delete presentation');
       }
 
       // Remove from local state
-      setPresentations((prev) => prev.filter((p) => p.id !== presentationId));
+      setPresentations(prev => prev.filter(p => p.id !== presentationId));
     } catch (error) {
-      console.error("Error deleting presentation:", error);
-      setError("Failed to delete presentation. Please try again.");
+      console.error('Error deleting presentation:', error);
+      setError('Failed to delete presentation. Please try again.');
     }
   };
 
   const handleArchivePresentation = async (presentationId: string) => {
     try {
-      const presentation = presentations.find((p) => p.id === presentationId);
+      const presentation = presentations.find(p => p.id === presentationId);
       if (!presentation) return;
 
       const { error } = await supabase
-        .from("presentations")
+        .from('presentations')
         .update({ is_archived: !presentation.is_archived })
-        .eq("id", presentationId);
+        .eq('id', presentationId);
 
       if (error) {
         throw error;
       }
 
       // Update local state
-      setPresentations((prev) =>
-        prev.map((p) =>
-          p.id === presentationId ? { ...p, is_archived: !p.is_archived } : p
-        )
-      );
+      setPresentations(prev => prev.map(p => 
+        p.id === presentationId 
+          ? { ...p, is_archived: !p.is_archived }
+          : p
+      ));
     } catch (error) {
-      console.error("Error archiving presentation:", error);
-      setError("Failed to archive presentation. Please try again.");
+      console.error('Error archiving presentation:', error);
+      setError('Failed to archive presentation. Please try again.');
     }
   };
 
   const handleDuplicatePresentation = async (presentationId: string) => {
     // TODO: Implement duplication logic
-    console.log("Duplicate presentation:", presentationId);
+    console.log('Duplicate presentation:', presentationId);
   };
 
   if (isLoading) {
@@ -194,9 +180,7 @@ export default function PresentationsPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center space-y-4">
           <Loader2 className="h-8 w-8 animate-spin mx-auto text-purple-600" />
-          <p className="text-slate-600 dark:text-slate-400">
-            Loading your presentations...
-          </p>
+          <p className="text-slate-600 dark:text-slate-400">Loading your presentations...</p>
         </div>
       </div>
     );
@@ -230,8 +214,8 @@ export default function PresentationsPage() {
               Create and manage your AI-generated presentations
             </p>
           </div>
-
-          <Button
+          
+          <Button 
             asChild
             className="bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
           >
@@ -254,7 +238,7 @@ export default function PresentationsPage() {
               className="pl-10 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm"
             />
           </div>
-
+          
           <Select value={difficultyFilter} onValueChange={setDifficultyFilter}>
             <SelectTrigger className="w-full md:w-48 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm">
               <SelectValue placeholder="Difficulty" />
@@ -266,7 +250,7 @@ export default function PresentationsPage() {
               <SelectItem value="advanced">Advanced</SelectItem>
             </SelectContent>
           </Select>
-
+          
           <Select value={themeFilter} onValueChange={setThemeFilter}>
             <SelectTrigger className="w-full md:w-48 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm">
               <SelectValue placeholder="Theme" />
@@ -285,16 +269,10 @@ export default function PresentationsPage() {
         {/* Results Summary */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
-            <Badge
-              variant="outline"
-              className="bg-white/90 dark:bg-slate-800/90"
-            >
-              {filteredPresentations.length} presentation
-              {filteredPresentations.length !== 1 ? "s" : ""}
+            <Badge variant="outline" className="bg-white/90 dark:bg-slate-800/90">
+              {filteredPresentations.length} presentation{filteredPresentations.length !== 1 ? 's' : ''}
             </Badge>
-            {(searchQuery ||
-              difficultyFilter !== "all" ||
-              themeFilter !== "all") && (
+            {(searchQuery || difficultyFilter !== "all" || themeFilter !== "all") && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -315,17 +293,16 @@ export default function PresentationsPage() {
           <div className="text-center py-16">
             <Presentation className="h-16 w-16 mx-auto text-slate-400 mb-4" />
             <h3 className="text-xl font-semibold text-slate-700 dark:text-slate-300 mb-2">
-              {presentations.length === 0
-                ? "No presentations yet"
-                : "No presentations match your filters"}
+              {presentations.length === 0 ? "No presentations yet" : "No presentations match your filters"}
             </h3>
             <p className="text-slate-600 dark:text-slate-400 mb-6">
-              {presentations.length === 0
+              {presentations.length === 0 
                 ? "Create your first AI-generated presentation to get started"
-                : "Try adjusting your search or filter criteria"}
+                : "Try adjusting your search or filter criteria"
+              }
             </p>
             {presentations.length === 0 && (
-              <Button
+              <Button 
                 asChild
                 className="bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white"
               >
@@ -353,3 +330,6 @@ export default function PresentationsPage() {
     </div>
   );
 }
+
+export default PresentationsPage;
+
