@@ -19,7 +19,9 @@ import {
   FileText,
   Timer,
   Eye,
-  EyeOff
+  EyeOff,
+  Home,
+  Presentation
 } from "lucide-react";
 import {
   Sheet,
@@ -185,15 +187,17 @@ export default function PresentationViewer({
     switch (slide.layout) {
       case 'title-only':
         return (
-          <div className="flex flex-col items-center justify-center h-full text-center">
-            <h1 className="text-6xl font-bold mb-4" style={{ color: presentation.text_color }}>
-              {slide.title}
-            </h1>
-            {contentLines.length > 0 && (
-              <p className="text-2xl opacity-80" style={{ color: presentation.text_color }}>
-                {contentLines[0]}
-              </p>
-            )}
+          <div className="flex flex-col items-center justify-center h-full text-center px-8 md:px-16">
+            <div className="max-w-6xl mx-auto space-y-8">
+              <h1 className="text-6xl md:text-7xl lg:text-8xl font-bold leading-tight" style={{ color: presentation.text_color }}>
+                {slide.title}
+              </h1>
+              {contentLines.length > 0 && (
+                <p className="text-2xl md:text-3xl lg:text-4xl opacity-90 font-medium leading-relaxed" style={{ color: presentation.text_color }}>
+                  {contentLines[0]}
+                </p>
+              )}
+            </div>
           </div>
         );
       
@@ -203,21 +207,23 @@ export default function PresentationViewer({
         const rightContent = contentLines.slice(midPoint);
         
         return (
-          <div className="h-full flex flex-col">
-            <h2 className="text-4xl font-bold mb-8" style={{ color: presentation.text_color }}>
-              {slide.title}
-            </h2>
-            <div className="flex-1 grid grid-cols-2 gap-8">
-              <div className="space-y-4">
+          <div className="h-full flex flex-col px-8 md:px-16 py-8">
+            <div className="mb-12">
+              <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight" style={{ color: presentation.text_color }}>
+                {slide.title}
+              </h2>
+            </div>
+            <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16">
+              <div className="space-y-6">
                 {leftContent.map((line, index) => (
-                  <p key={index} className="text-xl leading-relaxed" style={{ color: presentation.text_color }}>
+                  <p key={index} className="text-xl md:text-2xl lg:text-3xl leading-relaxed font-medium" style={{ color: presentation.text_color }}>
                     {line}
                   </p>
                 ))}
               </div>
-              <div className="space-y-4">
+              <div className="space-y-6">
                 {rightContent.map((line, index) => (
-                  <p key={index} className="text-xl leading-relaxed" style={{ color: presentation.text_color }}>
+                  <p key={index} className="text-xl md:text-2xl lg:text-3xl leading-relaxed font-medium" style={{ color: presentation.text_color }}>
                     {line}
                   </p>
                 ))}
@@ -228,15 +234,23 @@ export default function PresentationViewer({
       
       default:
         return (
-          <div className="h-full flex flex-col">
-            <h2 className="text-4xl font-bold mb-8" style={{ color: presentation.text_color }}>
-              {slide.title}
-            </h2>
-            <div className="flex-1 space-y-6">
+          <div className="h-full flex flex-col px-8 md:px-16 lg:px-20 py-8 md:py-12">
+            <div className="mb-12">
+              <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight" style={{ color: presentation.text_color }}>
+                {slide.title}
+              </h2>
+            </div>
+            <div className="flex-1 space-y-8 md:space-y-10">
               {contentLines.map((line, index) => (
-                <p key={index} className="text-xl leading-relaxed" style={{ color: presentation.text_color }}>
-                  {line}
-                </p>
+                <div key={index} className="flex items-start gap-4 md:gap-6">
+                  <div 
+                    className="w-3 h-3 md:w-4 md:h-4 rounded-full mt-3 md:mt-4 flex-shrink-0"
+                    style={{ backgroundColor: presentation.accent_color }}
+                  />
+                  <p className="text-xl md:text-2xl lg:text-3xl leading-relaxed font-medium flex-1" style={{ color: presentation.text_color }}>
+                    {line}
+                  </p>
+                </div>
               ))}
             </div>
           </div>
@@ -246,95 +260,99 @@ export default function PresentationViewer({
 
   return (
     <div className="h-screen flex flex-col bg-gray-900">
-      {/* Top Controls */}
+      {/* Enhanced Top Controls */}
       {!isFullscreen && (
-        <div className="flex items-center justify-between p-4 bg-white dark:bg-slate-800 border-b">
-          <div className="flex items-center gap-4">
-            <h1 className="text-lg font-semibold">{presentation.title}</h1>
-            <Badge variant="outline">
+        <div className="flex items-center justify-between p-4 md:p-6 bg-white dark:bg-slate-800 border-b shadow-sm">
+          <div className="flex items-center gap-4 md:gap-6">
+            <div className="flex items-center gap-3">
+              <Presentation className="h-6 w-6 text-blue-600" />
+              <h1 className="text-lg md:text-xl font-semibold">{presentation.title}</h1>
+            </div>
+            <Badge variant="outline" className="text-sm font-medium">
               {currentSlide + 1} / {slides.length}
             </Badge>
           </div>
           
-          <div className="flex items-center gap-2">
-            {/* Timer Display */}
+          <div className="flex items-center gap-2 md:gap-3">
+            {/* Enhanced Timer Display */}
             {isPlaying && autoAdvanceTime > 0 && (
-              <div className="flex items-center gap-2 px-3 py-1 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
+              <div className="flex items-center gap-2 px-4 py-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
                 <Timer className="h-4 w-4 text-blue-600" />
                 <span className="text-sm font-medium text-blue-600">{timeRemaining}s</span>
               </div>
             )}
             
-            {/* Speaker Notes Toggle */}
+            {/* Enhanced Speaker Notes Toggle */}
             <Button
               variant="outline"
               size="sm"
               onClick={() => setShowSpeakerNotes(!showSpeakerNotes)}
+              className="transition-all duration-200 hover:scale-105"
             >
               {showSpeakerNotes ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </Button>
             
-            {/* Settings */}
+            {/* Enhanced Settings */}
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" className="transition-all duration-200 hover:scale-105">
                   <Settings className="h-4 w-4" />
                 </Button>
               </SheetTrigger>
-              <SheetContent>
+              <SheetContent className="w-80">
                 <SheetHeader>
                   <SheetTitle>Presentation Settings</SheetTitle>
                   <SheetDescription>
                     Configure your presentation experience
                   </SheetDescription>
                 </SheetHeader>
-                <div className="space-y-4 mt-6">
+                <div className="space-y-6 mt-6">
                   <div>
-                    <label className="text-sm font-medium">Auto-advance time (seconds)</label>
+                    <label className="text-sm font-medium block mb-2">Auto-advance time (seconds)</label>
                     <input
                       type="number"
                       min="0"
                       max="60"
                       value={autoAdvanceTime}
                       onChange={(e) => setAutoAdvanceTime(parseInt(e.target.value) || 0)}
-                      className="w-full mt-1 px-3 py-2 border rounded-md"
+                      className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
                   </div>
                 </div>
               </SheetContent>
             </Sheet>
             
-            {/* Exit Button */}
-            <Button variant="outline" size="sm" onClick={onExit}>
-              <Square className="h-4 w-4" />
+            {/* Enhanced Exit Button */}
+            <Button variant="outline" size="sm" onClick={onExit} className="transition-all duration-200 hover:scale-105">
+              <Home className="h-4 w-4" />
             </Button>
           </div>
         </div>
       )}
 
-      {/* Main Content Area */}
+      {/* Enhanced Main Content Area */}
       <div className="flex-1 flex">
-        {/* Slide Display */}
+        {/* Enhanced Slide Display */}
         <div className="flex-1 relative">
           <div 
-            className="h-full p-12 flex items-center justify-center"
+            className="h-full flex items-center justify-center transition-all duration-300"
             style={{ backgroundColor: presentation.background_color }}
           >
-            <div className="w-full max-w-6xl">
+            <div className="w-full max-w-7xl mx-auto h-full">
               {renderSlideContent(currentSlideData)}
             </div>
           </div>
           
-          {/* Navigation Overlay */}
-          <div className="absolute inset-0 flex items-center justify-between p-4 pointer-events-none">
+          {/* Enhanced Navigation Overlay */}
+          <div className="absolute inset-0 flex items-center justify-between p-6 md:p-8 pointer-events-none">
             <Button
               variant="ghost"
               size="lg"
               onClick={previousSlide}
               disabled={currentSlide === 0}
-              className="pointer-events-auto bg-black/20 hover:bg-black/40 text-white"
+              className="pointer-events-auto bg-black/20 hover:bg-black/40 text-white transition-all duration-200 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <ChevronLeft className="h-6 w-6" />
+              <ChevronLeft className="h-6 w-6 md:h-8 md:w-8" />
             </Button>
             
             <Button
@@ -342,72 +360,98 @@ export default function PresentationViewer({
               size="lg"
               onClick={nextSlide}
               disabled={currentSlide === slides.length - 1}
-              className="pointer-events-auto bg-black/20 hover:bg-black/40 text-white"
+              className="pointer-events-auto bg-black/20 hover:bg-black/40 text-white transition-all duration-200 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <ChevronRight className="h-6 w-6" />
+              <ChevronRight className="h-6 w-6 md:h-8 md:w-8" />
             </Button>
           </div>
         </div>
 
-        {/* Speaker Notes Panel */}
+        {/* Enhanced Speaker Notes Panel */}
         {showSpeakerNotes && (
-          <div className="w-80 bg-white dark:bg-slate-800 border-l p-4 overflow-y-auto">
-            <div className="flex items-center gap-2 mb-4">
-              <FileText className="h-5 w-5" />
-              <h3 className="font-semibold">Speaker Notes</h3>
-            </div>
-            <div className="text-sm text-slate-600 dark:text-slate-400 space-y-2">
-              {currentSlideData.speaker_notes ? (
-                currentSlideData.speaker_notes.split('\n').map((note, index) => (
-                  <p key={index}>{note}</p>
-                ))
-              ) : (
-                <p className="italic">No speaker notes for this slide.</p>
-              )}
+          <div className="w-80 md:w-96 bg-white dark:bg-slate-800 border-l shadow-lg overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-6">
+                <FileText className="h-5 w-5 text-blue-600" />
+                <h3 className="font-semibold text-lg">Speaker Notes</h3>
+              </div>
+              <div className="text-sm text-slate-600 dark:text-slate-400 space-y-3 leading-relaxed">
+                {currentSlideData.speaker_notes ? (
+                  currentSlideData.speaker_notes.split('\n').map((note, index) => (
+                    <p key={index} className="p-3 bg-slate-50 dark:bg-slate-700 rounded-lg">{note}</p>
+                  ))
+                ) : (
+                  <p className="italic text-center py-8 text-slate-400">No speaker notes for this slide.</p>
+                )}
+              </div>
             </div>
           </div>
         )}
       </div>
 
-      {/* Bottom Controls */}
-      <div className="bg-white dark:bg-slate-800 border-t p-4">
-        <div className="flex items-center justify-between">
-          {/* Slide Navigation */}
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={previousSlide} disabled={currentSlide === 0}>
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            
-            <div className="flex items-center gap-1">
-              {slides.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => goToSlide(index)}
-                  className={`w-3 h-3 rounded-full transition-colors ${
-                    index === currentSlide
-                      ? 'bg-blue-600'
-                      : index < currentSlide
-                      ? 'bg-green-600'
-                      : 'bg-gray-300 dark:bg-gray-600'
-                  }`}
-                />
-              ))}
+      {/* Enhanced Bottom Controls */}
+      <div className="bg-white dark:bg-slate-800 border-t shadow-lg">
+        <div className="p-4 md:p-6">
+          <div className="flex items-center justify-between">
+            {/* Enhanced Slide Navigation */}
+            <div className="flex items-center gap-3 md:gap-4">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={previousSlide} 
+                disabled={currentSlide === 0}
+                className="transition-all duration-200 hover:scale-105"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              
+              <div className="flex items-center gap-2">
+                {slides.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => goToSlide(index)}
+                    className={`w-3 h-3 md:w-4 md:h-4 rounded-full transition-all duration-200 hover:scale-125 ${
+                      index === currentSlide
+                        ? 'bg-blue-600 shadow-lg'
+                        : index < currentSlide
+                        ? 'bg-green-600 shadow-md'
+                        : 'bg-gray-300 dark:bg-gray-600 hover:bg-gray-400'
+                    }`}
+                  />
+                ))}
+              </div>
+              
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={nextSlide} 
+                disabled={currentSlide === slides.length - 1}
+                className="transition-all duration-200 hover:scale-105"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
             </div>
-            
-            <Button variant="outline" size="sm" onClick={nextSlide} disabled={currentSlide === slides.length - 1}>
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
 
-          {/* Playback Controls */}
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={togglePlayback}>
-              {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-            </Button>
-            
-            <Button variant="outline" size="sm" onClick={toggleFullscreen}>
-              {isFullscreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
-            </Button>
+            {/* Enhanced Playback Controls */}
+            <div className="flex items-center gap-2 md:gap-3">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={togglePlayback}
+                className="transition-all duration-200 hover:scale-105"
+              >
+                {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+              </Button>
+              
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={toggleFullscreen}
+                className="transition-all duration-200 hover:scale-105"
+              >
+                {isFullscreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
+              </Button>
+            </div>
           </div>
         </div>
       </div>

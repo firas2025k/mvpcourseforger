@@ -222,19 +222,21 @@ function PresentationDetailPage() {
     switch (slide.layout) {
       case 'title-only':
         return (
-          <div className="flex flex-col items-center justify-center h-full text-center p-8">
-            <h1 className="text-4xl md:text-6xl font-bold mb-4" style={{ color: presentation.text_color }}>
-              {slide.title}
-            </h1>
-            {slide.content.trim() && (
-              <div className="text-xl md:text-2xl opacity-80 max-w-4xl">
-                <MarkdownSlideRenderer 
-                  content={slide.content}
-                  textColor={presentation.text_color}
-                  accentColor={presentation.accent_color}
-                />
-              </div>
-            )}
+          <div className="flex flex-col items-center justify-center h-full text-center p-4 md:p-8 overflow-hidden">
+            <div className="max-w-4xl mx-auto space-y-4 max-h-full overflow-y-auto">
+              <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold leading-tight" style={{ color: presentation.text_color }}>
+                {slide.title}
+              </h1>
+              {slide.content.trim() && (
+                <div className="text-lg md:text-xl lg:text-2xl opacity-90 max-w-3xl">
+                  <MarkdownSlideRenderer 
+                    content={slide.content}
+                    textColor={presentation.text_color}
+                    accentColor={presentation.accent_color}
+                  />
+                </div>
+              )}
+            </div>
           </div>
         );
       
@@ -245,19 +247,21 @@ function PresentationDetailPage() {
         const rightContent = contentLines.slice(midPoint).join('\n');
         
         return (
-          <div className="h-full flex flex-col p-8">
-            <h2 className="text-3xl md:text-4xl font-bold mb-8" style={{ color: presentation.text_color }}>
-              {slide.title}
-            </h2>
-            <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div>
+          <div className="h-full flex flex-col p-4 md:p-6 overflow-hidden">
+            <div className="mb-4 flex-shrink-0">
+              <h2 className="text-xl md:text-2xl lg:text-3xl font-bold leading-tight" style={{ color: presentation.text_color }}>
+                {slide.title}
+              </h2>
+            </div>
+            <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 min-h-0">
+              <div className="overflow-hidden">
                 <MarkdownSlideRenderer
                   content={leftContent}
                   textColor={presentation.text_color}
                   accentColor={presentation.accent_color}
                 />
               </div>
-              <div>
+              <div className="overflow-hidden">
                 <MarkdownSlideRenderer 
                   content={rightContent}
                   textColor={presentation.text_color}
@@ -270,11 +274,13 @@ function PresentationDetailPage() {
       
       default:
         return (
-          <div className="h-full flex flex-col p-8">
-            <h2 className="text-3xl md:text-4xl font-bold mb-8" style={{ color: presentation.text_color }}>
-              {slide.title}
-            </h2>
-            <div className="flex-1 max-w-5xl">
+          <div className="h-full flex flex-col p-4 md:p-6 lg:p-8 overflow-hidden">
+            <div className="mb-4 flex-shrink-0">
+              <h2 className="text-xl md:text-2xl lg:text-3xl font-bold leading-tight" style={{ color: presentation.text_color }}>
+                {slide.title}
+              </h2>
+            </div>
+            <div className="flex-1 max-w-4xl min-h-0">
               <MarkdownSlideRenderer 
                 content={slide.content}
                 textColor={presentation.text_color}
@@ -480,12 +486,12 @@ function PresentationDetailPage() {
             {/* Visual Slide Viewer */}
             <Card className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 shadow-lg">
               <CardContent className="p-0">
-                {/* Slide Display */}
+                {/* Slide Display with Fixed Height and Overflow Handling */}
                 <div 
-                  className="relative aspect-video rounded-lg overflow-hidden"
+                  className="relative w-full h-[60vh] rounded-lg overflow-hidden"
                   style={{ backgroundColor: presentation.background_color }}
                 >
-                  <div className="absolute inset-0">
+                  <div className="absolute inset-0 overflow-hidden">
                     {renderSlideContent(presentation.slides[currentSlideIndex])}
                   </div>
                   

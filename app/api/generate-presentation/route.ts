@@ -193,7 +193,7 @@ export async function POST(request: NextRequest) {
 
     for (const slideOutline of presentationOutline.slides) {
       const slidePrompt = `
-        You are an AI presentation content creator.
+        You are an AI presentation content creator specializing in concise, impactful slides.
         Presentation Topic: "${userPrompt}"
         Slide Title: "${slideOutline.slideTitle}"
         Slide Type: "${slideOutline.slideType}"
@@ -206,15 +206,28 @@ export async function POST(request: NextRequest) {
           "speaker_notes": "..."
         }
         
-        Instructions:
-        - For "title" slides: Create a compelling title and subtitle
-        - For "content" slides: Create detailed, engaging content appropriate for ${difficulty} audience
-        - For "image" slides: Describe what image should be shown and provide supporting text
-        - For "chart" slides: Describe the data visualization and provide explanatory text
-        - For "conclusion" slides: Summarize key points and provide a strong closing
-        - Content should be formatted in markdown for better presentation
-        - Speaker notes should provide additional context and talking points
-        - Keep content concise but informative for slide presentation format
+        CRITICAL PRESENTATION RULES:
+        - Follow the 6x6 rule: Maximum 6 bullet points, 6 words per bullet
+        - Keep content CONCISE and IMPACTFUL - presentations are visual, not text-heavy
+        - Use bullet points (•) instead of long paragraphs
+        - Each bullet should be a key takeaway, not a full sentence
+        - Maximum 3-4 lines of content per slide (except title slides)
+        - Focus on keywords and phrases that trigger audience understanding
+        
+        Content Guidelines by Type:
+        - "title" slides: Brief compelling title + short subtitle (1-2 lines max)
+        - "content" slides: 3-5 bullet points with key concepts only
+        - "image" slides: Brief description + 2-3 supporting bullet points
+        - "chart" slides: Chart description + 2-3 key insights from data
+        - "conclusion" slides: 3-4 key takeaways + call to action
+        
+        Format content in markdown with:
+        - Use ## for main sections
+        - Use • for bullet points (not * or -)
+        - Keep each bullet point under 8 words
+        - Use bold (**text**) for emphasis on key terms only
+        
+        Speaker notes should be more detailed (2-3 sentences) to help presenter expand on the concise slide content.
         
         Output only the valid JSON object.
       `;
