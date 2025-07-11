@@ -46,8 +46,8 @@ Ultimate → 50 courses, 10 chapters, 6 lessons/chapter
 
 - 🧾 Profile & Settings: Manage user info and subscription details
 
-- 🧠 Plan Enforcement (Frontend + API): Validates limits before course generation
-
+- 🧠 Credit based system generation
+## folder structure
 .
 ├── README.md
 ├── actions
@@ -71,6 +71,8 @@ Ultimate → 50 courses, 10 chapters, 6 lessons/chapter
 │   │   ├── generate-course-from-pdf
 │   │   │   └── route.ts
 │   │   ├── generate-presentation
+│   │   │   └── route.ts
+│   │   ├── generate-presentation-from-pdf
 │   │   │   └── route.ts
 │   │   ├── lesson-content
 │   │   │   └── route.ts
@@ -155,6 +157,7 @@ Ultimate → 50 courses, 10 chapters, 6 lessons/chapter
 │   │   └── update-password-form.tsx
 │   ├── dashboard
 │   │   ├── CourseCard.tsx
+│   │   ├── CreditBalance.tsx
 │   │   ├── DashboardLayout.tsx
 │   │   ├── ManageSubscriptionButton.tsx
 │   │   ├── PresentationCard.tsx

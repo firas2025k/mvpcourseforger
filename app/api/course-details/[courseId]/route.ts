@@ -2,11 +2,20 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 
+interface QuizData {
+  id: string;
+  question: string;
+  correct_answer: string;
+  wrong_answers: string[];
+}
+
 interface LessonInChapter {
   id: string;
   title: string;
   content: string | null;
+  type: string;
   order_index: number;
+  quizzes: QuizData[];
 }
 
 interface ChapterWithLessons {
@@ -31,12 +40,20 @@ export async function GET(
           return cookieStore.get(name)?.value;
         },
         set(name: string, value: string, options: CookieOptions) {
-          // cookieStore is now from the outer scope
-          cookieStore.set(name, value, options);
+          try {
+            // cookieStore is now from the outer scope
+            cookieStore.set(name, value, options);
+          } catch (error) {
+            // Handle cookie setting errors silently
+          }
         },
         remove(name: string, options: CookieOptions) {
-          // cookieStore is now from the outer scope
-          cookieStore.set(name, '', options);
+          try {
+            // cookieStore is now from the outer scope
+            cookieStore.set(name, '', options);
+          } catch (error) {
+            // Handle cookie removal errors silently
+          }
         },
       },
     }
@@ -55,10 +72,21 @@ export async function GET(
   }
 
   try {
-    // Fetch course details
+    // Fetch course details with all necessary fields for the preview page
     const { data: course, error: courseError } = await supabase
       .from('courses')
-      .select('*')
+      .select(`
+        id,
+        title,
+        difficulty,
+        prompt,
+        chapter_count,
+        lessons_per_chapter,
+        credit_cost,
+        is_published,
+        created_at,
+        updated_at
+      `)
       .eq('id', courseId)
       .eq('user_id', user.id) // Ensure the user owns the course
       .single();
@@ -68,7 +96,7 @@ export async function GET(
       return NextResponse.json({ error: 'Course not found or access denied' }, { status: 404 });
     }
 
-    // Fetch chapters for the course, including their lessons
+    // Fetch chapters for the course, including their lessons and quizzes
     const { data: chaptersData, error: chaptersError } = await supabase
       .from('chapters')
       .select(`
@@ -79,11 +107,18 @@ export async function GET(
           id,
           title,
           content,
-          order_index
+          type,
+          order_index,
+          quizzes (
+            id,
+            question,
+            correct_answer,
+            wrong_answers
+          )
         )
       `)
       .eq('course_id', courseId)
-      .order('order_index', { ascending: true }) // Changed from chapter_number
+      .order('order_index', { ascending: true })
       .order('order_index', { referencedTable: 'lessons', ascending: true }) as { data: ChapterWithLessons[] | null; error: any };
 
     if (chaptersError) {
@@ -94,7 +129,10 @@ export async function GET(
     // Ensure chapters and their nested lessons are properly structured, handling potential nulls
     const chapters = chaptersData ? chaptersData.map(ch => ({
       ...ch,
-      lessons: ch.lessons || []
+      lessons: ch.lessons ? ch.lessons.map(lesson => ({
+        ...lesson,
+        quizzes: lesson.quizzes || []
+      })) : []
     })) : [];
 
     const courseWithDetails = {
@@ -109,3 +147,4 @@ export async function GET(
     return NextResponse.json({ error: 'Internal server error', details: error.message }, { status: 500 });
   }
 }
+

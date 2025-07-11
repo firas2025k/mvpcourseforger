@@ -1,7 +1,4 @@
-## Database Schema
-
-- here is the current supabase database schema for the MVP
-  -- WARNING: This schema is for context only and is not meant to be run.
+-- WARNING: This schema is for context only and is not meant to be run.
 -- Table order and constraints may not be valid for execution.
 
 CREATE TABLE public.chapters (
@@ -29,8 +26,20 @@ CREATE TABLE public.courses (
   source_document_metadata jsonb,
   price_cents integer,
   is_for_sale boolean DEFAULT false,
+  credit_cost integer NOT NULL DEFAULT 0,
   CONSTRAINT courses_pkey PRIMARY KEY (id),
   CONSTRAINT courses_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.credit_transactions (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  type text NOT NULL CHECK (type = ANY (ARRAY['purchase'::text, 'consumption'::text, 'adjustment'::text])),
+  amount integer NOT NULL,
+  related_entity_id uuid,
+  description text,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT credit_transactions_pkey PRIMARY KEY (id),
+  CONSTRAINT credit_transactions_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
 );
 CREATE TABLE public.enrollments (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -39,8 +48,8 @@ CREATE TABLE public.enrollments (
   enrolled_at timestamp with time zone DEFAULT now(),
   is_completed boolean DEFAULT false,
   CONSTRAINT enrollments_pkey PRIMARY KEY (id),
-  CONSTRAINT enrollments_course_id_fkey FOREIGN KEY (course_id) REFERENCES public.courses(id),
-  CONSTRAINT enrollments_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+  CONSTRAINT enrollments_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id),
+  CONSTRAINT enrollments_course_id_fkey FOREIGN KEY (course_id) REFERENCES public.courses(id)
 );
 CREATE TABLE public.lessons (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -65,7 +74,41 @@ CREATE TABLE public.plans (
   features ARRAY,
   max_chapters integer NOT NULL DEFAULT 3,
   max_lessons_per_chapter integer NOT NULL DEFAULT 3,
+  max_presentations integer DEFAULT 1,
+  max_slides_per_presentation integer DEFAULT 10,
+  credit_amount integer NOT NULL DEFAULT 0,
   CONSTRAINT plans_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.presentation_progress (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid,
+  slide_id uuid,
+  is_viewed boolean DEFAULT false,
+  viewed_at timestamp with time zone,
+  CONSTRAINT presentation_progress_pkey PRIMARY KEY (id),
+  CONSTRAINT presentation_progress_slide_id_fkey FOREIGN KEY (slide_id) REFERENCES public.slides(id),
+  CONSTRAINT presentation_progress_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.presentations (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid,
+  title text NOT NULL,
+  prompt text,
+  difficulty text CHECK (difficulty = ANY (ARRAY['beginner'::text, 'intermediate'::text, 'advanced'::text])),
+  slide_count integer,
+  is_published boolean DEFAULT false,
+  is_archived boolean DEFAULT false,
+  created_at timestamp with time zone DEFAULT now(),
+  source_type character varying DEFAULT 'prompt'::character varying,
+  source_document_name character varying,
+  source_document_metadata jsonb,
+  theme text DEFAULT 'default'::text,
+  background_color text DEFAULT '#ffffff'::text,
+  text_color text DEFAULT '#000000'::text,
+  accent_color text DEFAULT '#3b82f6'::text,
+  credit_cost integer NOT NULL DEFAULT 0,
+  CONSTRAINT presentations_pkey PRIMARY KEY (id),
+  CONSTRAINT presentations_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
 );
 CREATE TABLE public.profiles (
   id uuid NOT NULL,
@@ -75,6 +118,9 @@ CREATE TABLE public.profiles (
   created_at timestamp with time zone DEFAULT now(),
   course_limit integer DEFAULT 0,
   courses_created_count integer DEFAULT 0,
+  presentation_limit integer DEFAULT 0,
+  presentations_created_count integer DEFAULT 0,
+  credits integer NOT NULL DEFAULT 0,
   CONSTRAINT profiles_pkey PRIMARY KEY (id),
   CONSTRAINT profiles_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id)
 );
@@ -85,8 +131,8 @@ CREATE TABLE public.progress (
   is_completed boolean DEFAULT false,
   completed_at timestamp with time zone,
   CONSTRAINT progress_pkey PRIMARY KEY (id),
-  CONSTRAINT progress_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id),
-  CONSTRAINT progress_lesson_id_fkey FOREIGN KEY (lesson_id) REFERENCES public.lessons(id)
+  CONSTRAINT progress_lesson_id_fkey FOREIGN KEY (lesson_id) REFERENCES public.lessons(id),
+  CONSTRAINT progress_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
 );
 CREATE TABLE public.quizzes (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -97,6 +143,21 @@ CREATE TABLE public.quizzes (
   created_at timestamp with time zone DEFAULT now(),
   CONSTRAINT quizzes_pkey PRIMARY KEY (id),
   CONSTRAINT quizzes_lesson_id_fkey FOREIGN KEY (lesson_id) REFERENCES public.lessons(id)
+);
+CREATE TABLE public.slides (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  presentation_id uuid,
+  title text NOT NULL,
+  content text,
+  type text DEFAULT 'content'::text CHECK (type = ANY (ARRAY['title'::text, 'content'::text, 'image'::text, 'chart'::text, 'conclusion'::text])),
+  layout text DEFAULT 'default'::text CHECK (layout = ANY (ARRAY['default'::text, 'title-only'::text, 'two-column'::text, 'image-left'::text, 'image-right'::text, 'full-image'::text])),
+  background_image_url text,
+  order_index integer NOT NULL,
+  speaker_notes text,
+  animation_type text DEFAULT 'fade'::text,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT slides_pkey PRIMARY KEY (id),
+  CONSTRAINT slides_presentation_id_fkey FOREIGN KEY (presentation_id) REFERENCES public.presentations(id)
 );
 CREATE TABLE public.subscriptions (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -113,36 +174,3 @@ CREATE TABLE public.subscriptions (
   CONSTRAINT subscriptions_plan_id_fkey FOREIGN KEY (plan_id) REFERENCES public.plans(id),
   CONSTRAINT subscriptions_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
 );
-## handle_new_user function
-
-DECLARE
-default_plan_id UUID;
-BEGIN
--- Get Free plan ID
-SELECT id INTO default_plan_id FROM public.plans WHERE name = 'Free' LIMIT 1;
-IF default_plan_id IS NULL THEN
-RAISE EXCEPTION 'Free plan not found in plans table. Please seed plans table.';
-END IF;
--- Insert into profiles with course_limit = 1 and courses_created_count = 0
-INSERT INTO public.profiles (id, course_limit, courses_created_count, agreed_to_terms)
-VALUES (NEW.id, 1, 0, FALSE);
--- Insert into subscriptions for Free plan
-INSERT INTO public.subscriptions (user_id, plan_id, is_active)
-VALUES (NEW.id, default_plan_id, TRUE);
-RETURN NEW;
-END;
-
-## sync_profile_course_limit
-
-BEGIN
-IF NEW.is_active = TRUE THEN
-UPDATE public.profiles
-SET course_limit = (SELECT course_limit FROM public.plans WHERE id = NEW.plan_id)
-WHERE id = NEW.user_id;
-ELSE
-UPDATE public.profiles
-SET course_limit = (SELECT course_limit FROM public.plans WHERE name = 'Free')
-WHERE id = NEW.user_id;
-END IF;
-RETURN NEW;
-END;

@@ -1,3 +1,4 @@
+// app/api/generate-course/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
@@ -37,15 +38,138 @@ interface CourseOutline {
   }[];
 }
 
-interface LessonContent {
-  content: string;
-  quiz: {
-    questions: {
-      question: string;
-      choices: string[];
-      answer: string;
-    }[];
-  };
+// ----- CREDIT CALCULATION FUNCTIONS -----
+
+/**
+ * Calculates the credit cost for generating a course based on chapters and lessons
+ * @param chapters Number of chapters
+ * @param lessonsPerChapter Number of lessons per chapter
+ * @returns Credit cost for the course generation
+ */
+function calculateCourseCreditCost(chapters: number, lessonsPerChapter: number): number {
+  const lessonCost = chapters * lessonsPerChapter; // 1 credit per lesson
+  const chapterCost = chapters; // 1 credit per chapter
+  const totalCost = lessonCost + chapterCost;
+  return Math.max(totalCost, 3); // Minimum cost of 3 credits
+}
+
+/**
+ * Deducts credits from user's balance and records the transaction
+ * @param supabase Supabase client
+ * @param userId User ID
+ * @param creditCost Number of credits to deduct
+ * @param relatedEntityId Course ID or placeholder for transaction reference
+ * @param description Transaction description
+ * @returns Promise<boolean> Success status
+ */
+async function deductCreditsAndRecordTransaction(
+  supabase: any,
+  userId: string,
+  creditCost: number,
+  relatedEntityId: string,
+  description: string
+): Promise<boolean> {
+  try {
+    const { data: profile, error: fetchError } = await supabase
+      .from('profiles')
+      .select('credits')
+      .eq('id', userId)
+      .single();
+
+    if (fetchError || !profile) {
+      console.error('Error fetching user profile for credit deduction:', fetchError);
+      return false;
+    }
+
+    const currentCredits = profile.credits || 0;
+    const newBalance = currentCredits - creditCost;
+
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update({ credits: newBalance })
+      .eq('id', userId);
+
+    if (updateError) {
+      console.error('Error updating credit balance:', updateError);
+      return false;
+    }
+
+    const { error: transactionError } = await supabase
+      .from('credit_transactions')
+      .insert({
+        user_id: userId,
+        type: 'consumption',
+        amount: -creditCost,
+        related_entity_id: relatedEntityId,
+        description: description,
+      });
+
+    if (transactionError) {
+      console.error('Error recording credit transaction:', transactionError);
+    }
+
+    console.log(`Successfully deducted ${creditCost} credits from user ${userId}. New balance: ${newBalance}`);
+    return true;
+  } catch (error) {
+    console.error('Error in credit deduction process:', error);
+    return false;
+  }
+}
+
+/**
+ * Robust JSON parser that handles various edge cases from AI responses
+ * @param text Raw text from AI response
+ * @param context Context for error logging
+ * @returns Parsed JSON object or null if parsing fails
+ */
+function parseAIResponse(text: string, context: string): any {
+  try {
+    let cleanText = text.replace(/^```json\s*\n?|\n?```\s*$/g, '').trim();
+    const jsonStart = cleanText.indexOf('{');
+    const jsonEnd = cleanText.lastIndexOf('}');
+    if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
+      cleanText = cleanText.substring(jsonStart, jsonEnd + 1);
+    }
+    console.log(`Attempting to parse ${context}:`, cleanText.substring(0, 200) + '...');
+    return JSON.parse(cleanText);
+  } catch (error) {
+    console.error(`Failed to parse ${context}:`, error);
+    console.error(`Raw text (first 500 chars):`, text.substring(0, 500));
+    return null;
+  }
+}
+
+/**
+ * Makes a Gemini API call with retry logic for 503 errors
+ * @param prompt The prompt to send to Gemini
+ * @param context Context for logging
+ * @param maxRetries Maximum number of retries
+ * @returns Promise<string> The response text
+ */
+async function makeGeminiAPICall(prompt: string, context: string, maxRetries: number = 3): Promise<string> {
+  let lastError: any;
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`${context} - Attempt ${attempt}/${maxRetries}`);
+      const chatSession = model.startChat({ generationConfig, safetySettings });
+      const result = await chatSession.sendMessage(prompt);
+      const responseText = result.response.text();
+      console.log(`${context} - Success on attempt ${attempt}`);
+      return responseText;
+    } catch (error: any) {
+      lastError = error;
+      console.error(`${context} - Attempt ${attempt} failed:`, error.message);
+      if (error.message && error.message.includes('503')) {
+        console.log(`${context} - 503 error detected, retrying in ${attempt * 2} seconds...`);
+        if (attempt < maxRetries) {
+          await new Promise(resolve => setTimeout(resolve, attempt * 2000));
+          continue;
+        }
+      }
+      break;
+    }
+  }
+  throw new Error(`${context} failed after ${maxRetries} attempts. Last error: ${lastError?.message || 'Unknown error'}`);
 }
 
 export async function POST(request: NextRequest) {
@@ -73,16 +197,36 @@ export async function POST(request: NextRequest) {
   );
 
   try {
-    // 1. Authenticate user & check course limits
+    // 1. Authenticate user
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized: User not authenticated.' }, { status: 401 });
     }
 
-    // Fetch user profile and plan details
+    // 2. Parse and validate request body
+    const body = await request.json() as GenerateCourseRequestBody;
+    const { prompt: userPrompt, chapters, lessons_per_chapter, difficulty } = body;
+
+    if (!userPrompt || !chapters || !lessons_per_chapter || !difficulty) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    // 3. Validate input ranges
+    if (chapters < 1 || chapters > 20) {
+      return NextResponse.json({ error: 'Chapters must be between 1 and 20' }, { status: 400 });
+    }
+
+    if (lessons_per_chapter < 1 || lessons_per_chapter > 10) {
+      return NextResponse.json({ error: 'Lessons per chapter must be between 1 and 10' }, { status: 400 });
+    }
+
+    // 4. Calculate credit cost
+    const creditCost = calculateCourseCreditCost(chapters, lessons_per_chapter);
+
+    // 5. Check user's credit balance
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('course_limit')
+      .select('credits')
       .eq('id', user.id)
       .single();
 
@@ -91,7 +235,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Could not retrieve user profile.' }, { status: 500 });
     }
 
-    // Fetch plan details for max chapters and lessons
+    const currentCredits = profile.credits || 0;
+
+    if (currentCredits < creditCost) {
+      return NextResponse.json({ 
+        error: `Insufficient credits. This course requires ${creditCost} credits, but you have ${currentCredits} credits available. Please purchase more credits to continue.`,
+        required_credits: creditCost,
+        available_credits: currentCredits
+      }, { status: 402 });
+    }
+
+    // 6. Check subscription-based limits
     const { data: subscription, error: subscriptionError } = await supabase
       .from('subscriptions')
       .select('plan_id')
@@ -99,137 +253,175 @@ export async function POST(request: NextRequest) {
       .eq('is_active', true)
       .single();
 
-    if (subscriptionError || !subscription) {
-      console.error('Error fetching subscription:', subscriptionError?.message);
-      return NextResponse.json({ error: 'Could not retrieve user subscription.' }, { status: 500 });
-    }
+    let planLimits = null;
+    if (!subscriptionError && subscription) {
+      const { data: plan, error: planError } = await supabase
+        .from('plans')
+        .select('max_chapters, max_lessons_per_chapter')
+        .eq('id', subscription.plan_id)
+        .single();
 
-    const { data: plan, error: planError } = await supabase
-      .from('plans')
-      .select('course_limit, max_chapters, max_lessons_per_chapter')
-      .eq('id', subscription.plan_id)
-      .single();
-
-    if (planError || !plan) {
-      console.error('Error fetching plan:', planError?.message);
-      return NextResponse.json({ error: 'Could not retrieve plan details.' }, { status: 500 });
-    }
-
-    let effectiveCourseLimit = plan.course_limit;
-    if (effectiveCourseLimit < 1) {
-      console.warn(`User ${user.id} has course_limit: ${plan.course_limit}. Applying effective limit of 1.`);
-      effectiveCourseLimit = 1;
-    }
-
-    const { count: courseCount, error: countError } = await supabase
-      .from('courses')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', user.id);
-
-    if (countError) {
-      console.error('Error fetching course count:', countError.message);
-      return NextResponse.json({ error: 'Could not retrieve course count.' }, { status: 500 });
-    }
-
-    if (courseCount !== null && courseCount >= effectiveCourseLimit) {
-      return NextResponse.json({ error: 'Course limit reached. Please upgrade your plan.' }, { status: 403 });
-    }
-
-    const body = await request.json() as GenerateCourseRequestBody;
-    const { prompt: userPrompt, chapters, lessons_per_chapter, difficulty } = body;
-
-    if (!userPrompt || !chapters || !lessons_per_chapter || !difficulty) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
-    }
-
-    // Check plan-based chapter and lesson limits
-    if (chapters > plan.max_chapters) {
-      return NextResponse.json(
-        { error: `Requested chapters (${chapters}) exceed plan limit (${plan.max_chapters}).` },
-        { status: 403 }
-      );
-    }
-    if (lessons_per_chapter > plan.max_lessons_per_chapter) {
-      return NextResponse.json(
-        { error: `Requested lessons per chapter (${lessons_per_chapter}) exceed plan limit (${plan.max_lessons_per_chapter}).` },
-        { status: 403 }
-      );
-    }
-
-    // STAGE 1 - GENERATE COURSE OUTLINE
-    const outlinePrompt = `
-      You are an AI course planner. Based on the user's request, generate a course outline.
-      User Request: "${userPrompt}", Difficulty: ${difficulty}
-      Generate a JSON object with a course title, and exactly ${chapters} chapter titles.
-      For each chapter, generate exactly ${lessons_per_chapter} unique and compelling lesson titles.
-      Return ONLY a valid JSON object with this structure:
-      { "courseTitle": "...", "chapters": [ { "chapterTitle": "...", "lessonTitles": ["...", "..."] } ] }
-    `;
-
-    const chatSession = model.startChat({ generationConfig, safetySettings });
-    const outlineResult = await chatSession.sendMessage(outlinePrompt);
-    const outlineText = outlineResult.response.text().replace(/^```json\n|\n```$/g, '');
-    let courseOutline: CourseOutline;
-
-    try {
-      courseOutline = JSON.parse(outlineText);
-    } catch (e) {
-      console.error("Failed to parse course outline JSON:", e);
-      console.error("Raw outline response from Gemini:", outlineText);
-      return NextResponse.json({ error: "Failed to generate a valid course outline from AI." }, { status: 500 });
-    }
-
-    // STAGE 2 - GENERATE CONTENT FOR EACH LESSON
-    const finalChapters: AiChapter[] = [];
-
-    for (const chapterOutline of courseOutline.chapters) {
-      const generatedLessons: AiLesson[] = [];
-      for (const lessonTitle of chapterOutline.lessonTitles) {
-        const lessonPrompt = `
-          You are an AI educator creating content for a single lesson.
-          Course Topic: "${userPrompt}", Chapter: "${chapterOutline.chapterTitle}", Lesson: "${lessonTitle}", Difficulty: ${difficulty}.
-          Generate a JSON object with this structure: { "content": "...", "quiz": { "questions": [ { "question": "...", "choices": ["...", "...", "...", "..."], "answer": "..." } ] } }
-          Instructions:
-          - The "content" must be detailed, 5-7 paragraphs long, and tailored for a ${difficulty} audience.
-          - The "quiz" must have at least one question with 4 choices.
-          - Output only the valid JSON object.
-        `;
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        const lessonChat = model.startChat({ generationConfig, safetySettings });
-        const result = await lessonChat.sendMessage(lessonPrompt);
-        const lessonText = result.response.text();
-
-        try {
-          const sanitizedLessonText = lessonText
-            .replace(/^```json\n|\n```$/g, '')
-            .replace(/[\x00-\x1F\x7F-\x9F]/g, '')
-            .replace(/\n/g, '\\n')
-            .replace(/\t/g, '\\t');
-          const lessonContent: LessonContent = JSON.parse(sanitizedLessonText);
-          generatedLessons.push({ title: lessonTitle, ...lessonContent });
-        } catch (error) {
-          console.error(`Failed to parse content for lesson: "${lessonTitle}"`, error);
-          console.error(`Raw lesson text: ${lessonText}`);
-          generatedLessons.push({ title: lessonTitle, content: "Error: Failed to generate content for this lesson.", quiz: { questions: [] } });
+      if (!planError && plan) {
+        planLimits = plan;
+        if (chapters > plan.max_chapters) {
+          return NextResponse.json(
+            { error: `Requested chapters (${chapters}) exceed plan limit (${plan.max_chapters}). Please upgrade your plan or reduce the number of chapters.` },
+            { status: 403 }
+          );
+        }
+        if (lessons_per_chapter > plan.max_lessons_per_chapter) {
+          return NextResponse.json(
+            { error: `Requested lessons per chapter (${lessons_per_chapter}) exceed plan limit (${plan.max_lessons_per_chapter}). Please upgrade your plan or reduce lessons per chapter.` },
+            { status: 403 }
+          );
         }
       }
-      finalChapters.push({ title: chapterOutline.chapterTitle, lessons: generatedLessons });
     }
 
-    // ASSEMBLE FINAL PAYLOAD
-    const finalPayload = {
-      originalPrompt: userPrompt,
-      originalChapterCount: chapters,
-      originalLessonsPerChapter: lessons_per_chapter,
-      difficulty: difficulty,
-      aiGeneratedCourse: { title: courseOutline.courseTitle, difficulty: difficulty, chapters: finalChapters }
-    };
+    // 7. Deduct credits BEFORE generation
+    const creditDeductionSuccess = await deductCreditsAndRecordTransaction(
+      supabase,
+      user.id,
+      creditCost,
+      'pending',
+      `Course generation: ${userPrompt} (${chapters} chapters, ${lessons_per_chapter} lessons each)`
+    );
 
-    return NextResponse.json(finalPayload, { status: 200 });
+    if (!creditDeductionSuccess) {
+      return NextResponse.json({ error: 'Failed to process credit payment.' }, { status: 500 });
+    }
 
+    try {
+      // 8. Generate course outline
+      const outlinePrompt = `
+        You are an AI course planner. Based on the user's request, generate a course outline.
+        User Request: "${userPrompt}", Difficulty: ${difficulty}
+        Generate a JSON object with a course title, and exactly ${chapters} chapter titles.
+        For each chapter, generate exactly ${lessons_per_chapter} unique and compelling lesson titles.
+        
+        IMPORTANT: Return ONLY a valid JSON object with this exact structure:
+        {
+          "courseTitle": "Course Title Here",
+          "chapters": [
+            {
+              "chapterTitle": "Chapter 1 Title",
+              "lessonTitles": ["Lesson 1", "Lesson 2", "Lesson 3"]
+            }
+          ]
+        }
+      `;
+
+      const outlineText = await makeGeminiAPICall(outlinePrompt, 'Course outline generation');
+      const courseOutline = parseAIResponse(outlineText, 'course outline');
+
+      if (!courseOutline || !courseOutline.courseTitle || !courseOutline.chapters) {
+        throw new Error("Failed to generate a valid course outline from AI.");
+      }
+
+      // 9. Generate lesson content
+      const finalChapters: AiChapter[] = [];
+
+      for (let chapterIndex = 0; chapterIndex < courseOutline.chapters.length; chapterIndex++) {
+        const chapterOutline = courseOutline.chapters[chapterIndex];
+        const generatedLessons: AiLesson[] = [];
+
+        for (let lessonIndex = 0; lessonIndex < chapterOutline.lessonTitles.length; lessonIndex++) {
+          const lessonTitle = chapterOutline.lessonTitles[lessonIndex];
+          const lessonPrompt = `
+            You are an AI educator creating content for a single lesson.
+            Course Topic: "${userPrompt}"
+            Chapter: "${chapterOutline.chapterTitle}"
+            Lesson: "${lessonTitle}"
+            Difficulty: ${difficulty}
+            
+            Generate detailed lesson content with a quiz. Return ONLY a valid JSON object with this exact structure:
+            {
+              "content": "Detailed lesson content here (5-7 paragraphs for ${difficulty} level)",
+              "quiz": {
+                "questions": [
+                  {
+                    "question": "Question text here?",
+                    "choices": ["Option A", "Option B", "Option C", "Option D"],
+                    "answer": "Correct option text"
+                  }
+                ]
+              }
+            }
+          `;
+
+          if (lessonIndex > 0) {
+            await new Promise(resolve => setTimeout(resolve, 2000));
+          }
+
+          try {
+            const lessonText = await makeGeminiAPICall(lessonPrompt, `Lesson "${lessonTitle}"`);
+            const lessonContent = parseAIResponse(lessonText, `lesson "${lessonTitle}"`);
+
+            if (lessonContent && lessonContent.content) {
+              generatedLessons.push({ 
+                title: lessonTitle, 
+                content: lessonContent.content,
+                quiz: lessonContent.quiz || { questions: [] }
+              });
+            } else {
+              generatedLessons.push({ 
+                title: lessonTitle, 
+                content: `This lesson covers ${lessonTitle} in the context of ${chapterOutline.chapterTitle}.`,
+                quiz: { questions: [] }
+              });
+            }
+          } catch (lessonError) {
+            generatedLessons.push({ 
+              title: lessonTitle, 
+              content: `This lesson covers ${lessonTitle} in the context of ${chapterOutline.chapterTitle}.`,
+              quiz: { questions: [] }
+            });
+          }
+        }
+        finalChapters.push({ title: chapterOutline.chapterTitle, lessons: generatedLessons });
+      }
+
+      // 10. Return course data for preview - FIXED: Changed 'generatedCourse' to 'aiGeneratedCourse'
+      return NextResponse.json({
+        success: true,
+        courseId: null,
+        courseTitle: courseOutline.courseTitle,
+        creditCost: creditCost,
+        chaptersGenerated: finalChapters.length,
+        lessonsGenerated: finalChapters.reduce((total, chapter) => total + chapter.lessons.length, 0),
+        redirectUrl: `/dashboard/courses/preview`,
+        aiGeneratedCourse: {  // FIXED: Changed from 'generatedCourse' to 'aiGeneratedCourse'
+          title: courseOutline.courseTitle,
+          difficulty: difficulty,
+          chapters: finalChapters,
+        },
+        originalPrompt: userPrompt,
+        originalChapterCount: chapters,
+        originalLessonsPerChapter: lessons_per_chapter,
+      }, { status: 200 });
+
+    } catch (generationError) {
+      // Refund credits
+      const refundSuccess = await deductCreditsAndRecordTransaction(
+        supabase,
+        user.id,
+        -creditCost,
+        'failed',
+        `Refund for failed course generation: ${userPrompt}`
+      );
+
+      if (refundSuccess) {
+        console.log(`Refunded ${creditCost} credits to user ${user.id}`);
+      }
+
+      return NextResponse.json({ 
+        error: `Failed to generate course content: ${generationError instanceof Error ? generationError.message : 'Unknown error'}. Your credits have been refunded.` 
+      }, { status: 500 });
+    }
   } catch (error) {
     console.error('Error in /api/generate-course:', error);
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
     return NextResponse.json({ error: `Failed to generate course content: ${errorMessage}` }, { status: 500 });
   }
 }
+
