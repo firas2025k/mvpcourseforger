@@ -5,14 +5,20 @@ import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  ArrowLeft, 
-  Play, 
-  Edit, 
-  Trash2, 
+import {
+  ArrowLeft,
+  Play,
+  Edit,
+  Trash2,
   Share2,
   Download,
   Archive,
@@ -28,7 +34,7 @@ import {
   ChevronRight,
   Maximize,
   List,
-  Grid
+  Grid,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -47,25 +53,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { createBrowserClient } from '@supabase/ssr';
+import { createBrowserClient } from "@supabase/ssr";
 import MarkdownSlideRenderer from "@/components/dashboard/presentations/MarkdownSlideRenderer";
-
-interface Slide {
-  id: string;
-  title: string;
-  content: string;
-  type: 'title' | 'content' | 'image' | 'chart' | 'conclusion';
-  layout: 'default' | 'title-only' | 'two-column' | 'image-left' | 'image-right' | 'full-image';
-  speaker_notes?: string;
-  order_index: number;
-  is_viewed?: boolean;
-  viewed_at?: string;
-}
+import type { Slide } from "@/types/presentation";
+import { handleSavePresentationPdf } from "@/utils/presentationPdfExport";
 
 interface PresentationData {
   id: string;
   title: string;
-  difficulty: 'beginner' | 'intermediate' | 'advanced';
+  difficulty: "beginner" | "intermediate" | "advanced";
   slide_count: number;
   theme: string;
   background_color: string;
@@ -78,9 +74,11 @@ interface PresentationData {
 }
 
 const difficultyColors = {
-  beginner: "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400",
-  intermediate: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400",
-  advanced: "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400"
+  beginner:
+    "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400",
+  intermediate:
+    "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400",
+  advanced: "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400",
 };
 
 const themeColors = {
@@ -88,21 +86,23 @@ const themeColors = {
   dark: "from-gray-700 to-gray-900",
   corporate: "from-slate-600 to-slate-800",
   creative: "from-orange-500 to-pink-600",
-  minimal: "from-gray-500 to-gray-700"
+  minimal: "from-gray-500 to-gray-700",
 };
 
 function PresentationDetailPage() {
   const router = useRouter();
   const params = useParams();
   const presentationId = params.presentationId as string;
-  
-  const [presentation, setPresentation] = useState<PresentationData | null>(null);
+
+  const [presentation, setPresentation] = useState<PresentationData | null>(
+    null
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
-  const [viewMode, setViewMode] = useState<'slides' | 'outline'>('slides');
+  const [viewMode, setViewMode] = useState<"slides" | "outline">("slides");
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -120,13 +120,15 @@ function PresentationDetailPage() {
       setIsLoading(true);
       setError(null);
 
-      const response = await fetch(`/api/presentation-details/${presentationId}`);
-      
+      const response = await fetch(
+        `/api/presentation-details/${presentationId}`
+      );
+
       if (!response.ok) {
         if (response.status === 404) {
-          setError('Presentation not found.');
+          setError("Presentation not found.");
         } else {
-          setError('Failed to load presentation.');
+          setError("Failed to load presentation.");
         }
         return;
       }
@@ -134,8 +136,8 @@ function PresentationDetailPage() {
       const data = await response.json();
       setPresentation(data.presentation);
     } catch (err) {
-      console.error('Error fetching presentation:', err);
-      setError('An unexpected error occurred.');
+      console.error("Error fetching presentation:", err);
+      setError("An unexpected error occurred.");
     } finally {
       setIsLoading(false);
     }
@@ -143,21 +145,24 @@ function PresentationDetailPage() {
 
   const handleDelete = async () => {
     if (!presentation) return;
-    
+
     setIsDeleting(true);
     try {
-      const response = await fetch(`/api/presentation-details/${presentation.id}`, {
-        method: 'DELETE',
-      });
+      const response = await fetch(
+        `/api/presentation-details/${presentation.id}`,
+        {
+          method: "DELETE",
+        }
+      );
 
       if (!response.ok) {
-        throw new Error('Failed to delete presentation');
+        throw new Error("Failed to delete presentation");
       }
 
-      router.push('/dashboard/presentations');
+      router.push("/dashboard/presentations");
     } catch (error) {
-      console.error('Error deleting presentation:', error);
-      setError('Failed to delete presentation. Please try again.');
+      console.error("Error deleting presentation:", error);
+      setError("Failed to delete presentation. Please try again.");
     } finally {
       setIsDeleting(false);
       setShowDeleteDialog(false);
@@ -169,32 +174,36 @@ function PresentationDetailPage() {
 
     try {
       const { error } = await supabase
-        .from('presentations')
+        .from("presentations")
         .update({ is_archived: !presentation.is_archived })
-        .eq('id', presentation.id);
+        .eq("id", presentation.id);
 
       if (error) {
         throw error;
       }
 
-      setPresentation(prev => prev ? { ...prev, is_archived: !prev.is_archived } : null);
+      setPresentation((prev) =>
+        prev ? { ...prev, is_archived: !prev.is_archived } : null
+      );
     } catch (error) {
-      console.error('Error archiving presentation:', error);
-      setError('Failed to archive presentation. Please try again.');
+      console.error("Error archiving presentation:", error);
+      setError("Failed to archive presentation. Please try again.");
     }
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
   };
 
   const getProgressPercentage = () => {
     if (!presentation?.slides) return 0;
-    const viewedSlides = presentation.slides.filter(slide => slide.is_viewed).length;
+    const viewedSlides = presentation.slides.filter(
+      (slide) => slide.is_viewed
+    ).length;
     return Math.round((viewedSlides / presentation.slides.length) * 100);
   };
 
@@ -218,38 +227,50 @@ function PresentationDetailPage() {
 
   const renderSlideContent = (slide: Slide) => {
     if (!presentation) return null;
-    
+
     switch (slide.layout) {
-      case 'title-only':
+      case "title-only":
         return (
           <div className="flex flex-col items-center justify-center h-full text-center p-4 md:p-8 overflow-hidden">
             <div className="max-w-4xl mx-auto space-y-4 max-h-full overflow-y-auto">
-              <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold leading-tight" style={{ color: presentation.text_color }}>
+              <h1
+                className="text-2xl md:text-4xl lg:text-5xl font-bold leading-tight"
+                style={{ color: presentation.text_color }}
+              >
                 {slide.title}
               </h1>
               {slide.content.trim() && (
                 <div className="text-lg md:text-xl lg:text-2xl opacity-90 max-w-3xl">
-                  <MarkdownSlideRenderer 
+                  <MarkdownSlideRenderer
                     content={slide.content}
                     textColor={presentation.text_color}
                     accentColor={presentation.accent_color}
+                    imageUrl={slide.image_url}
+                    imageAlt={slide.image_alt}
+                    title={slide.title}
+                    layout={slide.layout}
                   />
                 </div>
               )}
             </div>
           </div>
         );
-      
-      case 'two-column':
-        const contentLines = slide.content.split('\n').filter(line => line.trim());
+
+      case "two-column":
+        const contentLines = slide.content
+          .split("\n")
+          .filter((line) => line.trim());
         const midPoint = Math.ceil(contentLines.length / 2);
-        const leftContent = contentLines.slice(0, midPoint).join('\n');
-        const rightContent = contentLines.slice(midPoint).join('\n');
-        
+        const leftContent = contentLines.slice(0, midPoint).join("\n");
+        const rightContent = contentLines.slice(midPoint).join("\n");
+
         return (
           <div className="h-full flex flex-col p-4 md:p-6 overflow-hidden">
             <div className="mb-4 flex-shrink-0">
-              <h2 className="text-xl md:text-2xl lg:text-3xl font-bold leading-tight" style={{ color: presentation.text_color }}>
+              <h2
+                className="text-xl md:text-2xl lg:text-3xl font-bold leading-tight"
+                style={{ color: presentation.text_color }}
+              >
                 {slide.title}
               </h2>
             </div>
@@ -259,32 +280,47 @@ function PresentationDetailPage() {
                   content={leftContent}
                   textColor={presentation.text_color}
                   accentColor={presentation.accent_color}
+                  imageUrl={slide.image_url}
+                  imageAlt={slide.image_alt}
+                  title={slide.title}
+                  layout={slide.layout}
                 />
               </div>
               <div className="overflow-hidden">
-                <MarkdownSlideRenderer 
+                <MarkdownSlideRenderer
                   content={rightContent}
                   textColor={presentation.text_color}
                   accentColor={presentation.accent_color}
+                  imageUrl={slide.image_url}
+                  imageAlt={slide.image_alt}
+                  title={slide.title}
+                  layout={slide.layout}
                 />
               </div>
             </div>
           </div>
         );
-      
+
       default:
         return (
           <div className="h-full flex flex-col p-4 md:p-6 lg:p-8 overflow-hidden">
             <div className="mb-4 flex-shrink-0">
-              <h2 className="text-xl md:text-2xl lg:text-3xl font-bold leading-tight" style={{ color: presentation.text_color }}>
+              <h2
+                className="text-xl md:text-2xl lg:text-3xl font-bold leading-tight"
+                style={{ color: presentation.text_color }}
+              >
                 {slide.title}
               </h2>
             </div>
             <div className="flex-1 max-w-4xl min-h-0">
-              <MarkdownSlideRenderer 
+              <MarkdownSlideRenderer
                 content={slide.content}
                 textColor={presentation.text_color}
                 accentColor={presentation.accent_color}
+                imageUrl={slide.image_url}
+                imageAlt={slide.image_alt}
+                title={slide.title}
+                layout={slide.layout}
               />
             </div>
           </div>
@@ -297,7 +333,9 @@ function PresentationDetailPage() {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50 to-pink-50 dark:from-slate-900 dark:via-purple-900 dark:to-pink-900 flex items-center justify-center">
         <div className="text-center space-y-4">
           <Loader2 className="h-8 w-8 animate-spin mx-auto text-purple-600" />
-          <p className="text-slate-600 dark:text-slate-400">Loading presentation...</p>
+          <p className="text-slate-600 dark:text-slate-400">
+            Loading presentation...
+          </p>
         </div>
       </div>
     );
@@ -308,7 +346,7 @@ function PresentationDetailPage() {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50 to-pink-50 dark:from-slate-900 dark:via-purple-900 dark:to-pink-900 flex items-center justify-center">
         <div className="text-center space-y-4">
           <AlertCircle className="h-8 w-8 mx-auto text-red-600" />
-          <p className="text-red-600">{error || 'Presentation not found'}</p>
+          <p className="text-red-600">{error || "Presentation not found"}</p>
           <Button asChild variant="outline">
             <Link href="/dashboard/presentations">
               <ArrowLeft className="h-4 w-4 mr-2" />
@@ -320,7 +358,9 @@ function PresentationDetailPage() {
     );
   }
 
-  const themeGradient = themeColors[presentation.theme as keyof typeof themeColors] || themeColors.default;
+  const themeGradient =
+    themeColors[presentation.theme as keyof typeof themeColors] ||
+    themeColors.default;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50 to-pink-50 dark:from-slate-900 dark:via-purple-900 dark:to-pink-900">
@@ -339,12 +379,14 @@ function PresentationDetailPage() {
         <Card className="mb-8 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 shadow-lg">
           {/* Theme Preview Bar */}
           <div className={`h-3 bg-gradient-to-r ${themeGradient}`}></div>
-          
+
           <CardHeader>
             <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className={`w-12 h-12 rounded-2xl bg-gradient-to-r ${themeGradient} flex items-center justify-center shadow-lg`}>
+                  <div
+                    className={`w-12 h-12 rounded-2xl bg-gradient-to-r ${themeGradient} flex items-center justify-center shadow-lg`}
+                  >
                     <Presentation className="h-6 w-6 text-white" />
                   </div>
                   <div>
@@ -352,7 +394,9 @@ function PresentationDetailPage() {
                       {presentation.title}
                     </CardTitle>
                     <CardDescription className="flex items-center gap-4 mt-1">
-                      <Badge className={difficultyColors[presentation.difficulty]}>
+                      <Badge
+                        className={difficultyColors[presentation.difficulty]}
+                      >
                         {presentation.difficulty}
                       </Badge>
                       <span className="flex items-center gap-1">
@@ -370,13 +414,19 @@ function PresentationDetailPage() {
                 {/* Status Badges */}
                 <div className="flex gap-2 mb-4">
                   {presentation.is_published && (
-                    <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                    <Badge
+                      variant="secondary"
+                      className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                    >
                       <Eye className="h-3 w-3 mr-1" />
                       Published
                     </Badge>
                   )}
                   {presentation.is_archived && (
-                    <Badge variant="secondary" className="bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400">
+                    <Badge
+                      variant="secondary"
+                      className="bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400"
+                    >
                       <Archive className="h-3 w-3 mr-1" />
                       Archived
                     </Badge>
@@ -393,7 +443,7 @@ function PresentationDetailPage() {
                     <span>{getProgressPercentage()}% complete</span>
                   </div>
                   <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
-                    <div 
+                    <div
                       className={`bg-gradient-to-r ${themeGradient} h-2 rounded-full transition-all duration-300`}
                       style={{ width: `${getProgressPercentage()}%` }}
                     ></div>
@@ -403,16 +453,26 @@ function PresentationDetailPage() {
 
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-2">
-                <Button 
+                <Button
                   asChild
                   className={`bg-gradient-to-r ${themeGradient} hover:opacity-90 text-white shadow-lg hover:shadow-xl transition-all duration-300`}
                 >
-                  <Link href={`/dashboard/presentations/${presentation.id}/present`}>
+                  <Link
+                    href={`/dashboard/presentations/${presentation.id}/present`}
+                  >
                     <Play className="h-4 w-4 mr-2" />
                     Start Presentation
                   </Link>
                 </Button>
-                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleSavePresentationPdf({ presentationId })}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Export PDF
+                </Button>
+
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="sm">
@@ -435,9 +495,9 @@ function PresentationDetailPage() {
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleArchive}>
                       <Archive className="h-4 w-4 mr-2" />
-                      {presentation.is_archived ? 'Unarchive' : 'Archive'}
+                      {presentation.is_archived ? "Unarchive" : "Archive"}
                     </DropdownMenuItem>
-                    <DropdownMenuItem 
+                    <DropdownMenuItem
                       onClick={() => setShowDeleteDialog(true)}
                       className="text-red-600 dark:text-red-400"
                     >
@@ -452,7 +512,11 @@ function PresentationDetailPage() {
         </Card>
 
         {/* Slides Viewer */}
-        <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as 'slides' | 'outline')} className="space-y-6">
+        <Tabs
+          value={viewMode}
+          onValueChange={(value) => setViewMode(value as "slides" | "outline")}
+          className="space-y-6"
+        >
           <div className="flex items-center justify-between">
             <TabsList className="grid w-fit grid-cols-2">
               <TabsTrigger value="slides" className="flex items-center gap-2">
@@ -464,17 +528,15 @@ function PresentationDetailPage() {
                 Outline
               </TabsTrigger>
             </TabsList>
-            
+
             <div className="flex items-center gap-2">
               <Badge variant="outline">
                 {currentSlideIndex + 1} / {presentation.slides.length}
               </Badge>
-              <Button
-                variant="outline"
-                size="sm"
-                asChild
-              >
-                <Link href={`/dashboard/presentations/${presentation.id}/present`}>
+              <Button variant="outline" size="sm" asChild>
+                <Link
+                  href={`/dashboard/presentations/${presentation.id}/present`}
+                >
                   <Maximize className="h-4 w-4 mr-2" />
                   Fullscreen
                 </Link>
@@ -487,14 +549,14 @@ function PresentationDetailPage() {
             <Card className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 shadow-lg">
               <CardContent className="p-0">
                 {/* Slide Display with Fixed Height and Overflow Handling */}
-                <div 
-                  className="relative w-full h-[60vh] rounded-lg overflow-hidden"
+                <div
+                  className="relative w-full h-[100vh] rounded-lg overflow-hidden"
                   style={{ backgroundColor: presentation.background_color }}
                 >
                   <div className="absolute inset-0 overflow-hidden">
                     {renderSlideContent(presentation.slides[currentSlideIndex])}
                   </div>
-                  
+
                   {/* Navigation Overlay */}
                   <div className="absolute inset-0 flex items-center justify-between p-4 opacity-0 hover:opacity-100 transition-opacity">
                     <Button
@@ -506,12 +568,14 @@ function PresentationDetailPage() {
                     >
                       <ChevronLeft className="h-6 w-6" />
                     </Button>
-                    
+
                     <Button
                       variant="ghost"
                       size="lg"
                       onClick={nextSlide}
-                      disabled={currentSlideIndex === presentation.slides.length - 1}
+                      disabled={
+                        currentSlideIndex === presentation.slides.length - 1
+                      }
                       className="bg-black/20 hover:bg-black/40 text-white"
                     >
                       <ChevronRight className="h-6 w-6" />
@@ -523,22 +587,38 @@ function PresentationDetailPage() {
                 <div className="p-4 border-t">
                   <div className="flex items-center justify-between mb-4">
                     <div>
-                      <h3 className="font-semibold text-lg">{presentation.slides[currentSlideIndex].title}</h3>
+                      <h3 className="font-semibold text-lg">
+                        {presentation.slides[currentSlideIndex].title}
+                      </h3>
                       <div className="flex gap-2 mt-1">
                         <Badge variant="outline" className="text-xs capitalize">
                           {presentation.slides[currentSlideIndex].type}
                         </Badge>
                         <Badge variant="outline" className="text-xs capitalize">
-                          {presentation.slides[currentSlideIndex].layout.replace('-', ' ')}
+                          {presentation.slides[
+                            currentSlideIndex
+                          ].layout.replace("-", " ")}
                         </Badge>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-2">
-                      <Button variant="outline" size="sm" onClick={previousSlide} disabled={currentSlideIndex === 0}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={previousSlide}
+                        disabled={currentSlideIndex === 0}
+                      >
                         <ChevronLeft className="h-4 w-4" />
                       </Button>
-                      <Button variant="outline" size="sm" onClick={nextSlide} disabled={currentSlideIndex === presentation.slides.length - 1}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={nextSlide}
+                        disabled={
+                          currentSlideIndex === presentation.slides.length - 1
+                        }
+                      >
                         <ChevronRight className="h-4 w-4" />
                       </Button>
                     </div>
@@ -553,11 +633,16 @@ function PresentationDetailPage() {
                         className={`flex-shrink-0 w-20 h-12 rounded border-2 transition-all ${
                           index === currentSlideIndex
                             ? `border-purple-500 bg-purple-50 dark:bg-purple-900/20`
-                            : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
+                            : "border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600"
                         }`}
-                        style={{ backgroundColor: presentation.background_color }}
+                        style={{
+                          backgroundColor: presentation.background_color,
+                        }}
                       >
-                        <div className="w-full h-full flex items-center justify-center text-xs font-medium" style={{ color: presentation.text_color }}>
+                        <div
+                          className="w-full h-full flex items-center justify-center text-xs font-medium"
+                          style={{ color: presentation.text_color }}
+                        >
                           {index + 1}
                         </div>
                       </button>
@@ -567,7 +652,9 @@ function PresentationDetailPage() {
                   {/* Speaker Notes */}
                   {presentation.slides[currentSlideIndex].speaker_notes && (
                     <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                      <p className="text-xs text-blue-600 dark:text-blue-400 font-medium mb-1">Speaker Notes:</p>
+                      <p className="text-xs text-blue-600 dark:text-blue-400 font-medium mb-1">
+                        Speaker Notes:
+                      </p>
                       <p className="text-sm text-blue-600 dark:text-blue-400">
                         {presentation.slides[currentSlideIndex].speaker_notes}
                       </p>
@@ -584,23 +671,36 @@ function PresentationDetailPage() {
               <h2 className="text-xl font-semibold text-slate-700 dark:text-slate-300">
                 Slides ({presentation.slides.length})
               </h2>
-              
+
               {presentation.slides.map((slide, index) => (
-                <Card key={slide.id} className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 shadow-sm hover:shadow-md transition-all duration-200">
+                <Card
+                  key={slide.id}
+                  className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 shadow-sm hover:shadow-md transition-all duration-200"
+                >
                   <CardHeader className="pb-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className={`w-8 h-8 rounded-lg bg-gradient-to-r ${themeGradient} flex items-center justify-center text-white text-sm font-medium`}>
+                        <div
+                          className={`w-8 h-8 rounded-lg bg-gradient-to-r ${themeGradient} flex items-center justify-center text-white text-sm font-medium`}
+                        >
                           {index + 1}
                         </div>
                         <div>
-                          <CardTitle className="text-lg">{slide.title}</CardTitle>
+                          <CardTitle className="text-lg">
+                            {slide.title}
+                          </CardTitle>
                           <div className="flex gap-2 mt-1">
-                            <Badge variant="outline" className="text-xs capitalize">
+                            <Badge
+                              variant="outline"
+                              className="text-xs capitalize"
+                            >
                               {slide.type}
                             </Badge>
-                            <Badge variant="outline" className="text-xs capitalize">
-                              {slide.layout.replace('-', ' ')}
+                            <Badge
+                              variant="outline"
+                              className="text-xs capitalize"
+                            >
+                              {slide.layout.replace("-", " ")}
                             </Badge>
                             {slide.is_viewed && (
                               <Badge className="text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
@@ -610,7 +710,14 @@ function PresentationDetailPage() {
                           </div>
                         </div>
                       </div>
-                      <Button variant="ghost" size="sm" onClick={() => {setCurrentSlideIndex(index); setViewMode('slides');}}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setCurrentSlideIndex(index);
+                          setViewMode("slides");
+                        }}
+                      >
                         <Eye className="h-4 w-4" />
                       </Button>
                     </div>
@@ -621,7 +728,9 @@ function PresentationDetailPage() {
                     </div>
                     {slide.speaker_notes && (
                       <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                        <p className="text-xs text-blue-600 dark:text-blue-400 font-medium mb-1">Speaker Notes:</p>
+                        <p className="text-xs text-blue-600 dark:text-blue-400 font-medium mb-1">
+                          Speaker Notes:
+                        </p>
                         <p className="text-xs text-blue-600 dark:text-blue-400 line-clamp-2">
                           {slide.speaker_notes.substring(0, 150)}...
                         </p>
@@ -641,7 +750,8 @@ function PresentationDetailPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Presentation</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{presentation.title}"? This action cannot be undone.
+              Are you sure you want to delete "{presentation.title}"? This
+              action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -651,7 +761,7 @@ function PresentationDetailPage() {
               disabled={isDeleting}
               className="bg-red-600 hover:bg-red-700"
             >
-              {isDeleting ? 'Deleting...' : 'Delete'}
+              {isDeleting ? "Deleting..." : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -661,4 +771,3 @@ function PresentationDetailPage() {
 }
 
 export default PresentationDetailPage;
-

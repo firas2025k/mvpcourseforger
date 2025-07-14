@@ -1,7 +1,7 @@
 // components/dashboard/presentations/CreatePresentationForm.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Checkbox } from "@/components/ui/checkbox";
 import { 
   Presentation, 
   Wand2, 
@@ -23,7 +24,12 @@ import {
   FileText,
   Upload,
   X,
-  CheckCircle
+  CheckCircle,
+  ImageIcon,
+  Camera,
+  Coins,
+  AlertCircle,
+  Zap
 } from "lucide-react";
 import { PRESENTATION_THEMES } from "@/types/presentation";
 
@@ -39,10 +45,28 @@ export default function CreatePresentationForm({ onGenerate, isGenerating = fals
     prompt: "",
     slides: 10,
     difficulty: "intermediate" as "beginner" | "intermediate" | "advanced",
-    theme: "default"
+    theme: "default",
+    include_images: false
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [creditCost, setCreditCost] = useState(2);
+
+  // Calculate credit cost whenever slides or image option changes
+  useEffect(() => {
+    const calculateCost = () => {
+      let baseCost = 1;
+      if (formData.slides <= 5) baseCost = 1;
+      else if (formData.slides <= 15) baseCost = 2;
+      else if (formData.slides <= 30) baseCost = 3;
+      else baseCost = 4;
+      
+      const imageCost = formData.include_images ? 1 : 0;
+      return baseCost + imageCost;
+    };
+    
+    setCreditCost(calculateCost());
+  }, [formData.slides, formData.include_images]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -119,6 +143,7 @@ export default function CreatePresentationForm({ onGenerate, isGenerating = fals
       formDataToSend.append('background_color', selectedTheme.background_color);
       formDataToSend.append('text_color', selectedTheme.text_color);
       formDataToSend.append('accent_color', selectedTheme.accent_color);
+      formDataToSend.append('include_images', formData.include_images.toString());
       
       if (onGenerate) {
         onGenerate({ formData: formDataToSend, isPDF: true });
@@ -127,6 +152,19 @@ export default function CreatePresentationForm({ onGenerate, isGenerating = fals
   };
 
   const selectedTheme = PRESENTATION_THEMES.find(t => t.name === formData.theme) || PRESENTATION_THEMES[0];
+
+  // Get cost color based on amount
+  const getCostColor = (cost: number) => {
+    if (cost <= 2) return "text-green-600 dark:text-green-400";
+    if (cost <= 4) return "text-yellow-600 dark:text-yellow-400";
+    return "text-red-600 dark:text-red-400";
+  };
+
+  const getCostBadgeColor = (cost: number) => {
+    if (cost <= 2) return "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-600";
+    if (cost <= 4) return "bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-400 dark:border-yellow-600";
+    return "bg-red-100 text-red-800 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-600";
+  };
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -342,6 +380,55 @@ export default function CreatePresentationForm({ onGenerate, isGenerating = fals
               </div>
             </div>
 
+            {/* Image Options */}
+            <div className="space-y-4">
+              <div className="border border-slate-200 dark:border-slate-700 rounded-lg p-4 bg-gradient-to-r from-blue-50/50 to-purple-50/50 dark:from-blue-900/10 dark:to-purple-900/10">
+                <div className="flex items-start gap-3">
+                  <div className="flex items-center space-x-2 mt-1">
+                    <Checkbox
+                      id="include-images"
+                      checked={formData.include_images}
+                      onCheckedChange={(checked) => 
+                        setFormData({ ...formData, include_images: checked as boolean })
+                      }
+                      disabled={isGenerating}
+                      className="data-[state=checked]:bg-purple-600 data-[state=checked]:border-purple-600"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <Label 
+                      htmlFor="include-images" 
+                      className="text-sm font-medium flex items-center gap-2 cursor-pointer"
+                    >
+                      <Camera className="h-4 w-4 text-purple-600" />
+                      Include Smart Images
+                      <Badge className="bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400 text-xs">
+                        +1 Credit
+                      </Badge>
+                    </Label>
+                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
+                      Automatically add relevant, high-quality images from Pixabay to enhance your presentation
+                    </p>
+                    
+                    {formData.include_images && (
+                      <div className="mt-3 p-3 bg-white/60 dark:bg-slate-800/60 rounded-lg border border-purple-200 dark:border-purple-600/30">
+                        <div className="flex items-center gap-2 text-sm text-purple-700 dark:text-purple-300">
+                          <Sparkles className="h-4 w-4" />
+                          <span className="font-medium">Smart Image Features:</span>
+                        </div>
+                        <ul className="text-xs text-slate-600 dark:text-slate-400 mt-2 space-y-1">
+                          <li>• Automatic keyword extraction from slide content</li>
+                          <li>• High-quality, relevant images from Pixabay</li>
+                          <li>• Multiple layout options (image-left, image-right, full-image)</li>
+                          <li>• Professional, safe-search filtered results</li>
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Theme Selection */}
             <div className="space-y-3">
               <Label className="text-sm font-medium flex items-center gap-2">
@@ -387,6 +474,36 @@ export default function CreatePresentationForm({ onGenerate, isGenerating = fals
               </div>
             </div>
 
+            {/* Cost Display */}
+            <div className="bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-700 rounded-lg p-4 border border-slate-200 dark:border-slate-600">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl flex items-center justify-center">
+                    <Coins className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                      Generation Cost
+                    </p>
+                    <p className="text-xs text-slate-600 dark:text-slate-400">
+                      {formData.slides} slides {formData.include_images ? '+ images' : ''}
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="flex items-center gap-2">
+                    <Badge className={`${getCostBadgeColor(creditCost)} font-bold`}>
+                      <Coins className="h-3 w-3 mr-1" />
+                      {creditCost} Credits
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    Base: {creditCost - (formData.include_images ? 1 : 0)} {formData.include_images && '+ Images: 1'}
+                  </p>
+                </div>
+              </div>
+            </div>
+
             {/* Generate Button */}
             <Button
               type="submit"
@@ -403,7 +520,12 @@ export default function CreatePresentationForm({ onGenerate, isGenerating = fals
                 <>
                   <Wand2 className="h-5 w-5 mr-2" />
                   {activeTab === "pdf" ? "Generate from PDF" : "Generate Presentation"}
-                  <ArrowRight className="h-5 w-5 ml-2" />
+                  <div className="ml-2 flex items-center gap-1">
+                    <span className="text-sm">({creditCost}</span>
+                    <Coins className="h-4 w-4" />
+                    <span className="text-sm">)</span>
+                  </div>
+                  <ArrowRight className="h-4 w-4 ml-2" />
                 </>
               )}
             </Button>
@@ -416,8 +538,38 @@ export default function CreatePresentationForm({ onGenerate, isGenerating = fals
                   ? "AI will analyze your PDF and create a complete presentation with slides, content, and speaker notes"
                   : "AI will create a complete presentation with slides, content, and speaker notes"
                 }
+                {formData.include_images && (
+                  <>
+                    <span className="mx-1">•</span>
+                    <ImageIcon className="h-4 w-4" />
+                    <span>Plus relevant images</span>
+                  </>
+                )}
               </p>
             </div>
+
+            {/* Pixabay API Warning */}
+            {formData.include_images && (
+              <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+                  <div className="text-sm text-amber-800 dark:text-amber-200">
+                    <p className="font-medium mb-1">Image Service Setup Required</p>
+                    <p>
+                      To use images, make sure <code className="bg-amber-100 dark:bg-amber-800 px-1 rounded">PIXABAY_API_KEY</code> is configured in your <code className="bg-amber-100 dark:bg-amber-800 px-1 rounded">.env.local</code> file. 
+                      <a 
+                        href="https://pixabay.com/api/docs/" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-amber-700 dark:text-amber-300 underline ml-1 hover:text-amber-900 dark:hover:text-amber-100"
+                      >
+                        Get your free API key here
+                      </a>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
           </form>
         </CardContent>
       </Card>

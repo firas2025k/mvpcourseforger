@@ -48,8 +48,8 @@ CREATE TABLE public.enrollments (
   enrolled_at timestamp with time zone DEFAULT now(),
   is_completed boolean DEFAULT false,
   CONSTRAINT enrollments_pkey PRIMARY KEY (id),
-  CONSTRAINT enrollments_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id),
-  CONSTRAINT enrollments_course_id_fkey FOREIGN KEY (course_id) REFERENCES public.courses(id)
+  CONSTRAINT enrollments_course_id_fkey FOREIGN KEY (course_id) REFERENCES public.courses(id),
+  CONSTRAINT enrollments_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
 );
 CREATE TABLE public.lessons (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -86,8 +86,8 @@ CREATE TABLE public.presentation_progress (
   is_viewed boolean DEFAULT false,
   viewed_at timestamp with time zone,
   CONSTRAINT presentation_progress_pkey PRIMARY KEY (id),
-  CONSTRAINT presentation_progress_slide_id_fkey FOREIGN KEY (slide_id) REFERENCES public.slides(id),
-  CONSTRAINT presentation_progress_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+  CONSTRAINT presentation_progress_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id),
+  CONSTRAINT presentation_progress_slide_id_fkey FOREIGN KEY (slide_id) REFERENCES public.slides(id)
 );
 CREATE TABLE public.presentations (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -107,6 +107,7 @@ CREATE TABLE public.presentations (
   text_color text DEFAULT '#000000'::text,
   accent_color text DEFAULT '#3b82f6'::text,
   credit_cost integer NOT NULL DEFAULT 0,
+  includes_images boolean DEFAULT false,
   CONSTRAINT presentations_pkey PRIMARY KEY (id),
   CONSTRAINT presentations_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
 );
@@ -156,6 +157,9 @@ CREATE TABLE public.slides (
   speaker_notes text,
   animation_type text DEFAULT 'fade'::text,
   created_at timestamp with time zone DEFAULT now(),
+  image_url text,
+  image_alt text,
+  image_keywords ARRAY,
   CONSTRAINT slides_pkey PRIMARY KEY (id),
   CONSTRAINT slides_presentation_id_fkey FOREIGN KEY (presentation_id) REFERENCES public.presentations(id)
 );

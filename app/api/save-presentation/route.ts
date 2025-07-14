@@ -18,6 +18,8 @@ interface SavePresentationRequestBody {
     layout: 'default' | 'title-only' | 'two-column' | 'image-left' | 'image-right' | 'full-image';
     speaker_notes?: string;
     order_index: number;
+    image_url?: string; // Add image_url
+    image_alt?: string; // Add image_alt
   }[];
 }
 
@@ -136,8 +138,10 @@ export async function POST(request: NextRequest) {
       content: slide.content,
       type: slide.type,
       layout: slide.layout,
-      speaker_notes: slide.speaker_notes || '',
+      speaker_notes: slide.speaker_notes || null,
       order_index: slide.order_index,
+      image_url: slide.image_url || null,
+      image_alt: slide.image_alt || null,
       animation_type: 'fade'
     }));
 
@@ -181,4 +185,3 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: `Failed to save presentation: ${errorMessage}` }, { status: 500 });
   }
 }
-

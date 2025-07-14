@@ -18,6 +18,8 @@ export interface Presentation {
   background_color: string;
   text_color: string;
   accent_color: string;
+  credit_cost: number;
+  includes_images: boolean;
   slides?: Slide[];
 }
 
@@ -33,6 +35,12 @@ export interface Slide {
   speaker_notes?: string;
   animation_type: string;
   created_at: string;
+  image_url?: string;
+  image_alt?: string;
+  image_keywords?: string[];
+  // Additional fields for presentation progress tracking
+  is_viewed?: boolean;
+  viewed_at?: string;
 }
 
 export interface PresentationProgress {
@@ -52,6 +60,7 @@ export interface GeneratePresentationRequest {
   background_color?: string;
   text_color?: string;
   accent_color?: string;
+  includes_images?: boolean;
 }
 
 export interface AiSlide {
@@ -60,6 +69,9 @@ export interface AiSlide {
   type: 'title' | 'content' | 'image' | 'chart' | 'conclusion';
   layout: 'default' | 'title-only' | 'two-column' | 'image-left' | 'image-right' | 'full-image';
   speaker_notes?: string;
+  image_url?: string;
+  image_alt?: string;
+  image_keywords?: string[];
 }
 
 export interface PresentationOutline {
@@ -74,6 +86,9 @@ export interface PresentationOutline {
 export interface SlideContent {
   content: string;
   speaker_notes?: string;
+  image_url?: string;
+  image_alt?: string;
+  image_keywords?: string[];
 }
 
 export interface GeneratePresentationResponse {
@@ -100,6 +115,7 @@ export interface SavePresentationRequest {
   background_color: string;
   text_color: string;
   accent_color: string;
+  includes_images?: boolean;
   slides: {
     title: string;
     content: string;
@@ -107,6 +123,9 @@ export interface SavePresentationRequest {
     layout: 'default' | 'title-only' | 'two-column' | 'image-left' | 'image-right' | 'full-image';
     speaker_notes?: string;
     order_index: number;
+    image_url?: string;
+    image_alt?: string;
+    image_keywords?: string[];
   }[];
 }
 
@@ -202,4 +221,3 @@ export const SLIDE_LAYOUTS: SlideLayoutConfig[] = [
     preview: 'Background image with text overlay'
   }
 ];
-

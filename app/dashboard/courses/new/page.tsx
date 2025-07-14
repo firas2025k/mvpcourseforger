@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -37,6 +37,9 @@ import {
   Star,
   Crown,
   GraduationCap,
+  Coins,
+  Calculator,
+  TrendingUp,
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -75,6 +78,25 @@ export default function EnhancedCourseGenerationPage() {
       progress: 0,
       message: "",
     });
+
+  // Credit cost state
+  const [creditCost, setCreditCost] = useState(0);
+
+  // Credit cost calculation function (same as API)
+  const calculateCourseCreditCost = useCallback((chapters: number, lessonsPerChapter: number): number => {
+    const lessonCost = chapters * lessonsPerChapter; // 1 credit per lesson
+    const chapterCost = chapters; // 1 credit per chapter
+    const totalCost = lessonCost + chapterCost;
+    return Math.max(totalCost, 3); // Minimum cost of 3 credits
+  }, []);
+
+  // Update credit cost when parameters change
+  useEffect(() => {
+    const chaptersNum = parseInt(chapters);
+    const lessonsNum = parseInt(lessonsPerChapter);
+    const cost = calculateCourseCreditCost(chaptersNum, lessonsNum);
+    setCreditCost(cost);
+  }, [chapters, lessonsPerChapter, calculateCourseCreditCost]);
 
   // File upload handlers
   const handleFileSelect = useCallback((file: File) => {
@@ -313,6 +335,15 @@ export default function EnhancedCourseGenerationPage() {
       handlePdfGeneration();
     }
   };
+
+  // Get cost level for styling
+  const getCostLevel = (cost: number) => {
+    if (cost <= 5) return "low";
+    if (cost <= 10) return "medium";
+    return "high";
+  };
+
+  const costLevel = getCostLevel(creditCost);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-slate-950 dark:via-slate-900 dark:to-blue-950">
@@ -599,6 +630,109 @@ export default function EnhancedCourseGenerationPage() {
               </div>
             </div>
 
+            {/* Credit Cost Display - NEW SECTION */}
+            <Card className={cn(
+              "transition-all duration-500 border-2",
+              costLevel === "low" && "bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 border-green-200/50 dark:border-green-700/50",
+              costLevel === "medium" && "bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-950/30 dark:to-orange-950/30 border-yellow-200/50 dark:border-yellow-700/50",
+              costLevel === "high" && "bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-950/30 dark:to-pink-950/30 border-red-200/50 dark:border-red-700/50"
+            )}>
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="relative">
+                      <div className={cn(
+                        "p-3 rounded-full transition-all duration-300",
+                        costLevel === "low" && "bg-green-100 dark:bg-green-900/50",
+                        costLevel === "medium" && "bg-yellow-100 dark:bg-yellow-900/50",
+                        costLevel === "high" && "bg-red-100 dark:bg-red-900/50"
+                      )}>
+                        <Coins className={cn(
+                          "h-6 w-6 transition-all duration-300",
+                          costLevel === "low" && "text-green-600 dark:text-green-400",
+                          costLevel === "medium" && "text-yellow-600 dark:text-yellow-400",
+                          costLevel === "high" && "text-red-600 dark:text-red-400"
+                        )} />
+                      </div>
+                      <div className={cn(
+                        "absolute inset-0 rounded-full blur opacity-20 animate-pulse",
+                        costLevel === "low" && "bg-green-400",
+                        costLevel === "medium" && "bg-yellow-400",
+                        costLevel === "high" && "bg-red-400"
+                      )}></div>
+                    </div>
+                    <div>
+                      <h3 className={cn(
+                        "text-lg font-semibold transition-all duration-300",
+                        costLevel === "low" && "text-green-900 dark:text-green-100",
+                        costLevel === "medium" && "text-yellow-900 dark:text-yellow-100",
+                        costLevel === "high" && "text-red-900 dark:text-red-100"
+                      )}>
+                        Generation Cost
+                      </h3>
+                      <p className={cn(
+                        "text-sm transition-all duration-300",
+                        costLevel === "low" && "text-green-700 dark:text-green-300",
+                        costLevel === "medium" && "text-yellow-700 dark:text-yellow-300",
+                        costLevel === "high" && "text-red-700 dark:text-red-300"
+                      )}>
+                        Credits required for this course configuration
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="flex items-center gap-2">
+                      <span className={cn(
+                        "text-3xl font-bold transition-all duration-500",
+                        costLevel === "low" && "text-green-600 dark:text-green-400",
+                        costLevel === "medium" && "text-yellow-600 dark:text-yellow-400",
+                        costLevel === "high" && "text-red-600 dark:text-red-400"
+                      )}>
+                        {creditCost}
+                      </span>
+                      <div className="flex flex-col items-center">
+                        <Zap className={cn(
+                          "h-5 w-5 transition-all duration-300",
+                          costLevel === "low" && "text-green-500",
+                          costLevel === "medium" && "text-yellow-500",
+                          costLevel === "high" && "text-red-500"
+                        )} />
+                        <span className="text-xs text-muted-foreground">credits</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Cost Breakdown */}
+                <div className="mt-4 pt-4 border-t border-slate-200/50 dark:border-slate-700/50">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Calculator className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm font-medium text-muted-foreground">Cost Breakdown</span>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                    <div className="flex items-center justify-between p-2 rounded-lg bg-white/50 dark:bg-slate-800/50">
+                      <span className="text-muted-foreground">Chapters</span>
+                      <span className="font-medium">{chapters} × 1 = {parseInt(chapters)} credits</span>
+                    </div>
+                    <div className="flex items-center justify-between p-2 rounded-lg bg-white/50 dark:bg-slate-800/50">
+                      <span className="text-muted-foreground">Lessons</span>
+                      <span className="font-medium">{parseInt(chapters) * parseInt(lessonsPerChapter)} × 1 = {parseInt(chapters) * parseInt(lessonsPerChapter)} credits</span>
+                    </div>
+                    <div className="flex items-center justify-between p-2 rounded-lg bg-white/50 dark:bg-slate-800/50">
+                      <span className="text-muted-foreground">Minimum</span>
+                      <span className="font-medium">3 credits</span>
+                    </div>
+                  </div>
+                  <div className="mt-3 p-2 rounded-lg bg-gradient-to-r from-slate-100/50 to-blue-100/50 dark:from-slate-800/50 dark:to-blue-900/50">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">Total Cost</span>
+                      <span className="font-bold text-lg">{creditCost} credits</span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Generation Progress */}
             {isGenerating && (
               <Card className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/50 dark:to-purple-950/50 border border-blue-200/50 dark:border-blue-700/50">
@@ -662,6 +796,10 @@ export default function EnhancedCourseGenerationPage() {
                 <div className="flex items-center gap-3">
                   <Zap className="h-5 w-5" />
                   {generationMode === "prompt" ? "Generate Course from Prompt" : "Generate Course from PDF"}
+                  <div className="flex items-center gap-1 ml-2 px-2 py-1 bg-white/20 rounded-full">
+                    <Coins className="h-4 w-4" />
+                    <span className="font-bold">{creditCost}</span>
+                  </div>
                   <Star className="h-4 w-4 text-yellow-300" />
                 </div>
               )}

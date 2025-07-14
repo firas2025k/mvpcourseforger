@@ -30,6 +30,8 @@ import {
   Users,
   Clock,
   Target,
+  ImageIcon,
+  Camera,
 } from "lucide-react";
 import CreatePresentationForm from "@/components/dashboard/presentations/CreatePresentationForm";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -46,6 +48,9 @@ interface GeneratedSlide {
     | "image-right"
     | "full-image";
   speaker_notes?: string;
+  image_keywords?: string[]; // New: Keywords for image search
+  image_url?: string; // New: Selected image URL
+  image_alt?: string; // New: Alt text for image
 }
 
 interface GeneratedPresentation {
@@ -56,6 +61,7 @@ interface GeneratedPresentation {
   text_color: string;
   accent_color: string;
   slides: GeneratedSlide[];
+  imagesIncluded?: boolean; // New: Track if images were included
 }
 
 export default function NewPresentationPage() {
@@ -106,10 +112,14 @@ export default function NewPresentationPage() {
       // Validate and sanitize the generated presentation data
       const sanitizedPresentation = {
         ...responseData.aiGeneratedPresentation,
+        imagesIncluded: responseData.imagesIncluded || false,
         slides: responseData.aiGeneratedPresentation.slides.map((slide: any) => ({
           ...slide,
           content: slide.content || "No content available",
-          speaker_notes: slide.speaker_notes || ""
+          speaker_notes: slide.speaker_notes || "",
+          image_keywords: slide.image_keywords || [],
+          image_url: slide.image_url || null,
+          image_alt: slide.image_alt || null
         }))
       };
       
@@ -138,6 +148,9 @@ export default function NewPresentationPage() {
         type: slide.type,
         layout: slide.layout,
         speaker_notes: slide.speaker_notes || "",
+        image_url: slide.image_url || null,
+        image_alt: slide.image_alt || null,
+        image_keywords: slide.image_keywords || [],
         order_index: index,
       }));
 
@@ -149,6 +162,7 @@ export default function NewPresentationPage() {
         background_color: generatedPresentation.background_color,
         text_color: generatedPresentation.text_color,
         accent_color: generatedPresentation.accent_color,
+        includes_images: generatedPresentation.imagesIncluded || false,
         slides: slidesToSave,
       };
 
@@ -195,7 +209,10 @@ export default function NewPresentationPage() {
           id: `preview-${index}`,
           order_index: index,
           content: slide.content || "No content available",
-          speaker_notes: slide.speaker_notes || ""
+          speaker_notes: slide.speaker_notes || "",
+          image_url: slide.image_url || null,
+          image_alt: slide.image_alt || null,
+          image_keywords: slide.image_keywords || []
         })),
       })
     );
@@ -219,6 +236,12 @@ export default function NewPresentationPage() {
         {line || "\u00A0"} {/* Non-breaking space for empty lines */}
       </p>
     ));
+  };
+
+  // Helper function to count slides with images
+  const getSlidesWithImagesCount = () => {
+    if (!generatedPresentation) return 0;
+    return generatedPresentation.slides.filter(slide => slide.image_url).length;
   };
 
   return (
@@ -288,11 +311,11 @@ export default function NewPresentationPage() {
               Create New Presentation
             </h1>
             <p className="text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto mb-8">
-              Transform your ideas or PDF documents into stunning presentations with AI-powered content generation
+              Transform your ideas or PDF documents into stunning presentations with AI-powered content generation and beautiful images
             </p>
 
             {/* Feature Highlights */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto mb-12">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 max-w-5xl mx-auto mb-12">
               <div className="flex flex-col items-center p-6 bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-2xl border border-white/20 hover:bg-white/80 dark:hover:bg-slate-800/80 transition-all duration-300 hover:scale-105">
                 <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center mb-4">
                   <Wand2 className="h-6 w-6 text-white" />
@@ -302,6 +325,18 @@ export default function NewPresentationPage() {
                 </h3>
                 <p className="text-sm text-slate-600 dark:text-slate-400 text-center">
                   Intelligent content creation with speaker notes and structured layouts
+                </p>
+              </div>
+
+              <div className="flex flex-col items-center p-6 bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-2xl border border-white/20 hover:bg-white/80 dark:hover:bg-slate-800/80 transition-all duration-300 hover:scale-105">
+                <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-teal-600 rounded-xl flex items-center justify-center mb-4">
+                  <Camera className="h-6 w-6 text-white" />
+                </div>
+                <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2">
+                  Smart Images
+                </h3>
+                <p className="text-sm text-slate-600 dark:text-slate-400 text-center">
+                  Automatically add relevant, high-quality images from Pixabay
                 </p>
               </div>
 
@@ -364,7 +399,7 @@ export default function NewPresentationPage() {
                     <p className="text-slate-600 dark:text-slate-400 text-lg mb-4">
                       {originalPrompt === "PDF Document" 
                         ? "AI is analyzing your PDF content and creating slides..."
-                        : "AI is creating slides, content, and speaker notes for you..."
+                        : "AI is creating slides, content, speaker notes, and selecting images for you..."
                       }
                     </p>
                   </div>
@@ -381,8 +416,12 @@ export default function NewPresentationPage() {
                         <span>Creating slides</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse delay-700"></div>
+                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse delay-500"></div>
                         <span>Adding content</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse delay-700"></div>
+                        <span>Finding images</span>
                       </div>
                     </div>
 
@@ -414,7 +453,7 @@ export default function NewPresentationPage() {
                         <CardTitle className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
                           {generatedPresentation.title}
                         </CardTitle>
-                        <div className="flex items-center gap-4 mt-2">
+                        <div className="flex items-center gap-4 mt-2 flex-wrap">
                           <Badge
                             className={`${
                               generatedPresentation.difficulty === "beginner"
@@ -439,6 +478,12 @@ export default function NewPresentationPage() {
                             <Palette className="h-3 w-3 mr-1" />
                             {generatedPresentation.theme} theme
                           </Badge>
+                          {generatedPresentation.imagesIncluded && (
+                            <Badge className="bg-blue-100 text-blue-800 border-blue-200 font-medium">
+                              <ImageIcon className="h-3 w-3 mr-1" />
+                              {getSlidesWithImagesCount()} images included
+                            </Badge>
+                          )}
                           {originalPrompt === "PDF Document" && (
                             <Badge variant="outline" className="font-medium">
                               <FileText className="h-3 w-3 mr-1" />
@@ -487,9 +532,17 @@ export default function NewPresentationPage() {
                 <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">
                   Slide Preview
                 </h2>
-                <div className="flex items-center gap-2 text-sm text-slate-500">
-                  <Star className="h-4 w-4" />
-                  AI-generated content
+                <div className="flex items-center gap-4 text-sm text-slate-500">
+                  <div className="flex items-center gap-2">
+                    <Star className="h-4 w-4" />
+                    AI-generated content
+                  </div>
+                  {generatedPresentation.imagesIncluded && (
+                    <div className="flex items-center gap-2">
+                      <Camera className="h-4 w-4 text-blue-500" />
+                      Smart image selection
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -510,7 +563,7 @@ export default function NewPresentationPage() {
                             {slide.title || `Slide ${index + 1}`}
                           </CardTitle>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 flex-wrap">
                           <Badge
                             variant="outline"
                             className="capitalize text-xs"
@@ -523,11 +576,53 @@ export default function NewPresentationPage() {
                           >
                             {slide.layout.replace("-", " ")}
                           </Badge>
+                          {slide.image_url && (
+                            <Badge className="bg-blue-100 text-blue-800 border-blue-200 text-xs">
+                              <ImageIcon className="h-3 w-3 mr-1" />
+                              Image
+                            </Badge>
+                          )}
                         </div>
                       </div>
                     </CardHeader>
                     <CardContent className="relative">
                       <div className="space-y-4">
+                        {/* Image Preview */}
+                        {slide.image_url && (
+                          <div>
+                            <div className="flex items-center gap-2 mb-3">
+                              <ImageIcon className="h-4 w-4 text-blue-500" />
+                              <h4 className="font-medium text-sm text-slate-600 dark:text-slate-400">
+                                Selected Image
+                              </h4>
+                              {slide.image_keywords && slide.image_keywords.length > 0 && (
+                                <div className="flex gap-1 ml-2">
+                                  {slide.image_keywords.slice(0, 3).map((keyword, idx) => (
+                                    <Badge key={idx} variant="outline" className="text-xs">
+                                      {keyword}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                            <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 p-4 rounded-xl border border-blue-200/50 dark:border-blue-600/30">
+                              <img
+                                src={slide.image_url}
+                                alt={slide.image_alt || slide.title}
+                                className="w-full h-32 object-cover rounded-lg"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none';
+                                }}
+                              />
+                              {slide.image_alt && (
+                                <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">
+                                  {slide.image_alt}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
                         <div>
                           <div className="flex items-center gap-2 mb-3">
                             <FileText className="h-4 w-4 text-slate-500" />
