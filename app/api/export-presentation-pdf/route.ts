@@ -73,31 +73,10 @@ export async function POST(request: NextRequest) {
 
   let browser;
   try {
-    // Fetch presentation data from Supabase
+    // Fetch presentation data from Supabase (for validation and filename only)
     const { data: presentation, error: presentationError } = await supabase
       .from("presentations")
-      .select(
-        `
-        id,
-        title,
-        difficulty,
-        theme,
-        background_color,
-        text_color,
-        accent_color,
-        slides (
-          id,
-          title,
-          content,
-          type,
-          layout,
-          order_index,
-          image_url,
-          image_alt,
-          speaker_notes
-        )
-      `
-      )
+      .select("id, title")
       .eq("id", presentationId)
       .eq("user_id", user.id)
       .single();
@@ -108,11 +87,6 @@ export async function POST(request: NextRequest) {
         { status: 404 }
       );
     }
-
-    // Sort slides by order_index
-    presentation.slides = (presentation.slides || []).sort(
-      (a: SlideData, b: SlideData) => a.order_index - b.order_index
-    );
 
     // Launch Puppeteer
     if (process.env.NODE_ENV === "production") {
@@ -143,31 +117,44 @@ export async function POST(request: NextRequest) {
     const page = await browser.newPage();
     await page.setViewport({ width: 1280, height: 800 });
 
-    // Generate HTML content for the presentation
-    const htmlContent = generatePresentationHTML(presentation);
-    await page.setContent(htmlContent, { waitUntil: "networkidle0" });
+    // Forward the user's cookies to Puppeteer for authentication
+    const baseUrl =
+      process.env.NODE_ENV === "production"
+        ? process.env.NEXT_PUBLIC_SITE_URL || "https://your-production-url.com"
+        : "http://localhost:3000";
+    const cookieHeader = request.headers.get("cookie");
+    if (cookieHeader) {
+      const cookies = cookieHeader.split(";").map((cookieStr) => {
+        const [name, ...rest] = cookieStr.trim().split("=");
+        return {
+          name,
+          value: rest.join("="),
+          domain:
+            process.env.NODE_ENV === "production"
+              ? new URL(baseUrl).hostname
+              : "localhost",
+          path: "/",
+        };
+      });
+      await page.setCookie(...cookies);
+    }
+
+    // Use Puppeteer to navigate to the print-presentation route and render the real slides
+    const printUrl = `${baseUrl}/print-presentation/${presentationId}`;
+    await page.goto(printUrl, { waitUntil: "networkidle0" });
 
     // Generate PDF
     const pdfBuffer = await page.pdf({
       format: "A4",
       printBackground: true,
+      landscape: true,
       margin: {
-        top: "20mm",
-        right: "20mm",
-        bottom: "20mm",
-        left: "20mm",
+        top: "0mm",
+        right: "0mm",
+        bottom: "0mm",
+        left: "0mm",
       },
-      displayHeaderFooter: true,
-      headerTemplate: `
-        <div style="font-size: 10px; margin: 0 auto; color: #666; width: 100%; text-align: center;">
-          ${presentation.title}
-        </div>
-      `,
-      footerTemplate: `
-        <div style="font-size: 10px; margin: 0 auto; color: #666; width: 100%; text-align: center;">
-          Page <span class="pageNumber"></span> of <span class="totalPages"></span>
-        </div>
-      `,
+      displayHeaderFooter: false,
     });
 
     const fileName = `${presentation.title.replace(
@@ -183,6 +170,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error: any) {
+    console.error("[PDF Export] Error:", error);
     return NextResponse.json(
       { error: "Failed to generate PDF", details: error.message },
       { status: 500 }
