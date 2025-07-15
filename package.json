@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
+    "@hookform/resolvers": "^5.1.1",
     "@langchain/community": "^0.3.47",
     "@langchain/core": "^0.3.60",
     "@langchain/google-genai": "^0.2.14",
@@ -37,6 +38,7 @@
     "@tiptap/extension-underline": "^2.14.0",
     "@tiptap/react": "^2.14.0",
     "@tiptap/starter-kit": "^2.14.0",
+    "@vapi-ai/web": "^2.3.8",
     "@vercel/speed-insights": "^1.2.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -45,6 +47,7 @@
     "i18next": "^25.2.1",
     "jsonrepair": "^3.12.0",
     "langchain": "^0.3.29",
+    "lottie-react": "^2.4.1",
     "lucide-react": "^0.511.0",
     "next": "^14.2.29",
     "next-i18next": "^15.4.2",
@@ -62,7 +65,8 @@
     "remark-gfm": "^4.0.1",
     "sonner": "^2.0.5",
     "stripe": "^18.2.1",
-    "tailwind-merge": "^3.3.0"
+    "tailwind-merge": "^3.3.0",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

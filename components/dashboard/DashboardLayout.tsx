@@ -27,6 +27,7 @@ import {
   Star,
   Crown,
   GraduationCap,
+  GraduationCapIcon,
 } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
@@ -49,9 +50,15 @@ interface NavLink {
 const navLinks: NavLink[] = [
   {
     href: "/dashboard",
-    label: "Dashboard",
+    label: "Courses",
     icon: LayoutDashboard,
     gradient: "from-blue-500 to-purple-600",
+  },
+  {
+    href: "/dashboard/voice",
+    label: "Voice Teacher",
+    icon: GraduationCapIcon,
+    gradient: "from-yellow-500 to-orange-600",
   },
   {
     href: "/dashboard/analytics",
