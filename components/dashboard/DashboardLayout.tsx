@@ -10,6 +10,7 @@ import { ThemeSwitcher } from "@/components/theme-switcher";
 import { Button } from "@/components/ui/button";
 import logoIcon from "@/public/assets/images/logo.png";
 import { SearchInput } from "@/components/dashboard/SearchInput";
+import CreditBalance from "@/components/dashboard/CreditBalance";
 import {
   CircleUser,
   Menu,
@@ -28,6 +29,7 @@ import {
   Crown,
   GraduationCap,
   GraduationCapIcon,
+  Coins,
 } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
@@ -39,6 +41,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+
+// Credit loading component
+function CreditLoading() {
+  return (
+    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 shadow-sm">
+      <Coins className="h-4 w-4 text-slate-400 animate-pulse" />
+      <div className="w-8 h-4 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></div>
+    </div>
+  );
+}
 
 interface NavLink {
   href: string;
@@ -77,6 +89,12 @@ const navLinks: NavLink[] = [
     label: "Settings",
     icon: Settings,
     gradient: "from-slate-500 to-slate-700",
+  },
+  {
+    href: "/dashboard/credit",
+    label: "Credits",
+    icon: Coins,
+    gradient: "from-yellow-500 to-orange-600",
   },
   {
     href: "/pricing",
@@ -425,7 +443,7 @@ export default function DashboardLayout({
             <Menu className="h-6 w-6" />
           </Button>
 
-          <div className="flex flex-1 items-center justify-end gap-4">
+          <div className="flex flex-1 items-center justify-end gap-4 relative">
             {showSearch && (
               <Suspense>
                 <div className="relative flex-1 md:grow-0 max-w-md">
@@ -437,63 +455,67 @@ export default function DashboardLayout({
                 </div>
               </Suspense>
             )}
-            <ThemeSwitcher />
-
-            {/* Desktop User Menu */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="secondary"
-                  size="icon"
-                  className="rounded-full hover:scale-110 transition-all duration-200 bg-slate-100/80 dark:bg-slate-800/80 hover:bg-slate-200/80 dark:hover:bg-slate-700/80 border border-slate-200/50 dark:border-slate-700/50"
-                >
-                  <UserAvatar />
-                  <span className="sr-only">Toggle user menu</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="end"
-                className="w-56 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/50 dark:border-slate-700/50 shadow-xl"
-              >
-                <DropdownMenuLabel className="flex flex-col p-4">
-                  <UserName />
-                  <UserEmail />
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator className="bg-slate-200/50 dark:bg-slate-700/50" />
-                <DropdownMenuItem
-                  asChild
-                  className="hover:bg-slate-100/80 dark:hover:bg-slate-800/80 transition-colors duration-200"
-                >
-                  <Link
-                    href="/dashboard"
-                    className="flex items-center gap-3 p-3"
+            <div className="flex items-center gap-4">
+              <Suspense fallback={<CreditLoading />}>
+                <CreditBalance compact={true} showTopUpButton={false} />
+              </Suspense>
+              <ThemeSwitcher />
+              {/* Desktop User Menu */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    className="rounded-full hover:scale-110 transition-all duration-200 bg-slate-100/80 dark:bg-slate-800/80 hover:bg-slate-200/80 dark:hover:bg-slate-700/80 border border-slate-200/50 dark:border-slate-700/50"
                   >
-                    <LayoutDashboard className="h-4 w-4" />
-                    Dashboard
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  asChild
-                  className="hover:bg-slate-100/80 dark:hover:bg-slate-800/80 transition-colors duration-200"
+                    <UserAvatar />
+                    <span className="sr-only">Toggle user menu</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  className="w-56 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/50 dark:border-slate-700/50 shadow-xl"
                 >
-                  <Link
-                    href="/dashboard/settings"
-                    className="flex items-center gap-3 p-3"
+                  <DropdownMenuLabel className="flex flex-col p-4">
+                    <UserName />
+                    <UserEmail />
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator className="bg-slate-200/50 dark:bg-slate-700/50" />
+                  <DropdownMenuItem
+                    asChild
+                    className="hover:bg-slate-100/80 dark:hover:bg-slate-800/80 transition-colors duration-200"
                   >
-                    <Settings className="h-4 w-4" />
-                    Settings
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator className="bg-slate-200/50 dark:bg-slate-700/50" />
-                <DropdownMenuItem
-                  onClick={handleLogout}
-                  className="cursor-pointer flex items-center gap-3 p-3 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors duration-200"
-                >
-                  <LogOut className="h-4 w-4" />
-                  Logout
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                    <Link
+                      href="/dashboard"
+                      className="flex items-center gap-3 p-3"
+                    >
+                      <LayoutDashboard className="h-4 w-4" />
+                      Dashboard
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    asChild
+                    className="hover:bg-slate-100/80 dark:hover:bg-slate-800/80 transition-colors duration-200"
+                  >
+                    <Link
+                      href="/dashboard/settings"
+                      className="flex items-center gap-3 p-3"
+                    >
+                      <Settings className="h-4 w-4" />
+                      Settings
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="bg-slate-200/50 dark:bg-slate-700/50" />
+                  <DropdownMenuItem
+                    onClick={handleLogout}
+                    className="cursor-pointer flex items-center gap-3 p-3 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors duration-200"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
         </header>
 

@@ -1,9 +1,9 @@
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import CreditBalance from "@/components/dashboard/CreditBalance";
-import { Suspense } from 'react';
-import { Loader2, Sparkles, Coins } from 'lucide-react';
-import { cookies } from 'next/headers';
-import { createServerClient } from '@supabase/ssr';
+import { Suspense } from "react";
+import { Loader2, Sparkles, Coins } from "lucide-react";
+import { cookies } from "next/headers";
+import { createServerClient } from "@supabase/ssr";
 
 // Enhanced loading component
 function DashboardLoading() {
@@ -50,55 +50,53 @@ async function CreditBalanceWrapper() {
 
   try {
     // Get current user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
     if (authError || !user) {
       return <CreditLoading />;
     }
 
     // Fetch user's credit balance
     const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('credits')
-      .eq('id', user.id)
+      .from("profiles")
+      .select("credits")
+      .eq("id", user.id)
       .single();
 
     if (profileError) {
-      console.error('Error fetching user credits:', profileError);
+      console.error("Error fetching user credits:", profileError);
       return <CreditLoading />;
     }
 
     const credits = profile?.credits || 0;
 
     return (
-      <CreditBalance 
-        initialCredits={credits} 
-        showTopUpButton={false} 
-        compact={true} 
+      <CreditBalance
+        initialCredits={credits}
+        showTopUpButton={false}
+        compact={true}
       />
     );
   } catch (error) {
-    console.error('Error in CreditBalanceWrapper:', error);
+    console.error("Error in CreditBalanceWrapper:", error);
     return <CreditLoading />;
   }
 }
 
 // Enhanced DashboardLayout wrapper with credit display
-function DashboardLayoutWithCredits({ children }: { children: React.ReactNode }) {
+function DashboardLayoutWithCredits({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <DashboardLayout>
-      {/* Credit Balance in Header */}
-      <div className="fixed top-4 right-4 z-50">
-        <Suspense fallback={<CreditLoading />}>
-          <CreditBalanceWrapper />
-        </Suspense>
-      </div>
-      
       {/* Main Content */}
       <Suspense fallback={<DashboardLoading />}>
-        <div className="animate-in fade-in duration-500">
-          {children}
-        </div>
+        <div className="animate-in fade-in duration-500">{children}</div>
       </Suspense>
     </DashboardLayout>
   );
@@ -111,4 +109,3 @@ export default function ProtectedLayout({
 }) {
   return <DashboardLayoutWithCredits>{children}</DashboardLayoutWithCredits>;
 }
-
