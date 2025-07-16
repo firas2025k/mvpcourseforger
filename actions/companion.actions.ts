@@ -30,18 +30,100 @@ const getSupabaseAndUser = async () => {
 export const createCompanion = async (formData: any) => {
   const { supabase, user } = await getSupabaseAndUser();
   if (!user) throw new Error("Not authenticated");
-  const author = user.id;
-  // Restore 'duration' if present in formData
-  const { duration, ...formDataWithoutDuration } = formData;
-  const insertData = { ...formDataWithoutDuration, author };
-  if (duration !== undefined) insertData.duration = duration;
-  const { data, error } = await supabase
-    .from("companions")
-    .insert(insertData)
-    .select();
-  if (error || !data)
-    throw new Error(error?.message || "Failed to create a companion");
-  return data[0];
+
+  const { name, subject, topic, voice, style, duration } = formData;
+
+  // Validate input
+  if (!name || !subject || !topic || !voice || !style || !duration) {
+    throw new Error("Missing required fields");
+  }
+
+  if (duration < 5 || duration > 120) {
+    throw new Error("Duration must be between 5 and 120 minutes");
+  }
+
+  // Calculate credit cost
+  const baseCost = 2;
+  const durationCost = Math.ceil(duration / 10);
+  const creditCost = Math.max(baseCost + durationCost, 3);
+
+  // Check user's credit balance
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("credits")
+    .eq("id", user.id)
+    .single();
+
+  if (profileError || !profile) {
+    throw new Error("Could not retrieve user profile");
+  }
+
+  const currentCredits = profile.credits || 0;
+
+  if (currentCredits < creditCost) {
+    throw new Error(
+      `Insufficient credits. This voice agent requires ${creditCost} credits, but you have ${currentCredits} credits available.`
+    );
+  }
+
+  // Deduct credits
+  const newBalance = currentCredits - creditCost;
+  const { error: updateError } = await supabase
+    .from("profiles")
+    .update({ credits: newBalance })
+    .eq("id", user.id);
+
+  if (updateError) {
+    throw new Error("Failed to process credit payment");
+  }
+
+  try {
+    // Create companion
+    const insertData = {
+      name,
+      subject,
+      topic,
+      voice,
+      style,
+      duration,
+      author: user.id,
+    };
+
+    const { data, error } = await supabase
+      .from("companions")
+      .insert(insertData)
+      .select()
+      .single();
+
+    if (error || !data) {
+      // Refund credits if companion creation fails
+      await supabase
+        .from("profiles")
+        .update({ credits: currentCredits })
+        .eq("id", user.id);
+
+      throw new Error(error?.message || "Failed to create a companion");
+    }
+
+    // Record credit transaction
+    await supabase.from("credit_transactions").insert({
+      user_id: user.id,
+      type: "consumption",
+      amount: -creditCost,
+      related_entity_id: data.id,
+      description: `Voice agent creation: ${name} (${subject} - ${topic}, ${duration} minutes)`,
+    });
+
+    return data;
+  } catch (error) {
+    // Refund credits on any error
+    await supabase
+      .from("profiles")
+      .update({ credits: currentCredits })
+      .eq("id", user.id);
+
+    throw error;
+  }
 };
 
 // TODO: Replace this inline type with a proper GetAllCompanions type

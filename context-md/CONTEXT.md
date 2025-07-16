@@ -53,6 +53,7 @@ Ultimate → 50 courses, 10 chapters, 6 lessons/chapter
 .
 ├── README.md
 ├── actions
+│ ├── companion.actions.ts
 │ └── search.ts
 ├── app
 │ ├── actions
@@ -67,6 +68,8 @@ Ultimate → 50 courses, 10 chapters, 6 lessons/chapter
 │ │ │ └── [courseId]
 │ │ │ └── route.ts
 │ │ ├── export-course-pdf
+│ │ │ └── route.ts
+│ │ ├── export-presentation-pdf
 │ │ │ └── route.ts
 │ │ ├── generate-course
 │ │ │ └── route.ts
@@ -138,7 +141,13 @@ Ultimate → 50 courses, 10 chapters, 6 lessons/chapter
 │ │ │ ├── new
 │ │ │ │ └── page.tsx
 │ │ │ └── page.tsx
-│ │ └── settings
+│ │ ├── settings
+│ │ │ └── page.tsx
+│ │ └── voice
+│ │ ├── [id]
+│ │ │ └── page.tsx
+│ │ ├── new
+│ │ │ └── page.tsx
 │ │ └── page.tsx
 │ ├── favicon.ico
 │ ├── globals.css
@@ -147,6 +156,9 @@ Ultimate → 50 courses, 10 chapters, 6 lessons/chapter
 │ ├── page.tsx
 │ ├── pricing
 │ │ ├── PricingClientPage.tsx
+│ │ └── page.tsx
+│ ├── print-presentation
+│ │ └── [presentationId]
 │ │ └── page.tsx
 │ └── twitter-image.png
 ├── build.log
@@ -176,11 +188,19 @@ Ultimate → 50 courses, 10 chapters, 6 lessons/chapter
 │ │ │ ├── CourseLayoutClient.tsx.backup
 │ │ │ ├── LessonContent.tsx
 │ │ │ ├── LessonEditor.tsx
+│ │ │ ├── ReadAloudButton.tsx
+│ │ │ ├── ReadAloudControls.tsx
+│ │ │ ├── ReadAloudSettings.tsx
 │ │ │ └── RichTextEditor.tsx
-│ │ └── presentations
-│ │ ├── CreatePresentationForm.tsx
-│ │ ├── MarkdownSlideRenderer.tsx
-│ │ └── PresentationViewer.tsx
+│ │ ├── presentations
+│ │ │ ├── CreatePresentationForm.tsx
+│ │ │ ├── MarkdownSlideRenderer.tsx
+│ │ │ └── PresentationViewer.tsx
+│ │ └── voice
+│ │ ├── CompanionCard.tsx
+│ │ ├── CompanionComponent.tsx
+│ │ ├── CompanionForm.tsx
+│ │ └── CompanionsList.tsx
 │ ├── landing
 │ │ ├── Footer.tsx
 │ │ └── Navbar.tsx
@@ -201,8 +221,10 @@ Ultimate → 50 courses, 10 chapters, 6 lessons/chapter
 │ ├── checkbox.tsx
 │ ├── dialog.tsx
 │ ├── dropdown-menu.tsx
+│ ├── form.tsx
 │ ├── input.tsx
 │ ├── label.tsx
+│ ├── popover.tsx
 │ ├── progress.tsx
 │ ├── radio-group.tsx
 │ ├── resizable.tsx
@@ -210,11 +232,16 @@ Ultimate → 50 courses, 10 chapters, 6 lessons/chapter
 │ ├── select.tsx
 │ ├── separator.tsx
 │ ├── sheet.tsx
+│ ├── slider.tsx
 │ ├── sonner.tsx
+│ ├── table.tsx
 │ ├── tabs.tsx
 │ ├── textarea.tsx
 │ └── tooltip.tsx
 ├── components.json
+├── constants
+│ ├── index.ts
+│ └── soundwaves.json
 ├── context-md
 │ ├── Analytics_page.md
 │ ├── CONTEXT.md
@@ -233,7 +260,8 @@ Ultimate → 50 courses, 10 chapters, 6 lessons/chapter
 ├── eslint.config.mjs
 ├── hooks
 │ ├── useAutoSave.ts
-│ └── useDebounce.ts
+│ ├── useDebounce.ts
+│ └── useReadAloud.ts
 ├── html2pdf.d.ts
 ├── lib
 │ ├── gemini.ts
@@ -243,7 +271,8 @@ Ultimate → 50 courses, 10 chapters, 6 lessons/chapter
 │ │ ├── client.ts
 │ │ ├── middleware.ts
 │ │ └── server.ts
-│ └── utils.ts
+│ ├── utils.ts
+│ └── vapi.sdk.ts
 ├── middleware.ts
 ├── next-env.d.ts
 ├── next-i18next.config.js
@@ -257,22 +286,52 @@ Ultimate → 50 courses, 10 chapters, 6 lessons/chapter
 │ │ ├── banner.png
 │ │ ├── logo-icon.png
 │ │ └── logo.png
-│ └── locales
-│ ├── en
+│ ├── icons
+│ │ ├── bookmark-filled.svg
+│ │ ├── bookmark.svg
+│ │ ├── cap.svg
+│ │ ├── check.svg
+│ │ ├── clock.svg
+│ │ ├── coding.svg
+│ │ ├── economics.svg
+│ │ ├── google.svg
+│ │ ├── history.svg
+│ │ ├── language.svg
+│ │ ├── logout.svg
+│ │ ├── maths.svg
+│ │ ├── mic-off.svg
+│ │ ├── mic-on.svg
+│ │ ├── plus.svg
+│ │ ├── science.svg
+│ │ └── search.svg
+│ ├── images
+│ │ ├── cta.svg
+│ │ ├── limit.svg
+│ │ └── logo.svg
+│ ├── locales
+│ │ ├── en
+│ │ │ └── common.json
+│ │ └── fr
 │ │ └── common.json
-│ └── fr
-│ └── common.json
+│ └── readme
+│ ├── hero.png
+│ ├── jsmpro.jpg
+│ ├── thumbnail.png
+│ └── videokit.jpg
 ├── tailwind.config.ts
 ├── tsconfig.json
 ├── types
 │ ├── course.ts
+│ ├── index.d.ts
 │ ├── index.ts
 │ ├── pdf-types.ts
 │ ├── presentation.ts
-│ └── supabase.ts
+│ ├── supabase.ts
+│ └── vapi.d.ts
 ├── utils
 │ ├── parseJson.ts
-│ └── pdfExport.ts
+│ ├── pdfExport.ts
+│ └── presentationPdfExport.ts
 └── vercel.json
 
 ## Important notes
