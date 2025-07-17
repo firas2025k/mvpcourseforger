@@ -1,3 +1,4 @@
+"use state"
 import { useState, useCallback } from "react";
 
 interface Toast {
