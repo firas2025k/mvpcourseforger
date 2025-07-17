@@ -32,7 +32,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'User not authenticated' }, { status: 401, headers: tempHttpResponse.headers });
     }
 
-    const { stripe_price_id: priceId, app_plan_id: clientPlanId } = await request.json(); // priceId from Stripe (sent as stripe_price_id), planId from your app's plans table (sent as app_plan_id)
+    const { stripe_price_id: priceId, app_plan_id: clientPlanId } = await request.json();
 
     if (!priceId || !clientPlanId) {
       return NextResponse.json({ error: 'Stripe Price ID and Plan ID are required' }, { status: 400, headers: tempHttpResponse.headers });
@@ -50,7 +50,7 @@ export async function POST(request: Request) {
       .limit(1)
       .single();
 
-    if (subFetchError && subFetchError.code !== 'PGRST116') { // PGRST116: no rows found, which is fine
+    if (subFetchError && subFetchError.code !== 'PGRST116') {
         console.error('Error fetching existing subscription for customer ID:', subFetchError);
         return NextResponse.json({ error: 'Could not retrieve user subscription data.' }, { status: 500, headers: tempHttpResponse.headers });
     }
@@ -67,20 +67,18 @@ export async function POST(request: Request) {
       });
       stripeCustomerId = customer.id;
 
-      // Upsert the customer ID into the subscriptions table (or create a new entry if none exists)
-      // This assumes a user might not have a subscription record yet if they've never attempted to subscribe.
+      // Update the subscriptions table with the customer ID
       const { error: upsertError } = await supabase
         .from('subscriptions')
         .upsert(
           {
             user_id: user.id,
             stripe_customer_id: stripeCustomerId,
-            plan_id: clientPlanId, // Store the app's plan_id, useful for initial record
+            plan_id: clientPlanId,
             is_active: false, // Will be activated by webhook
           },
           {
-            onConflict: 'user_id', // If user_id record exists, update it. Adjust if your PK/unique constraint is different.
-            // If you want to ensure only one active subscription, you might need more complex logic here or in webhooks.
+            onConflict: 'user_id',
           }
         );
 
@@ -89,15 +87,13 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Could not save customer information.' }, { status: 500, headers: tempHttpResponse.headers });
       }
     } else {
-        // If customer ID exists, ensure their current plan_id is updated if they are changing plans
-        // This is a light update; webhooks will handle the full subscription state.
+        // Update existing subscription with new plan
         const { error: updatePlanError } = await supabase
             .from('subscriptions')
             .update({ plan_id: clientPlanId, stripe_customer_id: stripeCustomerId })
             .eq('user_id', user.id);
         if (updatePlanError) {
             console.error('Error updating plan_id for existing customer:', updatePlanError);
-            // Non-critical, proceed with checkout
         }
     }
 
@@ -115,10 +111,10 @@ export async function POST(request: Request) {
       ],
       mode: 'subscription',
       success_url: `${baseUrl}/dashboard?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${baseUrl}/pricing`, // Or wherever your pricing page is
+      cancel_url: `${baseUrl}/pricing`,
       metadata: {
-        supabase_user_id: user.id,
-        app_plan_id: clientPlanId, // Pass your app's plan_id to webhook
+        supabase_user_id: user.id, // Fixed: Use consistent key
+        app_plan_id: clientPlanId,
       },
       allow_promotion_codes: true,
     });

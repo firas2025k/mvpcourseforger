@@ -68,6 +68,11 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 
+// Import read aloud components
+import { useReadAloud } from "@/hooks/useReadAloud";
+import { ReadAloudButton } from "./ReadAloudButton";
+import { ReadAloudControls } from "./ReadAloudControls";
+
 interface CourseLayoutClientProps {
   courseData: FullCourseData;
 }
@@ -111,7 +116,11 @@ export default function CourseLayoutClient({
   );
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [showReadAloudControls, setShowReadAloudControls] = useState(false);
   const router = useRouter();
+
+  // Initialize read aloud hook
+  const readAloud = useReadAloud();
 
   // Load sidebar state from localStorage
   useEffect(() => {
@@ -140,6 +149,11 @@ export default function CourseLayoutClient({
       JSON.stringify(isSidebarCollapsed)
     );
   }, [isSidebarCollapsed]);
+
+  // Show/hide read aloud controls based on playback state
+  useEffect(() => {
+    setShowReadAloudControls(readAloud.isPlaying || readAloud.isPaused);
+  }, [readAloud.isPlaying, readAloud.isPaused]);
 
   useEffect(() => {
     setQuizFeedback({});
@@ -187,6 +201,9 @@ export default function CourseLayoutClient({
 
   const handleLessonClick = (chapterId: string, lessonId: string) => {
     if (selectedLessonId !== lessonId || selectedChapterId !== chapterId) {
+      // Stop any current reading when switching lessons
+      readAloud.stop();
+
       setSelectedChapterId(chapterId);
       setSelectedLessonId(lessonId);
       if (selectedChapterId !== chapterId) {
@@ -210,6 +227,19 @@ export default function CourseLayoutClient({
   const selectedLesson = selectedChapter?.lessons?.find(
     (l) => l.id === selectedLessonId
   );
+
+  // Get lesson content for read aloud
+  const getLessonContentForReading = () => {
+    if (!selectedLesson) return "";
+
+    // Use edited content if available, otherwise use original content
+    const content =
+      lessonContent[selectedLesson.id] || selectedLesson.content || "";
+
+    // If it's HTML content, we'll let the hook handle the cleaning
+    // If it's markdown, we'll also let the hook handle it
+    return content;
+  };
 
   const flattenedLessons: FlattenedLesson[] = useMemo(() => {
     if (!courseData.chapters) return [];
@@ -529,7 +559,7 @@ export default function CourseLayoutClient({
                               </span>
                             </div>
                           </div>
-                          
+
                           <div className="relative">
                             <Progress
                               value={progressPercentage}
@@ -537,7 +567,7 @@ export default function CourseLayoutClient({
                             />
                             <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full opacity-20 animate-pulse"></div>
                           </div>
-                          
+
                           <div className="flex justify-between items-center text-xs">
                             <div className="flex items-center gap-1 text-slate-600 dark:text-slate-400">
                               <CheckCircle className="h-3 w-3 text-green-500" />
@@ -545,7 +575,9 @@ export default function CourseLayoutClient({
                             </div>
                             <div className="flex items-center gap-1 text-slate-600 dark:text-slate-400">
                               <Clock className="h-3 w-3" />
-                              <span>{totalLessons - completedLessonsCount} remaining</span>
+                              <span>
+                                {totalLessons - completedLessonsCount} remaining
+                              </span>
                             </div>
                           </div>
                         </div>
@@ -606,7 +638,8 @@ export default function CourseLayoutClient({
                                     );
                                     const isCurrentLesson =
                                       selectedLessonId === lesson.id;
-                                    const isCompleted = lessonCompletionStatus[lesson.id];
+                                    const isCompleted =
+                                      lessonCompletionStatus[lesson.id];
 
                                     return (
                                       <li key={lesson.id}>
@@ -634,11 +667,13 @@ export default function CourseLayoutClient({
                                                       <div className="absolute inset-0 bg-green-400 rounded-full blur opacity-30 animate-pulse"></div>
                                                     </div>
                                                   ) : (
-                                                    <div className={`w-6 h-6 rounded-full border-2 flex-shrink-0 transition-all duration-300 ${
-                                                      isCurrentLesson 
-                                                        ? "border-white bg-white/20" 
-                                                        : "border-slate-300 dark:border-slate-600 group-hover:border-blue-400"
-                                                    }`}>
+                                                    <div
+                                                      className={`w-6 h-6 rounded-full border-2 flex-shrink-0 transition-all duration-300 ${
+                                                        isCurrentLesson
+                                                          ? "border-white bg-white/20"
+                                                          : "border-slate-300 dark:border-slate-600 group-hover:border-blue-400"
+                                                      }`}
+                                                    >
                                                       {isCurrentLesson && (
                                                         <PlayCircle className="h-4 w-4 text-white m-0.5" />
                                                       )}
@@ -698,13 +733,21 @@ export default function CourseLayoutClient({
           </div>
         </ResizablePanel>
 
-        <ResizableHandle withHandle className="bg-slate-200/60 dark:bg-slate-700/60 hover:bg-blue-300 dark:hover:bg-blue-600 transition-colors duration-200" />
+        <ResizableHandle
+          withHandle
+          className="bg-slate-200/60 dark:bg-slate-700/60 hover:bg-blue-300 dark:hover:bg-blue-600 transition-colors duration-200"
+        />
 
         <ResizablePanel defaultSize={isSidebarCollapsed ? 94 : 75}>
           <div className="flex flex-col h-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm">
             {/* Enhanced Header */}
             <div className="p-6 border-b border-slate-200/60 dark:border-slate-700/60 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md">
-              <Button variant="outline" size="sm" asChild className="mb-4 hover:shadow-md transition-all duration-200 group">
+              <Button
+                variant="outline"
+                size="sm"
+                asChild
+                className="mb-4 hover:shadow-md transition-all duration-200 group"
+              >
                 <Link href="/dashboard" className="flex items-center gap-2">
                   <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform duration-200" />
                   Back to Dashboard
@@ -732,6 +775,16 @@ export default function CourseLayoutClient({
                 </BreadcrumbList>
               </Breadcrumb>
             </div>
+
+            {/* Read Aloud Controls - Show when active */}
+            {showReadAloudControls && selectedLesson && (
+              <div className="p-4 border-b border-slate-200/60 dark:border-slate-700/60 bg-slate-50/80 dark:bg-slate-800/80">
+                <ReadAloudControls
+                  readAloud={readAloud}
+                  content={getLessonContentForReading()}
+                />
+              </div>
+            )}
 
             {/* Enhanced Content Area */}
             <ScrollArea className="flex-grow">
@@ -768,24 +821,35 @@ export default function CourseLayoutClient({
                           </div>
                         </div>
                       </div>
-                      <Button
-                        variant={isEditMode ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setIsEditMode(!isEditMode)}
-                        className="ml-6 flex-shrink-0 hover:shadow-lg transition-all duration-300 group"
-                      >
-                        {isEditMode ? (
-                          <>
-                            <Eye className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform duration-200" />
-                            Preview
-                          </>
-                        ) : (
-                          <>
-                            <Edit3 className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform duration-200" />
-                            Edit
-                          </>
-                        )}
-                      </Button>
+                      <div className="ml-6 flex-shrink-0 flex items-center gap-3">
+                        {/* Read Aloud Button */}
+                        <ReadAloudButton
+                          readAloud={readAloud}
+                          content={getLessonContentForReading()}
+                          variant="outline"
+                          size="sm"
+                        />
+
+                        {/* Edit Button */}
+                        <Button
+                          variant={isEditMode ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setIsEditMode(!isEditMode)}
+                          className="hover:shadow-lg transition-all duration-300 group"
+                        >
+                          {isEditMode ? (
+                            <>
+                              <Eye className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform duration-200" />
+                              Preview
+                            </>
+                          ) : (
+                            <>
+                              <Edit3 className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform duration-200" />
+                              Edit
+                            </>
+                          )}
+                        </Button>
+                      </div>
                     </div>
 
                     {/* Enhanced Completion Checkbox */}
@@ -873,7 +937,9 @@ export default function CourseLayoutClient({
                                   remarkPlugins={[remarkGfm]}
                                   rehypePlugins={[rehypeHighlight]}
                                 >
-                                  {selectedLesson.content.split(". ").join(".\n\n")}
+                                  {selectedLesson.content
+                                    .split(". ")
+                                    .join(".\n\n")}
                                 </ReactMarkdown>
                               )
                             ) : (
@@ -886,7 +952,8 @@ export default function CourseLayoutClient({
                                   Ready to add content?
                                 </h3>
                                 <p className="text-lg text-slate-500 dark:text-slate-500 mb-6">
-                                  Click "Edit" to start creating engaging lesson content.
+                                  Click "Edit" to start creating engaging lesson
+                                  content.
                                 </p>
                                 <Button
                                   onClick={() => setIsEditMode(true)}
@@ -920,7 +987,8 @@ export default function CourseLayoutClient({
                                     Knowledge Check
                                   </h2>
                                   <p className="text-slate-600 dark:text-slate-400 text-lg">
-                                    Test your understanding and reinforce your learning.
+                                    Test your understanding and reinforce your
+                                    learning.
                                   </p>
                                 </div>
                               </div>
@@ -930,10 +998,7 @@ export default function CourseLayoutClient({
                               {selectedLesson.quizzes.map((quiz, quizIndex) => {
                                 const feedback = quizFeedback[quiz.id];
                                 return (
-                                  <div
-                                    key={quiz.id}
-                                    className="relative"
-                                  >
+                                  <div key={quiz.id} className="relative">
                                     <div className="absolute inset-0 bg-gradient-to-r from-blue-400/5 to-purple-400/5 rounded-2xl blur-xl"></div>
                                     <div className="relative bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-2xl p-8 shadow-lg border border-slate-200/50 dark:border-slate-700/50 hover:shadow-xl transition-all duration-300">
                                       <div className="mb-8">
@@ -983,7 +1048,8 @@ export default function CourseLayoutClient({
 
                                             if (feedback) {
                                               if (
-                                                option === feedback.selectedAnswer
+                                                option ===
+                                                feedback.selectedAnswer
                                               ) {
                                                 if (feedback.isCorrect) {
                                                   optionClasses +=
@@ -1009,7 +1075,8 @@ export default function CourseLayoutClient({
                                                     "font-semibold text-red-800 dark:text-red-200 cursor-pointer flex-1 text-lg";
                                                 }
                                               } else if (
-                                                option === quiz.correct_answer &&
+                                                option ===
+                                                  quiz.correct_answer &&
                                                 !feedback.isCorrect
                                               ) {
                                                 optionClasses +=
@@ -1087,13 +1154,16 @@ export default function CourseLayoutClient({
                                             {feedback.isCorrect ? (
                                               <>
                                                 <Star className="h-5 w-5 text-yellow-500" />
-                                                <span>Excellent! Correct answer!</span>
+                                                <span>
+                                                  Excellent! Correct answer!
+                                                </span>
                                               </>
                                             ) : (
                                               <>
                                                 <Lightbulb className="h-5 w-5" />
                                                 <span>
-                                                  Not quite - see the correct answer above
+                                                  Not quite - see the correct
+                                                  answer above
                                                 </span>
                                               </>
                                             )}

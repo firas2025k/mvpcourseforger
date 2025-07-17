@@ -46,164 +46,233 @@ Ultimate → 50 courses, 10 chapters, 6 lessons/chapter
 
 - 🧾 Profile & Settings: Manage user info and subscription details
 
-- 🧠 Plan Enforcement (Frontend + API): Validates limits before course generation
+- 🧠 Credit based system generation
+
+## folder structure
 
 .
 ├── README.md
 ├── actions
-│   └── search.ts
+│ ├── companion.actions.ts
+│ └── search.ts
 ├── app
-│   ├── actions
-│   │   └── search.ts
-│   ├── api
-│   │   ├── complete-course
-│   │   │   └── route.ts
-│   │   ├── course
-│   │   │   └── [courseId]
-│   │   │   └── route.ts
-│   │   ├── course-details
-│   │   │   └── [courseId]
-│   │   │   └── route.ts
-│   │   ├── export-course-pdf
-│   │   │   └── route.ts
-│   │   ├── generate-course
-│   │   │   └── route.ts
-│   │   ├── lesson-content
-│   │   │   └── route.ts
-│   │   ├── lesson-progress
-│   │   │   └── route.ts
-│   │   ├── save-course
-│   │   │   └── route.ts
-│   │   └── stripe
-│   │   ├── create-checkout-session
-│   │   │   └── route.ts
-│   │   ├── create-portal-session
-│   │   │   └── route.ts
-│   │   └── webhook
-│   │   └── route.ts
-│   ├── auth
-│   │   ├── confirm
-│   │   │   └── route.ts
-│   │   ├── error
-│   │   │   └── page.tsx
-│   │   ├── forgot-password
-│   │   │   └── page.tsx
-│   │   ├── login
-│   │   │   └── page.tsx
-│   │   ├── sign-up
-│   │   │   └── page.tsx
-│   │   ├── sign-up-success
-│   │   │   └── page.tsx
-│   │   └── update-password
-│   │   └── page.tsx
-│   ├── dashboard
-│   │   ├── analytics
-│   │   │   └── page.tsx
-│   │   ├── courses
-│   │   │   ├── [courseId]
-│   │   │   │   └── page.tsx
-│   │   │   ├── new
-│   │   │   │   └── page.tsx
-│   │   │   └── preview
-│   │   │   └── page.tsx
-│   │   ├── dashboard.css
-│   │   ├── layout.tsx
-│   │   ├── page.tsx
-│   │   └── settings
-│   │   └── page.tsx
-│   ├── favicon.ico
-│   ├── globals.css
-│   ├── layout.tsx
-│   ├── opengraph-image.png
-│   ├── page.tsx
-│   ├── pricing
-│   │   ├── PricingClientPage.tsx
-│   │   └── page.tsx
-│   └── twitter-image.png
+│ ├── actions
+│ │ └── search.ts
+│ ├── api
+│ │ ├── complete-course
+│ │ │ └── route.ts
+│ │ ├── course
+│ │ │ └── [courseId]
+│ │ │ └── route.ts
+│ │ ├── course-details
+│ │ │ └── [courseId]
+│ │ │ └── route.ts
+│ │ ├── export-course-pdf
+│ │ │ └── route.ts
+│ │ ├── export-presentation-pdf
+│ │ │ └── route.ts
+│ │ ├── generate-course
+│ │ │ └── route.ts
+│ │ ├── generate-course-from-pdf
+│ │ │ └── route.ts
+│ │ ├── generate-presentation
+│ │ │ └── route.ts
+│ │ ├── generate-presentation-from-pdf
+│ │ │ └── route.ts
+│ │ ├── lesson-content
+│ │ │ └── route.ts
+│ │ ├── lesson-progress
+│ │ │ └── route.ts
+│ │ ├── presentation-details
+│ │ │ └── [presentationId]
+│ │ │ └── route.ts
+│ │ ├── presentation-progress
+│ │ │ └── route.ts
+│ │ ├── save-course
+│ │ │ └── route.ts
+│ │ ├── save-presentation
+│ │ │ └── route.ts
+│ │ ├── search-images
+│ │ │ └── route.ts
+│ │ ├── stripe
+│ │ │ ├── create-checkout-session
+│ │ │ │ └── route.ts
+│ │ │ ├── create-portal-session
+│ │ │ │ └── route.ts
+│ │ │ └── webhook
+│ │ │ └── route.ts
+│ │ └── user
+│ │ └── credits
+│ │ └── route.ts
+│ ├── auth
+│ │ ├── confirm
+│ │ │ └── route.ts
+│ │ ├── error
+│ │ │ └── page.tsx
+│ │ ├── forgot-password
+│ │ │ └── page.tsx
+│ │ ├── login
+│ │ │ └── page.tsx
+│ │ ├── sign-up
+│ │ │ └── page.tsx
+│ │ ├── sign-up-success
+│ │ │ └── page.tsx
+│ │ └── update-password
+│ │ └── page.tsx
+│ ├── course-content-styles.css
+│ ├── dashboard
+│ │ ├── analytics
+│ │ │ └── page.tsx
+│ │ ├── courses
+│ │ │ ├── [courseId]
+│ │ │ │ └── page.tsx
+│ │ │ ├── new
+│ │ │ │ └── page.tsx
+│ │ │ └── preview
+│ │ │ └── page.tsx
+│ │ ├── dashboard.css
+│ │ ├── layout.tsx
+│ │ ├── page.tsx
+│ │ ├── presentations
+│ │ │ ├── [presentationId]
+│ │ │ │ ├── page.tsx
+│ │ │ │ └── present
+│ │ │ │ └── page.tsx
+│ │ │ ├── new
+│ │ │ │ └── page.tsx
+│ │ │ └── page.tsx
+│ │ ├── settings
+│ │ │ └── page.tsx
+│ │ └── voice
+│ │ ├── [id]
+│ │ │ └── page.tsx
+│ │ ├── new
+│ │ │ └── page.tsx
+│ │ └── page.tsx
+│ ├── favicon.ico
+│ ├── globals.css
+│ ├── layout.tsx
+│ ├── opengraph-image.png
+│ ├── page.tsx
+│ ├── pricing
+│ │ ├── PricingClientPage.tsx
+│ │ └── page.tsx
+│ ├── print-presentation
+│ │ └── [presentationId]
+│ │ └── page.tsx
+│ └── twitter-image.png
 ├── build.log
 ├── components
-│   ├── analytics
-│   │   ├── CourseProgressPieChart.tsx
-│   │   └── LessonsCompletionBarChart.tsx
-│   ├── auth
-│   │   ├── AuthPageLayout.tsx
-│   │   ├── auth-button.tsx
-│   │   ├── forgot-password-form.tsx
-│   │   ├── login-form.tsx
-│   │   ├── logout-button.tsx
-│   │   ├── sign-up-form.tsx
-│   │   └── update-password-form.tsx
-│   ├── dashboard
-│   │   ├── CourseCard.tsx
-│   │   ├── DashboardLayout.tsx
-│   │   ├── ManageSubscriptionButton.tsx
-│   │   ├── SearchInput.tsx
-│   │   ├── SearchInputLoading.tsx
-│   │   ├── UserPlanCard.tsx
-│   │   └── courses
-│   │   ├── CourseLayoutClient.tsx
-│   │   ├── LessonEditor.tsx
-│   │   └── RichTextEditor.tsx
-│   ├── landing
-│   │   ├── Footer.tsx
-│   │   └── Navbar.tsx
-│   ├── next-logo.tsx
-│   ├── shared
-│   │   └── LanguageSwitcher.tsx
-│   ├── supabase-logo.tsx
-│   ├── theme-switcher.tsx
-│   └── ui
-│   ├── accordion.tsx
-│   ├── alert-dialog.tsx
-│   ├── avatar.tsx
-│   ├── badge.tsx
-│   ├── breadcrumb.tsx
-│   ├── button.tsx
-│   ├── card.tsx
-│   ├── checkbox.tsx
-│   ├── dialog.tsx
-│   ├── dropdown-menu.tsx
-│   ├── input.tsx
-│   ├── label.tsx
-│   ├── progress.tsx
-│   ├── radio-group.tsx
-│   ├── resizable.tsx
-│   ├── scroll-area.tsx
-│   ├── select.tsx
-│   ├── separator.tsx
-│   ├── sheet.tsx
-│   ├── sonner.tsx
-│   ├── tabs.tsx
-│   ├── textarea.tsx
-│   └── tooltip.tsx
+│ ├── analytics
+│ │ ├── CourseProgressPieChart.tsx
+│ │ └── LessonsCompletionBarChart.tsx
+│ ├── auth
+│ │ ├── AuthPageLayout.tsx
+│ │ ├── auth-button.tsx
+│ │ ├── forgot-password-form.tsx
+│ │ ├── login-form.tsx
+│ │ ├── logout-button.tsx
+│ │ ├── sign-up-form.tsx
+│ │ └── update-password-form.tsx
+│ ├── dashboard
+│ │ ├── CourseCard.tsx
+│ │ ├── CreditBalance.tsx
+│ │ ├── DashboardLayout.tsx
+│ │ ├── ManageSubscriptionButton.tsx
+│ │ ├── PresentationCard.tsx
+│ │ ├── SearchInput.tsx
+│ │ ├── SearchInputLoading.tsx
+│ │ ├── UserPlanCard.tsx
+│ │ ├── courses
+│ │ │ ├── CourseLayoutClient.tsx
+│ │ │ ├── CourseLayoutClient.tsx.backup
+│ │ │ ├── LessonContent.tsx
+│ │ │ ├── LessonEditor.tsx
+│ │ │ ├── ReadAloudButton.tsx
+│ │ │ ├── ReadAloudControls.tsx
+│ │ │ ├── ReadAloudSettings.tsx
+│ │ │ └── RichTextEditor.tsx
+│ │ ├── presentations
+│ │ │ ├── CreatePresentationForm.tsx
+│ │ │ ├── MarkdownSlideRenderer.tsx
+│ │ │ └── PresentationViewer.tsx
+│ │ └── voice
+│ │ ├── CompanionCard.tsx
+│ │ ├── CompanionComponent.tsx
+│ │ ├── CompanionForm.tsx
+│ │ └── CompanionsList.tsx
+│ ├── landing
+│ │ ├── Footer.tsx
+│ │ └── Navbar.tsx
+│ ├── next-logo.tsx
+│ ├── shared
+│ │ └── LanguageSwitcher.tsx
+│ ├── supabase-logo.tsx
+│ ├── theme-switcher.tsx
+│ └── ui
+│ ├── accordion.tsx
+│ ├── alert-dialog.tsx
+│ ├── alert.tsx
+│ ├── avatar.tsx
+│ ├── badge.tsx
+│ ├── breadcrumb.tsx
+│ ├── button.tsx
+│ ├── card.tsx
+│ ├── checkbox.tsx
+│ ├── dialog.tsx
+│ ├── dropdown-menu.tsx
+│ ├── form.tsx
+│ ├── input.tsx
+│ ├── label.tsx
+│ ├── popover.tsx
+│ ├── progress.tsx
+│ ├── radio-group.tsx
+│ ├── resizable.tsx
+│ ├── scroll-area.tsx
+│ ├── select.tsx
+│ ├── separator.tsx
+│ ├── sheet.tsx
+│ ├── slider.tsx
+│ ├── sonner.tsx
+│ ├── table.tsx
+│ ├── tabs.tsx
+│ ├── textarea.tsx
+│ └── tooltip.tsx
 ├── components.json
+├── constants
+│ ├── index.ts
+│ └── soundwaves.json
 ├── context-md
-│   ├── Analytics_page.md
-│   ├── CONTEXT.md
-│   ├── DEPLOYMENT.md
-│   ├── USER_FLOW.md
-│   ├── course-gen-context.md
-│   ├── database.md
-│   ├── errors.md
-│   ├── nexable-context.md
-│   ├── nexable-userflow.md
-│   ├── query.md
-│   ├── results.md
-│   ├── saas-context.md
-│   └── working-code.md
+│ ├── Analytics_page.md
+│ ├── CONTEXT.md
+│ ├── DEPLOYMENT.md
+│ ├── USER_FLOW.md
+│ ├── course-gen-context.md
+│ ├── database.md
+│ ├── errors.md
+│ ├── nexable-context.md
+│ ├── nexable-userflow.md
+│ ├── query.md
+│ ├── results.md
+│ ├── saas-context.md
+│ ├── schema.md
+│ └── working-code.md
 ├── eslint.config.mjs
 ├── hooks
-│   ├── useAutoSave.ts
-│   └── useDebounce.ts
+│ ├── useAutoSave.ts
+│ ├── useDebounce.ts
+│ └── useReadAloud.ts
 ├── html2pdf.d.ts
 ├── lib
-│   ├── gemini.ts
-│   ├── stripe.ts
-│   ├── supabase
-│   │   ├── client.ts
-│   │   ├── middleware.ts
-│   │   └── server.ts
-│   └── utils.ts
+│ ├── gemini.ts
+│ ├── pixabay.ts
+│ ├── stripe.ts
+│ ├── supabase
+│ │ ├── client.ts
+│ │ ├── middleware.ts
+│ │ └── server.ts
+│ ├── utils.ts
+│ └── vapi.sdk.ts
 ├── middleware.ts
 ├── next-env.d.ts
 ├── next-i18next.config.js
@@ -212,25 +281,57 @@ Ultimate → 50 courses, 10 chapters, 6 lessons/chapter
 ├── package.json
 ├── postcss.config.mjs
 ├── public
-│   ├── assets
-│   │   └── images
-│   │   ├── banner.png
-│   │   ├── logo-icon.png
-│   │   └── logo.png
-│   └── locales
-│   ├── en
-│   │   └── common.json
-│   └── fr
-│   └── common.json
+│ ├── assets
+│ │ └── images
+│ │ ├── banner.png
+│ │ ├── logo-icon.png
+│ │ └── logo.png
+│ ├── icons
+│ │ ├── bookmark-filled.svg
+│ │ ├── bookmark.svg
+│ │ ├── cap.svg
+│ │ ├── check.svg
+│ │ ├── clock.svg
+│ │ ├── coding.svg
+│ │ ├── economics.svg
+│ │ ├── google.svg
+│ │ ├── history.svg
+│ │ ├── language.svg
+│ │ ├── logout.svg
+│ │ ├── maths.svg
+│ │ ├── mic-off.svg
+│ │ ├── mic-on.svg
+│ │ ├── plus.svg
+│ │ ├── science.svg
+│ │ └── search.svg
+│ ├── images
+│ │ ├── cta.svg
+│ │ ├── limit.svg
+│ │ └── logo.svg
+│ ├── locales
+│ │ ├── en
+│ │ │ └── common.json
+│ │ └── fr
+│ │ └── common.json
+│ └── readme
+│ ├── hero.png
+│ ├── jsmpro.jpg
+│ ├── thumbnail.png
+│ └── videokit.jpg
 ├── tailwind.config.ts
 ├── tsconfig.json
 ├── types
-│   ├── course.ts
-│   ├── index.ts
-│   ├── pdf-types.ts
-│   └── supabase.ts
+│ ├── course.ts
+│ ├── index.d.ts
+│ ├── index.ts
+│ ├── pdf-types.ts
+│ ├── presentation.ts
+│ ├── supabase.ts
+│ └── vapi.d.ts
 ├── utils
-│   └── pdfExport.ts
+│ ├── parseJson.ts
+│ ├── pdfExport.ts
+│ └── presentationPdfExport.ts
 └── vercel.json
 
 ## Important notes
