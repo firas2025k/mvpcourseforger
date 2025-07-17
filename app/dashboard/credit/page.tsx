@@ -186,7 +186,7 @@ export default async function CreditPage({
                 className="border-yellow-200 text-yellow-700 hover:bg-yellow-50 dark:border-yellow-800 dark:text-yellow-400 dark:hover:bg-yellow-950/20"
               >
                 <Link
-                  href="/dashboard/credits/purchase"
+                  href="/dashboard/credit/purchase"
                   className="flex items-center gap-2"
                 >
                   <Plus className="h-4 w-4" />
