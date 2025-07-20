@@ -52,14 +52,14 @@ const creditPackages: CreditPackage[] = [
   {
     id: "starter",
     name: "Starter Pack",
-    credits: 100,
+    credits: 250,
     price: 9.99,
-    priceId: "price_starter_100",
+    priceId: "price_starter_250",
     description: "Perfect for trying out our AI generation features",
     features: [
-      "100 credits included",
-      "Create 8-10 basic courses",
-      "Generate 50+ presentations",
+      "250 credits included",
+      "Create 20-25 basic courses",
+      "Generate 125+ presentations",
       "24/7 customer support",
       "No expiration date",
     ],
@@ -67,18 +67,15 @@ const creditPackages: CreditPackage[] = [
   {
     id: "popular",
     name: "Popular Pack",
-    credits: 500,
-    price: 39.99,
-    originalPrice: 49.99,
-    discount: 20,
-    bonus: 50,
+    credits: 600,
+    price: 19.99,
     popular: true,
-    priceId: "price_popular_500",
+    priceId: "price_popular_600",
     description: "Most popular choice for regular users",
     features: [
-      "500 credits + 50 bonus",
-      "Create 40+ courses",
-      "Generate 250+ presentations",
+      "600 credits included",
+      "Create 50+ courses",
+      "Generate 300+ presentations",
       "Priority customer support",
       "Advanced AI features",
       "No expiration date",
@@ -87,17 +84,14 @@ const creditPackages: CreditPackage[] = [
   {
     id: "professional",
     name: "Professional Pack",
-    credits: 1000,
-    price: 69.99,
-    originalPrice: 99.99,
-    discount: 30,
-    bonus: 150,
-    priceId: "price_professional_1000",
+    credits: 1100,
+    price: 39.99,
+    priceId: "price_professional_1100",
     description: "Ideal for professionals and content creators",
     features: [
-      "1000 credits + 150 bonus",
-      "Create 80+ courses",
-      "Generate 500+ presentations",
+      "1100 credits included",
+      "Create 90+ courses",
+      "Generate 550+ presentations",
       "Premium customer support",
       "Advanced AI features",
       "Early access to new features",
@@ -107,17 +101,14 @@ const creditPackages: CreditPackage[] = [
   {
     id: "enterprise",
     name: "Enterprise Pack",
-    credits: 2500,
-    price: 149.99,
-    originalPrice: 249.99,
-    discount: 40,
-    bonus: 500,
-    priceId: "price_enterprise_2500",
+    credits: 2000,
+    price: 69.99,
+    priceId: "price_enterprise_2000",
     description: "Perfect for teams and heavy users",
     features: [
-      "2500 credits + 500 bonus",
-      "Create 200+ courses",
-      "Generate 1250+ presentations",
+      "2000 credits included",
+      "Create 160+ courses",
+      "Generate 1000+ presentations",
       "Dedicated account manager",
       "Advanced AI features",
       "Early access to new features",
@@ -314,7 +305,7 @@ export default async function CreditsPurchasePage() {
           </h2>
           <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
             Select the perfect package for your content creation needs. All
-            packages include bonus credits and never expire.
+            packages include credits that never expire.
           </p>
         </div>
 
@@ -322,7 +313,7 @@ export default async function CreditsPurchasePage() {
           {creditPackages.map((pkg) => (
             <Card
               key={pkg.id}
-              className={`relative overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-xl ${
+              className={`relative overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-xl flex flex-col ${
                 pkg.popular
                   ? "border-2 border-yellow-400 dark:border-yellow-500 bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-950/20 dark:to-orange-950/20"
                   : "bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50"
@@ -367,14 +358,6 @@ export default async function CreditsPurchasePage() {
                       <span className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                         {pkg.credits}
                       </span>
-                      {pkg.bonus && (
-                        <Badge
-                          variant="secondary"
-                          className="bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400"
-                        >
-                          +{pkg.bonus} bonus
-                        </Badge>
-                      )}
                     </div>
                     <p className="text-sm text-slate-500 dark:text-slate-400">
                       credits
@@ -383,28 +366,18 @@ export default async function CreditsPurchasePage() {
 
                   <div className="mt-4">
                     <div className="flex items-center justify-center gap-2">
-                      {pkg.originalPrice && (
-                        <span className="text-lg text-slate-400 line-through">
-                          ${pkg.originalPrice}
-                        </span>
-                      )}
                       <span className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-                        ${pkg.price}
+                        €{pkg.price}
                       </span>
                     </div>
-                    {pkg.discount && (
-                      <Badge variant="destructive" className="mt-2">
-                        Save {pkg.discount}%
-                      </Badge>
-                    )}
                   </div>
                 </div>
               </CardHeader>
 
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 flex-1 flex flex-col">
                 <Separator />
 
-                <div className="space-y-3">
+                <div className="space-y-3 flex-1">
                   {pkg.features.map((feature, index) => (
                     <div key={index} className="flex items-start gap-2">
                       <Check className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
@@ -417,10 +390,12 @@ export default async function CreditsPurchasePage() {
 
                 <Separator />
 
-                <CreditPurchaseForm
-                  packageData={pkg}
-                  currentCredits={currentCredits}
-                />
+                <div className="mt-auto">
+                  <CreditPurchaseForm
+                    packageData={pkg}
+                    currentCredits={currentCredits}
+                  />
+                </div>
               </CardContent>
             </Card>
           ))}
