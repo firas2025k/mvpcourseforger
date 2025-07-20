@@ -143,9 +143,9 @@ export async function POST(request: NextRequest) {
 function getPriceFromPackageId(priceId: string): number {
   const priceMap: { [key: string]: number } = {
     'price_starter_100': 9.99,
-    'price_popular_500': 39.99,
-    'price_professional_1000': 69.99,
-    'price_enterprise_2500': 149.99,
+    'price_popular_500': 19.99,
+    'price_professional_1000': 39.99,
+    'price_enterprise_2500': 69.99,
   };
   
   return priceMap[priceId] || 0;

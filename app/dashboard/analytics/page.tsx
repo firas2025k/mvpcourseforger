@@ -43,10 +43,12 @@ interface Companion {
   id: string;
   name: string;
   subject: string;
+  duration?: number; // Expected duration for companion sessions
 }
 interface SessionHistory {
   companion_id: string;
   created_at: string;
+  duration?: number; // Actual duration of the session in seconds
 }
 
 // Chart Data Types
@@ -69,11 +71,15 @@ interface PresentationBarChartData {
 interface SessionChartData {
   date: string;
   sessions: number;
+  totalDuration: number; // Total duration for that day in minutes
+  averageDuration: number; // Average duration per session in minutes
 }
 interface CompanionChartData {
   companionName: string;
   sessions: number;
   subject: string;
+  totalDuration: number; // Total duration in minutes
+  averageDuration: number; // Average duration per session in minutes
 }
 
 export interface AnalyticsData {
@@ -85,6 +91,8 @@ export interface AnalyticsData {
   totalSlides: number;
   slidesPending: number;
   totalSessions: number;
+  totalSessionDuration: number; // Total duration across all sessions in minutes
+  averageSessionDuration: number; // Average duration per session in minutes
   overallPercentage: number;
   presentationOverallPercentage: number;
   
@@ -224,9 +232,10 @@ export default async function AnalyticsPage() {
   }
 
   // --- VOICE AGENTS DATA FETCHING ---
+  // Enhanced: Query companions table with duration field
   const { data: userCompanionsData, error: companionsError } = await supabase
     .from("companions")
-    .select("id, name, subject")
+    .select("id, name, subject, duration")
     .eq("author", user.id);
 
   if (companionsError)
@@ -236,21 +245,25 @@ export default async function AnalyticsPage() {
 
   let sessionHistory: SessionHistory[] = [];
 
-  if (userCompanionIds.length > 0) {
-    const { data: sessionHistoryData, error: sessionHistoryError } =
-      await supabase
-        .from("session_history")
-        .select("companion_id, created_at")
-        .eq("user_id", user.id)
-        .in("companion_id", userCompanionIds)
-        .order("created_at", { ascending: false });
-    if (sessionHistoryError)
-      console.error(
-        "Error fetching session history:",
-        sessionHistoryError.message
-      );
-    sessionHistory = sessionHistoryData || [];
-  }
+  // Enhanced: Fetch session history with duration data
+  const { data: sessionHistoryData, error: sessionHistoryError } =
+    await supabase
+      .from("session_history")
+      .select("companion_id, created_at, duration")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+  
+  if (sessionHistoryError)
+    console.error(
+      "Error fetching session history:",
+      sessionHistoryError.message
+    );
+  sessionHistory = sessionHistoryData || [];
+
+  // Filter session history to only include sessions for existing companions
+  const filteredSessionHistory = userCompanionIds.length > 0 
+    ? sessionHistory.filter(session => userCompanionIds.includes(session.companion_id))
+    : sessionHistory;
 
   // --- DATA PROCESSING ---
 
@@ -331,37 +344,70 @@ export default async function AnalyticsPage() {
       })
       .filter((d) => d.total > 0);
 
-  // Voice Agents Data
-  const sessionsByDate = sessionHistory.reduce((acc, session) => {
+  // Enhanced Voice Agents Data with Duration Tracking
+  const sessionsByDate = filteredSessionHistory.reduce((acc, session) => {
     const date = new Date(session.created_at).toLocaleDateString();
-    acc[date] = (acc[date] || 0) + 1;
+    const durationInMinutes = session.duration ? Math.round(session.duration / 60) : 0;
+    
+    if (!acc[date]) {
+      acc[date] = { sessions: 0, totalDuration: 0 };
+    }
+    
+    acc[date].sessions += 1;
+    acc[date].totalDuration += durationInMinutes;
+    
     return acc;
-  }, {} as Record<string, number>);
+  }, {} as Record<string, { sessions: number; totalDuration: number }>);
 
   const sessionChartData: SessionChartData[] = Object.entries(sessionsByDate)
-    .map(([date, sessions]) => ({ date, sessions }))
+    .map(([date, data]) => ({
+      date,
+      sessions: data.sessions,
+      totalDuration: data.totalDuration,
+      averageDuration: data.sessions > 0 ? Math.round(data.totalDuration / data.sessions) : 0
+    }))
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
     .slice(-7); // Last 7 days
 
+  // Enhanced: Show all companions with duration data
   const companionUsageData: CompanionChartData[] = userCompanions
     .map((companion) => {
-      const sessions = sessionHistory.filter(
+      const companionSessions = filteredSessionHistory.filter(
         (s) => s.companion_id === companion.id
-      ).length;
+      );
+      const sessions = companionSessions.length;
+      const totalDurationSeconds = companionSessions.reduce(
+        (sum, session) => sum + (session.duration || 0), 0
+      );
+      const totalDurationMinutes = Math.round(totalDurationSeconds / 60);
+      const averageDurationMinutes = sessions > 0 
+        ? Math.round(totalDurationMinutes / sessions) 
+        : 0;
+
       return {
         companionName: companion.name,
         sessions: sessions,
         subject: companion.subject || "General",
+        totalDuration: totalDurationMinutes,
+        averageDuration: averageDurationMinutes,
       };
-    })
-    .filter((d) => d.sessions > 0);
+    });
 
-  // Summary calculations
+  // Enhanced Summary calculations with duration
   const overallPercentage =
     totalLessons > 0 ? Math.round((lessonsCompleted / totalLessons) * 100) : 0;
   const presentationOverallPercentage =
     totalSlides > 0 ? Math.round((slidesViewed / totalSlides) * 100) : 0;
-  const totalSessions = sessionHistory.length;
+  const totalSessions = filteredSessionHistory.length;
+  
+  // Calculate total and average session duration
+  const totalSessionDurationSeconds = filteredSessionHistory.reduce(
+    (sum, session) => sum + (session.duration || 0), 0
+  );
+  const totalSessionDuration = Math.round(totalSessionDurationSeconds / 60); // Convert to minutes
+  const averageSessionDuration = totalSessions > 0 
+    ? Math.round(totalSessionDuration / totalSessions) 
+    : 0;
 
   const analyticsData: AnalyticsData = {
     lessonsCompleted,
@@ -371,6 +417,8 @@ export default async function AnalyticsPage() {
     totalSlides,
     slidesPending,
     totalSessions,
+    totalSessionDuration,
+    averageSessionDuration,
     overallPercentage,
     presentationOverallPercentage,
     coursesPieChartData,

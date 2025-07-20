@@ -12,24 +12,40 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Users, Mic, TrendingUp, Star, Sparkles, Crown } from "lucide-react";
+import { Users, Mic, TrendingUp, Star, Sparkles, Crown, Timer, Clock } from "lucide-react";
 
 interface ChartData {
   companionName: string;
   sessions: number;
   subject: string;
+  totalDuration: number; // in minutes
+  averageDuration: number; // in minutes
 }
 
 interface CompanionUsageChartProps {
   data: ChartData[];
 }
 
+// Helper function to format duration
+const formatDuration = (minutes: number): string => {
+  if (minutes < 60) {
+    return `${minutes}m`;
+  }
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`;
+};
+
 /**
- * A client component that renders a bar chart for companion usage statistics.
+ * A client component that renders a bar chart for companion usage statistics with duration tracking.
  */
 export function CompanionUsageChart({ data }: CompanionUsageChartProps) {
   const totalSessions = data.reduce(
     (sum, companion) => sum + companion.sessions,
+    0
+  );
+  const totalDuration = data.reduce(
+    (sum, companion) => sum + companion.totalDuration,
     0
   );
   const mostUsedCompanion =
@@ -39,6 +55,7 @@ export function CompanionUsageChart({ data }: CompanionUsageChartProps) {
         )
       : null;
 
+  // Fixed: Show chart even when data exists but all companions have 0 sessions
   if (data.length === 0) {
     return (
       <Card className="relative overflow-hidden bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 shadow-lg hover:shadow-xl transition-all duration-300 group hover:scale-[1.02]">
@@ -62,7 +79,7 @@ export function CompanionUsageChart({ data }: CompanionUsageChartProps) {
             </div>
             <p className="text-slate-600 dark:text-slate-400 flex items-center gap-2 justify-center">
               <Sparkles className="h-4 w-4" />
-              No companion usage data to display
+              No companions created yet
             </p>
           </div>
         </CardContent>
@@ -70,7 +87,7 @@ export function CompanionUsageChart({ data }: CompanionUsageChartProps) {
     );
   }
 
-  // Custom tooltip component
+  // Custom tooltip component with duration information
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       const companion = data.find((d) => d.companionName === label);
@@ -96,6 +113,26 @@ export function CompanionUsageChart({ data }: CompanionUsageChartProps) {
                 {companion?.sessions}
               </span>
             </div>
+            {companion && companion.totalDuration > 0 && (
+              <>
+                <div className="flex items-center justify-between gap-4">
+                  <span className="text-slate-600 dark:text-slate-400">
+                    Total Time:
+                  </span>
+                  <span className="font-bold text-orange-600 dark:text-orange-400">
+                    {formatDuration(companion.totalDuration)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between gap-4">
+                  <span className="text-slate-600 dark:text-slate-400">
+                    Avg Session:
+                  </span>
+                  <span className="font-bold text-green-600 dark:text-green-400">
+                    {formatDuration(companion.averageDuration)}
+                  </span>
+                </div>
+              </>
+            )}
           </div>
         </div>
       );
@@ -116,7 +153,9 @@ export function CompanionUsageChart({ data }: CompanionUsageChartProps) {
           Companion Usage
         </CardTitle>
         <div className="flex items-center gap-2">
-          {mostUsedCompanion && <Crown className="h-5 w-5 text-yellow-500" />}
+          {mostUsedCompanion && mostUsedCompanion.sessions > 0 && (
+            <Crown className="h-5 w-5 text-yellow-500" />
+          )}
           <div className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
             {totalSessions}
           </div>
@@ -124,60 +163,78 @@ export function CompanionUsageChart({ data }: CompanionUsageChartProps) {
       </CardHeader>
 
       <CardContent className="relative">
-        <ResponsiveContainer width="100%" height={250}>
-          <BarChart
-            data={data}
-            margin={{
-              top: 5,
-              right: 30,
-              left: 20,
-              bottom: 5,
-            }}
-          >
-            <defs>
-              <linearGradient
-                id="companionBarGradient"
-                x1="0%"
-                y1="0%"
-                x2="0%"
-                y2="100%"
-              >
-                <stop offset="0%" stopColor="#6366F1" />
-                <stop offset="100%" stopColor="#8B5CF6" />
-              </linearGradient>
-            </defs>
-            <CartesianGrid
-              strokeDasharray="3 3"
-              stroke="rgba(148, 163, 184, 0.3)"
-              vertical={false}
-            />
-            <XAxis
-              dataKey="companionName"
-              tick={{ fontSize: 12, fill: "currentColor" }}
-              angle={-20}
-              textAnchor="end"
-              height={60}
-              interval={0}
-              stroke="rgba(148, 163, 184, 0.5)"
-            />
-            <YAxis
-              tick={{ fontSize: 12, fill: "currentColor" }}
-              stroke="rgba(148, 163, 184, 0.5)"
-            />
-            <Tooltip content={<CustomTooltip />} />
-            <Bar
-              dataKey="sessions"
-              fill="url(#companionBarGradient)"
-              name="Sessions"
-              radius={[4, 4, 0, 0]}
-              strokeWidth={1}
-              stroke="rgba(255,255,255,0.8)"
-            />
-          </BarChart>
-        </ResponsiveContainer>
+        {/* Fixed: Show message when companions exist but have no sessions */}
+        {totalSessions === 0 ? (
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center space-y-3">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-r from-indigo-100 to-purple-100 dark:from-indigo-900/20 dark:to-purple-900/20 flex items-center justify-center mx-auto">
+                <Mic className="h-8 w-8 text-slate-400" />
+              </div>
+              <p className="text-slate-600 dark:text-slate-400 flex items-center gap-2 justify-center">
+                <Sparkles className="h-4 w-4" />
+                No sessions recorded yet
+              </p>
+              <p className="text-sm text-slate-500 dark:text-slate-500">
+                Start using your companions to see usage data
+              </p>
+            </div>
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height={250}>
+            <BarChart
+              data={data}
+              margin={{
+                top: 5,
+                right: 30,
+                left: 20,
+                bottom: 5,
+              }}
+            >
+              <defs>
+                <linearGradient
+                  id="companionBarGradient"
+                  x1="0%"
+                  y1="0%"
+                  x2="0%"
+                  y2="100%"
+                >
+                  <stop offset="0%" stopColor="#6366F1" />
+                  <stop offset="100%" stopColor="#8B5CF6" />
+                </linearGradient>
+              </defs>
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="rgba(148, 163, 184, 0.3)"
+                vertical={false}
+              />
+              <XAxis
+                dataKey="companionName"
+                tick={{ fontSize: 12, fill: "currentColor" }}
+                angle={-20}
+                textAnchor="end"
+                height={60}
+                interval={0}
+                stroke="rgba(148, 163, 184, 0.5)"
+              />
+              <YAxis
+                tick={{ fontSize: 12, fill: "currentColor" }}
+                stroke="rgba(148, 163, 184, 0.5)"
+              />
+              <Tooltip content={<CustomTooltip />} />
+              <Bar
+                dataKey="sessions"
+                fill="url(#companionBarGradient)"
+                name="Sessions"
+                radius={[4, 4, 0, 0]}
+                strokeWidth={1}
+                stroke="rgba(255,255,255,0.8)"
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        )}
 
-        {/* Usage summary */}
-        <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">
+        {/* Enhanced usage summary with duration */}
+        <div className="mt-4 grid grid-cols-1 md:grid-cols-4 gap-3">
           <div className="p-3 bg-slate-50/80 dark:bg-slate-700/50 rounded-lg">
             <div className="flex items-center gap-2 mb-1">
               <Users className="h-4 w-4 text-indigo-500" />
@@ -198,7 +255,9 @@ export function CompanionUsageChart({ data }: CompanionUsageChartProps) {
               </span>
             </div>
             <div className="text-sm font-bold text-purple-600 dark:text-purple-400 truncate">
-              {mostUsedCompanion?.companionName || "N/A"}
+              {mostUsedCompanion && mostUsedCompanion.sessions > 0 
+                ? mostUsedCompanion.companionName 
+                : "None yet"}
             </div>
           </div>
 
@@ -213,8 +272,21 @@ export function CompanionUsageChart({ data }: CompanionUsageChartProps) {
               {totalSessions}
             </div>
           </div>
+
+          <div className="p-3 bg-slate-50/80 dark:bg-slate-700/50 rounded-lg">
+            <div className="flex items-center gap-2 mb-1">
+              <Timer className="h-4 w-4 text-orange-500" />
+              <span className="text-xs font-medium text-slate-600 dark:text-slate-400">
+                Total Time
+              </span>
+            </div>
+            <div className="text-lg font-bold text-orange-600 dark:text-orange-400">
+              {formatDuration(totalDuration)}
+            </div>
+          </div>
         </div>
       </CardContent>
     </Card>
   );
 }
+

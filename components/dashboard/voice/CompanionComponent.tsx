@@ -15,6 +15,8 @@ import {
   Sparkles,
   Zap,
   MessageCircle,
+  Clock,
+  Timer,
 } from "lucide-react";
 
 interface CompanionComponentProps {
@@ -54,6 +56,11 @@ const CompanionComponent = ({
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [messages, setMessages] = useState<SavedMessage[]>([]);
+  
+  // Session duration tracking
+  const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
+  const [sessionDuration, setSessionDuration] = useState(0);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const lottieRef = useRef<LottieRefCurrentProps>(null);
 
@@ -67,12 +74,60 @@ const CompanionComponent = ({
     }
   }, [isSpeaking, lottieRef]);
 
+  // Update session duration every second when call is active
   useEffect(() => {
-    const onCallStart = () => setCallStatus(CallStatus.ACTIVE);
-    const onCallEnd = () => {
-      setCallStatus(CallStatus.FINISHED);
-      addToSessionHistory(companionId);
+    if (callStatus === CallStatus.ACTIVE && sessionStartTime) {
+      intervalRef.current = setInterval(() => {
+        const now = new Date();
+        const elapsed = Math.floor((now.getTime() - sessionStartTime.getTime()) / 1000);
+        setSessionDuration(elapsed);
+      }, 1000);
+    } else {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    }
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
     };
+  }, [callStatus, sessionStartTime]);
+
+  useEffect(() => {
+    const onCallStart = () => {
+      setCallStatus(CallStatus.ACTIVE);
+      setSessionStartTime(new Date());
+      setSessionDuration(0);
+    };
+    
+    const onCallEnd = async () => {
+      setCallStatus(CallStatus.FINISHED);
+      
+      // Calculate final session duration
+      const finalDuration = sessionDuration;
+      
+      // Clear the interval
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      
+      // Save session with duration to database
+      try {
+        await addToSessionHistory(companionId, finalDuration);
+        console.log(`Session ended. Duration: ${finalDuration} seconds`);
+      } catch (error) {
+        console.error("Error saving session history:", error);
+      }
+      
+      // Reset session tracking
+      setSessionStartTime(null);
+      setSessionDuration(0);
+    };
+    
     const onMessage = (message: Message) => {
       if (message.type === "transcript" && message.transcriptType === "final") {
         const role =
@@ -89,12 +144,14 @@ const CompanionComponent = ({
     const onSpeechStart = () => setIsSpeaking(true);
     const onSpeechEnd = () => setIsSpeaking(false);
     const onError = (error: Error) => console.log("Error", error);
+    
     vapi.on("call-start", onCallStart);
     vapi.on("call-end", onCallEnd);
     vapi.on("message", onMessage);
     vapi.on("error", onError);
     vapi.on("speech-start", onSpeechStart);
     vapi.on("speech-end", onSpeechEnd);
+    
     return () => {
       vapi.off("call-start", onCallStart);
       vapi.off("call-end", onCallEnd);
@@ -103,7 +160,7 @@ const CompanionComponent = ({
       vapi.off("speech-start", onSpeechStart);
       vapi.off("speech-end", onSpeechEnd);
     };
-  }, []);
+  }, [companionId, sessionDuration]);
 
   const toggleMicrophone = () => {
     const isMuted = vapi.isMuted();
@@ -127,8 +184,39 @@ const CompanionComponent = ({
     vapi.stop();
   };
 
+  const formatDuration = (seconds: number): string => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+
+    if (hours > 0) {
+      return `${hours}h ${minutes}m ${secs}s`;
+    } else if (minutes > 0) {
+      return `${minutes}m ${secs}s`;
+    } else {
+      return `${secs}s`;
+    }
+  };
+
   return (
     <div className="flex flex-col w-full h-full">
+      {/* Session Duration Display */}
+      {callStatus === CallStatus.ACTIVE && (
+        <div className="w-full bg-gradient-to-r from-blue-50/80 to-purple-50/80 dark:from-blue-950/50 dark:to-purple-950/50 border-b border-blue-200/50 dark:border-blue-700/50 p-4">
+          <div className="flex items-center justify-center gap-3">
+            <div className="flex items-center gap-2 px-4 py-2 bg-white/80 dark:bg-slate-800/80 rounded-full border border-blue-200/50 dark:border-blue-700/50 shadow-lg">
+              <Timer className="h-5 w-5 text-blue-600 animate-pulse" />
+              <span className="font-semibold text-blue-900 dark:text-blue-100">
+                Session Duration:
+              </span>
+              <span className="font-mono text-lg font-bold text-green-700 dark:text-green-400">
+                {formatDuration(sessionDuration)}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Main interaction area: companion and user info */}
       <div className="flex flex-col md:flex-row gap-8 w-full p-8 pb-0">
         {/* Companion Card */}
@@ -193,6 +281,16 @@ const CompanionComponent = ({
               {userName}
             </p>
           </div>
+
+          {/* Session Duration Display (Mobile) */}
+          {callStatus === CallStatus.ACTIVE && (
+            <div className="md:hidden flex items-center gap-2 px-3 py-2 bg-white/80 dark:bg-slate-800/80 rounded-full border border-blue-200/50 dark:border-blue-700/50">
+              <Clock className="h-4 w-4 text-blue-600" />
+              <span className="font-mono text-sm font-bold text-green-700 dark:text-green-400">
+                {formatDuration(sessionDuration)}
+              </span>
+            </div>
+          )}
 
           {/* Microphone Control */}
           <button
@@ -290,3 +388,4 @@ const CompanionComponent = ({
 };
 
 export default CompanionComponent;
+

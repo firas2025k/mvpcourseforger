@@ -126,7 +126,7 @@ export const createCompanion = async (formData: any) => {
   }
 };
 
-// TODO: Replace this inline type with a proper GetAllCompanions type
+// FIXED: Now only returns companions created by the authenticated user
 export const getAllCompanions = async ({
   limit = 10,
   page = 1,
@@ -138,8 +138,14 @@ export const getAllCompanions = async ({
   subject?: string;
   topic?: string;
 }) => {
-  const { supabase } = await getSupabaseAndUser();
-  let query = supabase.from("companions").select();
+  const { supabase, user } = await getSupabaseAndUser();
+  
+  // SECURITY FIX: Ensure user is authenticated
+  if (!user) throw new Error("Not authenticated");
+  
+  // SECURITY FIX: Filter by author (current user) to only show user's own companions
+  let query = supabase.from("companions").select().eq("author", user.id);
+  
   if (subject && topic) {
     query = query
       .ilike("subject", `%${subject}%`)
@@ -156,48 +162,108 @@ export const getAllCompanions = async ({
 };
 
 export const getCompanion = async (id: string) => {
-  const { supabase } = await getSupabaseAndUser();
+  const { supabase, user } = await getSupabaseAndUser();
+  
+  // SECURITY FIX: Ensure user is authenticated
+  if (!user) throw new Error("Not authenticated");
+  
+  // SECURITY FIX: Only allow access to companions created by the current user
   const { data, error } = await supabase
     .from("companions")
     .select()
-    .eq("id", id);
-  if (error) return console.log(error);
-  return data[0];
+    .eq("id", id)
+    .eq("author", user.id); // Only return if user is the author
+    
+  if (error) {
+    console.log(error);
+    throw new Error(error.message);
+  }
+  
+  // Return null if no companion found (user doesn't own it or it doesn't exist)
+  return data?.[0] || null;
 };
 
-export const addToSessionHistory = async (companionId: string) => {
+export const addToSessionHistory = async (companionId: string, duration: number) => {
   const { supabase, user } = await getSupabaseAndUser();
   if (!user) throw new Error("Not authenticated");
+  
+  // SECURITY CHECK: Verify the companion belongs to the user before adding session history
+  const { data: companion, error: companionError } = await supabase
+    .from("companions")
+    .select("id")
+    .eq("id", companionId)
+    .eq("author", user.id)
+    .single();
+    
+  if (companionError || !companion) {
+    throw new Error("Companion not found or access denied");
+  }
+  
   const { data, error } = await supabase.from("session_history").insert({
     companion_id: companionId,
     user_id: user.id,
+    duration: duration,
   });
   if (error) throw new Error(error.message);
   return data;
 };
 
 export const getRecentSessions = async (limit = 10) => {
-  const { supabase } = await getSupabaseAndUser();
+  const { supabase, user } = await getSupabaseAndUser();
+  
+  // SECURITY FIX: Ensure user is authenticated
+  if (!user) throw new Error("Not authenticated");
+  
+  // SECURITY FIX: Only return sessions for companions owned by the current user
   const { data, error } = await supabase
     .from("session_history")
-    .select("companions:companion_id (*)")
+    .select(`
+      companions:companion_id (
+        id,
+        name,
+        subject,
+        topic,
+        author
+      )
+    `)
+    .eq("user_id", user.id) // Only user's own sessions
     .order("created_at", { ascending: false })
     .limit(limit);
+    
   if (error) throw new Error(error.message);
-  return data.map(({ companions }) => companions);
+  
+  // Filter out any sessions where the companion is null or not owned by user
+  return data
+    .filter(({ companions }) => companions && companions.author === user.id)
+    .map(({ companions }) => companions);
 };
 
 export const getUserSessions = async (limit = 10) => {
   const { supabase, user } = await getSupabaseAndUser();
   if (!user) throw new Error("Not authenticated");
+  
+  // SECURITY FIX: Only return sessions for companions owned by the current user
   const { data, error } = await supabase
     .from("session_history")
-    .select("companions:companion_id (*)")
+    .select(`
+      companions:companion_id (
+        id,
+        name,
+        subject,
+        topic,
+        author
+      )
+    `)
     .eq("user_id", user.id)
     .order("created_at", { ascending: false })
     .limit(limit);
+    
   if (error) throw new Error(error.message);
-  return data.map(({ companions }) => companions);
+  
+  // Filter out any sessions where the companion is null or not owned by user
+  return data
+    .filter(({ companions }) => companions && companions.author === user.id)
+    .map(({ companions }) => companions);
 };
 
 export const getUserCompanions = async () => {
@@ -220,7 +286,20 @@ export const newCompanionPermissions = async () => {
 // Bookmarks
 export const addBookmark = async (companionId: string, path: string) => {
   const { supabase, user } = await getSupabaseAndUser();
-  if (!user) return;
+  if (!user) throw new Error("Not authenticated");
+  
+  // SECURITY CHECK: Verify the companion exists and belongs to the user
+  const { data: companion, error: companionError } = await supabase
+    .from("companions")
+    .select("id")
+    .eq("id", companionId)
+    .eq("author", user.id)
+    .single();
+    
+  if (companionError || !companion) {
+    throw new Error("Companion not found or access denied");
+  }
+  
   const { data, error } = await supabase.from("bookmarks").insert({
     companion_id: companionId,
     user_id: user.id,
@@ -234,7 +313,9 @@ export const addBookmark = async (companionId: string, path: string) => {
 
 export const removeBookmark = async (companionId: string, path: string) => {
   const { supabase, user } = await getSupabaseAndUser();
-  if (!user) return;
+  if (!user) throw new Error("Not authenticated");
+  
+  // Only remove bookmarks for the current user
   const { data, error } = await supabase
     .from("bookmarks")
     .delete()
@@ -250,12 +331,32 @@ export const removeBookmark = async (companionId: string, path: string) => {
 export const getBookmarkedCompanions = async () => {
   const { supabase, user } = await getSupabaseAndUser();
   if (!user) throw new Error("Not authenticated");
+  
+  // SECURITY FIX: Only return bookmarked companions that belong to the current user
   const { data, error } = await supabase
     .from("bookmarks")
-    .select("companions:companion_id (*)")
+    .select(`
+      companions:companion_id (
+        id,
+        name,
+        subject,
+        topic,
+        author,
+        voice,
+        style,
+        duration,
+        created_at
+      )
+    `)
     .eq("user_id", user.id);
+    
   if (error) {
     throw new Error(error.message);
   }
-  return data.map(({ companions }) => companions);
+  
+  // Filter out any bookmarks where the companion is null or not owned by user
+  return data
+    .filter(({ companions }) => companions && companions.author === user.id)
+    .map(({ companions }) => companions);
 };
+

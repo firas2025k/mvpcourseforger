@@ -76,7 +76,7 @@ export default function UserPlanCard({ userPlan, hasActivePaidSubscription, Mana
     setIsLoadingCredits(true);
     try {
       // Redirect to credit purchase page or open modal
-      router.push('/dashboard/credits/purchase');
+      router.push('/dashboard/credit/purchase');
     } catch (error) {
       console.error('Error initiating credit top-up:', error);
     } finally {
@@ -128,15 +128,8 @@ export default function UserPlanCard({ userPlan, hasActivePaidSubscription, Mana
       <CardContent className="relative space-y-4">
         {/* Plan Information */}
         <div>
-          <div className="text-lg font-bold">{name}</div>
-          <p className="text-xs text-muted-foreground">
-            {`${coursesRemaining} / ${courseLimit} course${courseLimit === 1 ? '' : 's'} remaining`}
-          </p>
-          <Progress
-            value={progress}
-            className={`mt-2 w-full ${isLimitReached ? 'bg-red-500' : 'bg-gray-200'}`}
-            color={isLimitReached ? '#ef4444' : undefined}
-          />
+          <div className="text-lg font-bold">{name} Plan</div>
+          
         </div>
 
         <Separator />

@@ -40,6 +40,8 @@ import {
   Coins,
   Calculator,
   TrendingUp,
+  Shield,
+  Info,
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -49,6 +51,11 @@ interface GenerationProgress {
   stage: string;
   progress: number;
   message: string;
+}
+
+interface UserPlanLimits {
+  max_chapters: number;
+  max_lessons_per_chapter: number;
 }
 
 export default function EnhancedCourseGenerationPage() {
@@ -82,6 +89,65 @@ export default function EnhancedCourseGenerationPage() {
   // Credit cost state
   const [creditCost, setCreditCost] = useState(0);
 
+  // Plan limits states
+  const [planLimits, setPlanLimits] = useState<UserPlanLimits | null>(null);
+  const [isLoadingLimits, setIsLoadingLimits] = useState(true);
+
+  // Fetch user plan limits on component mount
+  useEffect(() => {
+    const fetchPlanLimits = async () => {
+      try {
+        setIsLoadingLimits(true);
+        const response = await fetch("/api/generate-course", {
+          method: "GET",
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          setPlanLimits(result.planLimits);
+          
+          // Reset form values if they exceed the plan limits
+          if (result.planLimits) {
+            const currentChapters = parseInt(chapters);
+            const currentLessons = parseInt(lessonsPerChapter);
+            
+            if (currentChapters > result.planLimits.max_chapters) {
+              setChapters(result.planLimits.max_chapters.toString());
+            }
+            
+            if (currentLessons > result.planLimits.max_lessons_per_chapter) {
+              setLessonsPerChapter(result.planLimits.max_lessons_per_chapter.toString());
+            }
+          }
+        } else {
+          console.error("Failed to fetch plan limits");
+          toast.error("Failed to load plan limits", {
+            description: "Using default limits. Please refresh the page.",
+          });
+          // Set default limits if API fails
+          setPlanLimits({
+            max_chapters: 3,
+            max_lessons_per_chapter: 3
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching plan limits:", error);
+        toast.error("Failed to load plan limits", {
+          description: "Using default limits. Please refresh the page.",
+        });
+        // Set default limits if API fails
+        setPlanLimits({
+          max_chapters: 3,
+          max_lessons_per_chapter: 3
+        });
+      } finally {
+        setIsLoadingLimits(false);
+      }
+    };
+
+    fetchPlanLimits();
+  }, []);
+
   // Credit cost calculation function (same as API)
   const calculateCourseCreditCost = useCallback((chapters: number, lessonsPerChapter: number): number => {
     const lessonCost = chapters * lessonsPerChapter; // 1 credit per lesson
@@ -97,6 +163,25 @@ export default function EnhancedCourseGenerationPage() {
     const cost = calculateCourseCreditCost(chaptersNum, lessonsNum);
     setCreditCost(cost);
   }, [chapters, lessonsPerChapter, calculateCourseCreditCost]);
+
+  // Generate options arrays based on plan limits
+  const getChapterOptions = useCallback(() => {
+    if (!planLimits) return [];
+    const options = [];
+    for (let i = 1; i <= planLimits.max_chapters; i++) {
+      options.push(i);
+    }
+    return options;
+  }, [planLimits]);
+
+  const getLessonOptions = useCallback(() => {
+    if (!planLimits) return [];
+    const options = [];
+    for (let i = 1; i <= planLimits.max_lessons_per_chapter; i++) {
+      options.push(i);
+    }
+    return options;
+  }, [planLimits]);
 
   // File upload handlers
   const handleFileSelect = useCallback((file: File) => {
@@ -345,6 +430,30 @@ export default function EnhancedCourseGenerationPage() {
 
   const costLevel = getCostLevel(creditCost);
 
+  // Show loading state while fetching plan limits
+  if (isLoadingLimits) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-slate-950 dark:via-slate-900 dark:to-blue-950 flex items-center justify-center">
+        <Card className="w-96 shadow-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/50 dark:border-slate-700/50">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-center space-y-4 flex-col">
+              <div className="relative">
+                <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                <div className="absolute inset-0 bg-blue-400 rounded-full blur opacity-20 animate-pulse"></div>
+              </div>
+              <div className="text-center">
+                <h3 className="font-semibold text-lg">Loading Course Settings</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Fetching your plan limits...
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-slate-950 dark:via-slate-900 dark:to-blue-950">
       <div className="flex flex-1 flex-col gap-6 p-4 md:gap-8 md:p-8 max-w-4xl mx-auto">
@@ -362,6 +471,32 @@ export default function EnhancedCourseGenerationPage() {
             </Link>
           </Button>
         </div>
+
+        {/* Plan Limits Info Card */}
+        {planLimits && (
+          <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/50 dark:to-indigo-950/50 border border-blue-200/50 dark:border-blue-700/50">
+            <CardContent className="pt-4">
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <Shield className="h-5 w-5 text-blue-600" />
+                  <div className="absolute inset-0 bg-blue-400 rounded-full blur opacity-20 animate-pulse"></div>
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-blue-900 dark:text-blue-100 text-sm">Your Plan Limits</h3>
+                  <div className="flex items-center gap-4 mt-1">
+                    <span className="text-xs text-blue-700 dark:text-blue-300">
+                      Max Chapters: <strong>{planLimits.max_chapters}</strong>
+                    </span>
+                    <span className="text-xs text-blue-700 dark:text-blue-300">
+                      Max Lessons per Chapter: <strong>{planLimits.max_lessons_per_chapter}</strong>
+                    </span>
+                  </div>
+                </div>
+                <Info className="h-4 w-4 text-blue-500" />
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Main Card with Enhanced Styling */}
         <Card className="shadow-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/50 dark:border-slate-700/50 hover:shadow-2xl transition-all duration-300">
@@ -548,13 +683,13 @@ export default function EnhancedCourseGenerationPage() {
                     <Select
                       value={chapters}
                       onValueChange={setChapters}
-                      disabled={isGenerating}
+                      disabled={isGenerating || !planLimits}
                     >
                       <SelectTrigger className="relative bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 hover:border-blue-500/50 transition-all duration-300">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/50 dark:border-slate-700/50">
-                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
+                        {getChapterOptions().map((num) => (
                           <SelectItem key={num} value={num.toString()}>
                             {num} Chapter{num !== 1 ? "s" : ""}
                           </SelectItem>
@@ -562,6 +697,11 @@ export default function EnhancedCourseGenerationPage() {
                       </SelectContent>
                     </Select>
                   </div>
+                  {planLimits && (
+                    <p className="text-xs text-muted-foreground">
+                      Max allowed: {planLimits.max_chapters}
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-3">
@@ -571,13 +711,13 @@ export default function EnhancedCourseGenerationPage() {
                     <Select
                       value={lessonsPerChapter}
                       onValueChange={setLessonsPerChapter}
-                      disabled={isGenerating}
+                      disabled={isGenerating || !planLimits}
                     >
                       <SelectTrigger className="relative bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 hover:border-green-500/50 transition-all duration-300">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/50 dark:border-slate-700/50">
-                        {[1, 2, 3, 4, 5, 6].map((num) => (
+                        {getLessonOptions().map((num) => (
                           <SelectItem key={num} value={num.toString()}>
                             {num} Lesson{num !== 1 ? "s" : ""}
                           </SelectItem>
@@ -585,6 +725,11 @@ export default function EnhancedCourseGenerationPage() {
                       </SelectContent>
                     </Select>
                   </div>
+                  {planLimits && (
+                    <p className="text-xs text-muted-foreground">
+                      Max allowed: {planLimits.max_lessons_per_chapter}
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-3">
@@ -630,7 +775,7 @@ export default function EnhancedCourseGenerationPage() {
               </div>
             </div>
 
-            {/* Credit Cost Display - NEW SECTION */}
+            {/* Credit Cost Display */}
             <Card className={cn(
               "transition-all duration-500 border-2",
               costLevel === "low" && "bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 border-green-200/50 dark:border-green-700/50",
@@ -777,6 +922,7 @@ export default function EnhancedCourseGenerationPage() {
               onClick={handleGenerate}
               disabled={
                 isGenerating ||
+                !planLimits ||
                 (generationMode === "prompt" && !prompt.trim()) ||
                 (generationMode === "pdf" && !selectedFile)
               }

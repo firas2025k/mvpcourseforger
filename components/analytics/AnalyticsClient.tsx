@@ -37,6 +37,7 @@ import {
   Mic,
   Presentation,
   MessageSquare,
+  Timer,
 } from "lucide-react";
 
 // Import Chart Components
@@ -46,12 +47,120 @@ import { PresentationProgressPieChart } from "@/components/analytics/Presentatio
 import { SlidesCompletionBarChart } from "@/components/analytics/SlidesCompletionBarChart";
 import { VoiceAgentSessionChart } from "@/components/analytics/VoiceAgentSessionChart";
 import { CompanionUsageChart } from "@/components/analytics/CompanionUsageChart";
-import { AnalyticsData } from "@/app/dashboard/analytics/page";
 
+// Enhanced Analytics Data Interface
+interface Course {
+  id: string;
+  title: string;
+}
+interface Chapter {
+  id: string;
+  course_id: string;
+}
+interface Lesson {
+  id: string;
+  title: string;
+  chapter_id: string;
+}
+interface ProgressRecord {
+  lesson_id: string;
+  completed_at: string;
+}
+interface Presentation {
+  id: string;
+  title: string;
+  slide_count: number;
+}
+interface Slide {
+  id: string;
+  presentation_id: string;
+  title: string;
+}
+interface PresentationProgress {
+  slide_id: string;
+  viewed_at: string;
+}
+interface Companion {
+  id: string;
+  name: string;
+  subject: string;
+  duration?: number;
+}
+
+interface PieChartData {
+  name: string;
+  value: number;
+}
+interface BarChartData {
+  courseTitle: string;
+  completed: number;
+  total: number;
+  progress: number;
+}
+interface PresentationBarChartData {
+  presentationTitle: string;
+  viewed: number;
+  total: number;
+  progress: number;
+}
+interface SessionChartData {
+  date: string;
+  sessions: number;
+  totalDuration: number;
+  averageDuration: number;
+}
+interface CompanionChartData {
+  companionName: string;
+  sessions: number;
+  subject: string;
+  totalDuration: number;
+  averageDuration: number;
+}
+
+export interface AnalyticsData {
+  // Summary data
+  lessonsCompleted: number;
+  totalLessons: number;
+  lessonsPending: number;
+  slidesViewed: number;
+  totalSlides: number;
+  slidesPending: number;
+  totalSessions: number;
+  totalSessionDuration: number;
+  averageSessionDuration: number;
+  overallPercentage: number;
+  presentationOverallPercentage: number;
+  
+  // Chart data
+  coursesPieChartData: PieChartData[];
+  coursesBarChartData: BarChartData[];
+  presentationsPieChartData: PieChartData[];
+  presentationsBarChartData: PresentationBarChartData[];
+  sessionChartData: SessionChartData[];
+  companionUsageData: CompanionChartData[];
+  
+  // Detail data
+  allLessons: Lesson[];
+  completedProgress: ProgressRecord[];
+  userPresentations: Presentation[];
+  allSlides: Slide[];
+  viewedPresentationProgress: PresentationProgress[];
+  userCompanions: Companion[];
+}
 
 interface AnalyticsClientProps {
   data: AnalyticsData;
 }
+
+// Helper function to format duration
+const formatDuration = (minutes: number): string => {
+  if (minutes < 60) {
+    return `${minutes}m`;
+  }
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`;
+};
 
 export default function AnalyticsClient({ data }: AnalyticsClientProps) {
   const {
@@ -62,6 +171,8 @@ export default function AnalyticsClient({ data }: AnalyticsClientProps) {
     totalSlides,
     slidesPending,
     totalSessions,
+    totalSessionDuration,
+    averageSessionDuration,
     overallPercentage,
     presentationOverallPercentage,
     coursesPieChartData,
@@ -195,7 +306,7 @@ export default function AnalyticsClient({ data }: AnalyticsClientProps) {
                 </CardContent>
               </Card>
 
-              {/* Voice Agents Summary */}
+              {/* Enhanced Voice Agents Summary with Duration */}
               <Card className="relative overflow-hidden bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 shadow-lg hover:shadow-xl transition-all duration-300 group hover:scale-[1.02]">
                 <div className="absolute inset-0 bg-gradient-to-br from-orange-400/10 to-red-400/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 <CardHeader className="relative flex flex-row items-center justify-between space-y-0 pb-3">
@@ -210,11 +321,18 @@ export default function AnalyticsClient({ data }: AnalyticsClientProps) {
                 <CardContent className="relative">
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span>Total Sessions</span>
-                      <span>{userCompanions.length} companions</span>
+                      <span>Total Time</span>
+                      <span className="flex items-center gap-1">
+                        <Timer className="h-3 w-3" />
+                        {formatDuration(totalSessionDuration)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>Avg Session</span>
+                      <span>{formatDuration(averageSessionDuration)}</span>
                     </div>
                     <div className="text-xs text-slate-600 dark:text-slate-400">
-                      Recent activity across all voice agents
+                      {userCompanions.length} companions created
                     </div>
                   </div>
                 </CardContent>
@@ -365,7 +483,7 @@ export default function AnalyticsClient({ data }: AnalyticsClientProps) {
               <CompanionUsageChart data={companionUsageData} />
             </div>
 
-            {/* Voice Agent Details */}
+            {/* Enhanced Voice Agent Details with Duration */}
             <Card className="relative overflow-hidden bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 shadow-lg">
               <CardHeader className="relative">
                 <CardTitle className="text-2xl font-bold bg-gradient-to-r from-orange-900 to-red-900 dark:from-orange-100 dark:to-red-100 bg-clip-text text-transparent flex items-center gap-3">
@@ -376,9 +494,13 @@ export default function AnalyticsClient({ data }: AnalyticsClientProps) {
               <CardContent className="relative">
                 <div className="grid gap-4">
                   {userCompanions.map((companion) => {
-                    const sessions = companionUsageData.find(
+                    const companionData = companionUsageData.find(
                       (c) => c.companionName === companion.name
-                    )?.sessions || 0;
+                    );
+                    const sessions = companionData?.sessions || 0;
+                    const totalDuration = companionData?.totalDuration || 0;
+                    const averageDuration = companionData?.averageDuration || 0;
+                    
                     return (
                       <div
                         key={companion.id}
@@ -386,12 +508,32 @@ export default function AnalyticsClient({ data }: AnalyticsClientProps) {
                       >
                         <div className="flex items-center justify-between mb-2">
                           <h3 className="font-semibold">{companion.name}</h3>
-                          <Badge className="bg-orange-500 text-white">
-                            {sessions} sessions
-                          </Badge>
+                          <div className="flex items-center gap-2">
+                            <Badge className="bg-orange-500 text-white">
+                              {sessions} sessions
+                            </Badge>
+                            {totalDuration > 0 && (
+                              <Badge className="bg-blue-500 text-white flex items-center gap-1">
+                                <Timer className="h-3 w-3" />
+                                {formatDuration(totalDuration)}
+                              </Badge>
+                            )}
+                          </div>
                         </div>
-                        <div className="text-sm text-slate-600 dark:text-slate-400">
-                          Subject: {companion.subject || "General"}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm text-slate-600 dark:text-slate-400">
+                          <div>
+                            <span className="font-medium">Subject:</span> {companion.subject || "General"}
+                          </div>
+                          {sessions > 0 && (
+                            <>
+                              <div>
+                                <span className="font-medium">Total Time:</span> {formatDuration(totalDuration)}
+                              </div>
+                              <div>
+                                <span className="font-medium">Avg Session:</span> {formatDuration(averageDuration)}
+                              </div>
+                            </>
+                          )}
                         </div>
                       </div>
                     );

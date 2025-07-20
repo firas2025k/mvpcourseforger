@@ -38,6 +38,58 @@ interface CourseOutline {
   }[];
 }
 
+interface UserPlanLimits {
+  max_chapters: number;
+  max_lessons_per_chapter: number;
+}
+
+// ----- PLAN LIMIT FUNCTIONS -----
+
+/**
+ * Fetches the user's plan limits from the database
+ * @param supabase Supabase client
+ * @param userId User ID
+ * @returns Promise<UserPlanLimits | null> User's plan limits or null if not found
+ */
+async function getUserPlanLimits(supabase: any, userId: string): Promise<UserPlanLimits | null> {
+  try {
+    // First, get the user's active subscription
+    const { data: subscription, error: subscriptionError } = await supabase
+      .from('subscriptions')
+      .select(`
+        plan_id,
+        plans!inner (
+          max_chapters,
+          max_lessons_per_chapter
+        )
+      `)
+      .eq('user_id', userId)
+      .eq('is_active', true)
+      .single();
+
+    if (subscriptionError || !subscription) {
+      console.log('No active subscription found for user:', userId);
+      // Return default limits for users without active subscription
+      return {
+        max_chapters: 3,
+        max_lessons_per_chapter: 3
+      };
+    }
+
+    return {
+      max_chapters: subscription.plans.max_chapters,
+      max_lessons_per_chapter: subscription.plans.max_lessons_per_chapter
+    };
+  } catch (error) {
+    console.error('Error fetching user plan limits:', error);
+    // Return default limits on error
+    return {
+      max_chapters: 3,
+      max_lessons_per_chapter: 3
+    };
+  }
+}
+
 // ----- CREDIT CALCULATION FUNCTIONS -----
 
 /**
@@ -211,19 +263,31 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // 3. Validate input ranges
-    if (chapters < 1 || chapters > 20) {
-      return NextResponse.json({ error: 'Chapters must be between 1 and 20' }, { status: 400 });
+    // 3. Get user's plan limits
+    const planLimits = await getUserPlanLimits(supabase, user.id);
+    if (!planLimits) {
+      return NextResponse.json({ error: 'Could not retrieve user plan limits.' }, { status: 500 });
     }
 
-    if (lessons_per_chapter < 1 || lessons_per_chapter > 10) {
-      return NextResponse.json({ error: 'Lessons per chapter must be between 1 and 10' }, { status: 400 });
+    // 4. Validate input ranges against user's plan limits
+    if (chapters < 1 || chapters > planLimits.max_chapters) {
+      return NextResponse.json({ 
+        error: `Invalid number of chapters. Your plan allows 1-${planLimits.max_chapters} chapters.`,
+        max_chapters: planLimits.max_chapters
+      }, { status: 400 });
     }
 
-    // 4. Calculate credit cost
+    if (lessons_per_chapter < 1 || lessons_per_chapter > planLimits.max_lessons_per_chapter) {
+      return NextResponse.json({ 
+        error: `Invalid number of lessons per chapter. Your plan allows 1-${planLimits.max_lessons_per_chapter} lessons per chapter.`,
+        max_lessons_per_chapter: planLimits.max_lessons_per_chapter
+      }, { status: 400 });
+    }
+
+    // 5. Calculate credit cost
     const creditCost = calculateCourseCreditCost(chapters, lessons_per_chapter);
 
-    // 5. Check user's credit balance
+    // 6. Check user's credit balance
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('credits')
@@ -243,39 +307,6 @@ export async function POST(request: NextRequest) {
         required_credits: creditCost,
         available_credits: currentCredits
       }, { status: 402 });
-    }
-
-    // 6. Check subscription-based limits
-    const { data: subscription, error: subscriptionError } = await supabase
-      .from('subscriptions')
-      .select('plan_id')
-      .eq('user_id', user.id)
-      .eq('is_active', true)
-      .single();
-
-    let planLimits = null;
-    if (!subscriptionError && subscription) {
-      const { data: plan, error: planError } = await supabase
-        .from('plans')
-        .select('max_chapters, max_lessons_per_chapter')
-        .eq('id', subscription.plan_id)
-        .single();
-
-      if (!planError && plan) {
-        planLimits = plan;
-        if (chapters > plan.max_chapters) {
-          return NextResponse.json(
-            { error: `Requested chapters (${chapters}) exceed plan limit (${plan.max_chapters}). Please upgrade your plan or reduce the number of chapters.` },
-            { status: 403 }
-          );
-        }
-        if (lessons_per_chapter > plan.max_lessons_per_chapter) {
-          return NextResponse.json(
-            { error: `Requested lessons per chapter (${lessons_per_chapter}) exceed plan limit (${plan.max_lessons_per_chapter}). Please upgrade your plan or reduce lessons per chapter.` },
-            { status: 403 }
-          );
-        }
-      }
     }
 
     // 7. Deduct credits BEFORE generation
@@ -381,7 +412,7 @@ export async function POST(request: NextRequest) {
         finalChapters.push({ title: chapterOutline.chapterTitle, lessons: generatedLessons });
       }
 
-      // 10. Return course data for preview - FIXED: Changed 'generatedCourse' to 'aiGeneratedCourse'
+      // 10. Return course data for preview - including plan limits for frontend
       return NextResponse.json({
         success: true,
         courseId: null,
@@ -390,7 +421,7 @@ export async function POST(request: NextRequest) {
         chaptersGenerated: finalChapters.length,
         lessonsGenerated: finalChapters.reduce((total, chapter) => total + chapter.lessons.length, 0),
         redirectUrl: `/dashboard/courses/preview`,
-        aiGeneratedCourse: {  // FIXED: Changed from 'generatedCourse' to 'aiGeneratedCourse'
+        aiGeneratedCourse: {
           title: courseOutline.courseTitle,
           difficulty: difficulty,
           chapters: finalChapters,
@@ -398,6 +429,7 @@ export async function POST(request: NextRequest) {
         originalPrompt: userPrompt,
         originalChapterCount: chapters,
         originalLessonsPerChapter: lessons_per_chapter,
+        planLimits: planLimits, // Include plan limits in response
       }, { status: 200 });
 
     } catch (generationError) {
@@ -422,6 +454,56 @@ export async function POST(request: NextRequest) {
     console.error('Error in /api/generate-course:', error);
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
     return NextResponse.json({ error: `Failed to generate course content: ${errorMessage}` }, { status: 500 });
+  }
+}
+
+// NEW ENDPOINT: Get user plan limits
+export async function GET(request: NextRequest) {
+  const cookieStore = cookies();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+        set(name: string, value: string, options: CookieOptions) {
+          try {
+            cookieStore.set({ name, value, ...options });
+          } catch (error) {}
+        },
+        remove(name: string, options: CookieOptions) {
+          try {
+            cookieStore.set({ name, value: '', ...options });
+          } catch (error) {}
+        },
+      },
+    }
+  );
+
+  try {
+    // Authenticate user
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized: User not authenticated.' }, { status: 401 });
+    }
+
+    // Get user's plan limits
+    const planLimits = await getUserPlanLimits(supabase, user.id);
+    if (!planLimits) {
+      return NextResponse.json({ error: 'Could not retrieve user plan limits.' }, { status: 500 });
+    }
+
+    return NextResponse.json({
+      success: true,
+      planLimits: planLimits
+    }, { status: 200 });
+
+  } catch (error) {
+    console.error('Error in GET /api/generate-course:', error);
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
+    return NextResponse.json({ error: `Failed to retrieve plan limits: ${errorMessage}` }, { status: 500 });
   }
 }
 
