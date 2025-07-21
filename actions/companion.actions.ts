@@ -4,6 +4,8 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 // import type { Database } from '../types/supabase'; // Uncomment if you have a Database type
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
 
 // TODO: Define CreateCompanion, GetAllCompanions types in your types folder if needed
 
@@ -183,6 +185,69 @@ export const getCompanion = async (id: string) => {
   return data?.[0] || null;
 };
 
+
+export async function deleteCompanion(companionId: string, pathname: string) {
+  const { supabase, user } = await getSupabaseAndUser();
+
+  // Get the current user
+  const {
+    data: { user: authUser },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !authUser) {
+    redirect("/dashboard/voice");
+  }
+
+  try {
+    // Verify the companion belongs to the current user before deleting
+    const { data: companion, error: fetchError } = await supabase
+      .from("companions")
+      .select("id, author")
+      .eq("id", companionId)
+      .single();
+
+    if (fetchError) {
+      throw new Error("Companion not found");
+    }
+
+    if (companion.author !== authUser.id) {
+      throw new Error("Unauthorized: You can only delete your own companions");
+    }
+
+    // Delete associated session history
+    const { error: deleteSessionHistoryError } = await supabase
+      .from("session_history")
+      .delete()
+      .eq("companion_id", companionId);
+
+    if (deleteSessionHistoryError) {
+      throw new Error(`Failed to delete session history: ${deleteSessionHistoryError.message}`);
+    }
+
+    // Delete the companion
+    const { error: deleteError } = await supabase
+      .from("companions")
+      .delete()
+      .eq("id", companionId)
+      .eq("author", authUser.id); // Double-check authorization
+
+    if (deleteError) {
+      throw new Error(`Failed to delete companion: ${deleteError.message}`);
+    }
+
+    // Revalidate the current path to update the UI
+    revalidatePath(pathname);
+    
+    return { success: true, message: "Voice agent deleted successfully" };
+  } catch (error) {
+    console.error("Error deleting companion:", error);
+    return { 
+      success: false, 
+      message: error instanceof Error ? error.message : "Failed to delete voice agent" 
+    };
+  }
+}
 export const addToSessionHistory = async (companionId: string, duration: number) => {
   const { supabase, user } = await getSupabaseAndUser();
   if (!user) throw new Error("Not authenticated");

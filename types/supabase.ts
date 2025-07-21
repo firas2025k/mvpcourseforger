@@ -41,6 +41,53 @@ export type Database = {
           }
         ]
       }
+      companions: {
+        Row: {
+          id: string
+          author: string | null
+          name: string
+          subject: string | null
+          topic: string | null
+          description: string | null
+          created_at: string
+          duration: number | null
+          style: string | null
+          voice: string | null
+        }
+        Insert: {
+          id?: string
+          author?: string | null
+          name: string
+          subject?: string | null
+          topic?: string | null
+          description?: string | null
+          created_at?: string
+          duration?: number | null
+          style?: string | null
+          voice?: string | null
+        }
+        Update: {
+          id?: string
+          author?: string | null
+          name?: string
+          subject?: string | null
+          topic?: string | null
+          description?: string | null
+          created_at?: string
+          duration?: number | null
+          style?: string | null
+          voice?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "companions_author_fkey"
+            columns: ["author"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       courses: {
         Row: {
           id: string
@@ -58,6 +105,7 @@ export type Database = {
           source_document_metadata: Json | null
           price_cents: number | null
           is_for_sale: boolean
+          credit_cost: number
         }
         Insert: {
           id?: string
@@ -75,6 +123,7 @@ export type Database = {
           source_document_metadata?: Json | null
           price_cents?: number | null
           is_for_sale?: boolean
+          credit_cost?: number
         }
         Update: {
           id?: string
@@ -92,6 +141,7 @@ export type Database = {
           source_document_metadata?: Json | null
           price_cents?: number | null
           is_for_sale?: boolean
+          credit_cost?: number
         }
         Relationships: [
           {
@@ -106,7 +156,7 @@ export type Database = {
       credit_transactions: {
         Row: {
           id: string
-          user_id: string | null
+          user_id: string
           type: "purchase" | "consumption" | "adjustment"
           amount: number
           related_entity_id: string | null
@@ -115,7 +165,7 @@ export type Database = {
         }
         Insert: {
           id?: string
-          user_id?: string | null
+          user_id: string
           type: "purchase" | "consumption" | "adjustment"
           amount: number
           related_entity_id?: string | null
@@ -124,7 +174,7 @@ export type Database = {
         }
         Update: {
           id?: string
-          user_id?: string | null
+          user_id?: string
           type?: "purchase" | "consumption" | "adjustment"
           amount?: number
           related_entity_id?: string | null
@@ -136,7 +186,7 @@ export type Database = {
             foreignKeyName: "credit_transactions_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "users"
             referencedColumns: ["id"]
           }
         ]
@@ -235,7 +285,7 @@ export type Database = {
           max_lessons_per_chapter: number
           max_presentations: number | null
           max_slides_per_presentation: number | null
-          credit_amount: number | null
+          credit_amount: number
         }
         Insert: {
           id?: string
@@ -250,7 +300,7 @@ export type Database = {
           max_lessons_per_chapter?: number
           max_presentations?: number | null
           max_slides_per_presentation?: number | null
-          credit_amount?: number | null
+          credit_amount?: number
         }
         Update: {
           id?: string
@@ -265,7 +315,7 @@ export type Database = {
           max_lessons_per_chapter?: number
           max_presentations?: number | null
           max_slides_per_presentation?: number | null
-          credit_amount?: number | null
+          credit_amount?: number
         }
         Relationships: []
       }
@@ -326,6 +376,8 @@ export type Database = {
           background_color: string | null
           text_color: string | null
           accent_color: string | null
+          credit_cost: number
+          includes_images: boolean
         }
         Insert: {
           id?: string
@@ -344,6 +396,8 @@ export type Database = {
           background_color?: string | null
           text_color?: string | null
           accent_color?: string | null
+          credit_cost?: number
+          includes_images?: boolean
         }
         Update: {
           id?: string
@@ -362,6 +416,8 @@ export type Database = {
           background_color?: string | null
           text_color?: string | null
           accent_color?: string | null
+          credit_cost?: number
+          includes_images?: boolean
         }
         Relationships: [
           {
@@ -384,7 +440,7 @@ export type Database = {
           courses_created_count: number | null
           presentation_limit: number | null
           presentations_created_count: number | null
-          credits: number | null
+          credits: number
         }
         Insert: {
           id: string
@@ -396,7 +452,7 @@ export type Database = {
           courses_created_count?: number | null
           presentation_limit?: number | null
           presentations_created_count?: number | null
-          credits?: number | null
+          credits?: number
         }
         Update: {
           id?: string
@@ -408,7 +464,7 @@ export type Database = {
           courses_created_count?: number | null
           presentation_limit?: number | null
           presentations_created_count?: number | null
-          credits?: number | null
+          credits?: number
         }
         Relationships: [
           {
@@ -494,6 +550,45 @@ export type Database = {
           }
         ]
       }
+      session_history: {
+        Row: {
+          id: string
+          companion_id: string | null
+          user_id: string | null
+          created_at: string
+          duration: number | null
+        }
+        Insert: {
+          id?: string
+          companion_id?: string | null
+          user_id?: string | null
+          created_at?: string
+          duration?: number | null
+        }
+        Update: {
+          id?: string
+          companion_id?: string | null
+          user_id?: string | null
+          created_at?: string
+          duration?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_history_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_history_companion_id_fkey"
+            columns: ["companion_id"]
+            isOneToOne: false
+            referencedRelation: "companions"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       slides: {
         Row: {
           id: string
@@ -507,6 +602,9 @@ export type Database = {
           speaker_notes: string | null
           animation_type: string | null
           created_at: string
+          image_url: string | null
+          image_alt: string | null
+          image_keywords: string[] | null
         }
         Insert: {
           id?: string
@@ -520,6 +618,9 @@ export type Database = {
           speaker_notes?: string | null
           animation_type?: string | null
           created_at?: string
+          image_url?: string | null
+          image_alt?: string | null
+          image_keywords?: string[] | null
         }
         Update: {
           id?: string
@@ -533,6 +634,9 @@ export type Database = {
           speaker_notes?: string | null
           animation_type?: string | null
           created_at?: string
+          image_url?: string | null
+          image_alt?: string | null
+          image_keywords?: string[] | null
         }
         Relationships: [
           {
@@ -614,4 +718,11 @@ export type Database = {
   }
 }
 
+// Helper type for companion with all fields
+export type Companion = Database['public']['Tables']['companions']['Row']
 
+// Helper type for companion insert
+export type CompanionInsert = Database['public']['Tables']['companions']['Insert']
+
+// Helper type for companion update  
+export type CompanionUpdate = Database['public']['Tables']['companions']['Update']

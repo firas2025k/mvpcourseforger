@@ -9,27 +9,20 @@ import {
   ArrowLeft,
   Check,
   Star,
-  Zap,
   Crown,
-  Gift,
   CreditCard,
   Shield,
   Sparkles,
-  TrendingUp,
   BookOpen,
   LayoutGrid,
   Users,
   Clock,
   Target,
   Rocket,
-  DollarSign,
-  Plus,
-  Minus,
 } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import CreditBalance from "@/components/dashboard/CreditBalance";
 import CreditPurchaseForm from "@/components/dashboard/CreditPurchaseForm";
