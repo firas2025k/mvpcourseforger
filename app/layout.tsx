@@ -4,6 +4,7 @@ import { ThemeProvider } from "next-themes";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { SpeedInsights } from '@vercel/speed-insights/next';
+import { Analytics } from '@vercel/analytics/next';
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
@@ -153,6 +154,8 @@ export default function RootLayout({
           {children}
           <Toaster />
           <SpeedInsights />
+          <Analytics />
+
         </ThemeProvider>
       </body>
     </html>

@@ -39,6 +39,7 @@
     "@tiptap/react": "^2.14.0",
     "@tiptap/starter-kit": "^2.14.0",
     "@vapi-ai/web": "^2.3.8",
+    "@vercel/analytics": "^1.5.0",
     "@vercel/speed-insights": "^1.2.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
