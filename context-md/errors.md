@@ -1,122 +1,136 @@
-[{
-	"resource": "/Users/firasbentaleb/Documents/mvp/courseforger/components/dashboard/courses/CourseLayoutClient.tsx",
-	"owner": "typescript",
-	"code": "2339",
-	"severity": 8,
-	"message": "Property 'estimated_duration' does not exist on type 'Lesson'.",
-	"source": "ts",
-	"startLineNumber": 531,
-	"startColumn": 47,
-	"endLineNumber": 531,
-	"endColumn": 65
-},{
-	"resource": "/Users/firasbentaleb/Documents/mvp/courseforger/components/dashboard/courses/CourseLayoutClient.tsx",
-	"owner": "typescript",
-	"code": "2339",
-	"severity": 8,
-	"message": "Property 'estimated_duration' does not exist on type 'Lesson'.",
-	"source": "ts",
-	"startLineNumber": 613,
-	"startColumn": 47,
-	"endLineNumber": 613,
-	"endColumn": 65
-},{
-	"resource": "/Users/firasbentaleb/Documents/mvp/courseforger/components/dashboard/courses/CourseLayoutClient.tsx",
-	"owner": "typescript",
-	"code": "2322",
-	"severity": 8,
-	"message": "Type '{ children: string; remarkPlugins: ((options?: Options | null | undefined) => undefined)[]; rehypePlugins: ((options?: Readonly<Options> | null | undefined) => (tree: Root, file: VFile) => undefined)[]; className: string; }' is not assignable to type 'IntrinsicAttributes & Readonly<Options>'.\n  Property 'className' does not exist on type 'IntrinsicAttributes & Readonly<Options>'.",
-	"source": "ts",
-	"startLineNumber": 629,
-	"startColumn": 23,
-	"endLineNumber": 629,
-	"endColumn": 32
-},{
-	"resource": "/Users/firasbentaleb/Documents/mvp/courseforger/components/dashboard/courses/CourseLayoutClient.tsx",
-	"owner": "typescript",
-	"code": "2339",
-	"severity": 8,
-	"message": "Property 'explanation' does not exist on type 'Quiz'.",
-	"source": "ts",
-	"startLineNumber": 734,
-	"startColumn": 37,
-	"endLineNumber": 734,
-	"endColumn": 48
-},{
-	"resource": "/Users/firasbentaleb/Documents/mvp/courseforger/components/dashboard/courses/CourseLayoutClient.tsx",
-	"owner": "typescript",
-	"code": "2339",
-	"severity": 8,
-	"message": "Property 'explanation' does not exist on type 'Quiz'.",
-	"source": "ts",
-	"startLineNumber": 736,
-	"startColumn": 41,
-	"endLineNumber": 736,
-	"endColumn": 52
-},{
-	"resource": "/Users/firasbentaleb/Documents/mvp/courseforger/components/dashboard/courses/CourseLayoutClient.tsx",
-	"owner": "typescript",
-	"code": "2339",
-	"severity": 8,
-	"message": "Property 'estimated_duration' does not exist on type 'Lesson'.",
-	"source": "ts",
-	"startLineNumber": 924,
-	"startColumn": 53,
-	"endLineNumber": 924,
-	"endColumn": 71
-},{
-	"resource": "/Users/firasbentaleb/Documents/mvp/courseforger/components/dashboard/courses/CourseLayoutClient.tsx",
-	"owner": "typescript",
-	"code": "2339",
-	"severity": 8,
-	"message": "Property 'estimated_duration' does not exist on type 'Lesson'.",
-	"source": "ts",
-	"startLineNumber": 1065,
-	"startColumn": 55,
-	"endLineNumber": 1065,
-	"endColumn": 73
-},{
-	"resource": "/Users/firasbentaleb/Documents/mvp/courseforger/components/dashboard/courses/CourseLayoutClient.tsx",
-	"owner": "typescript",
-	"code": "2339",
-	"severity": 8,
-	"message": "Property 'estimated_duration' does not exist on type 'Lesson'.",
-	"source": "ts",
-	"startLineNumber": 1167,
-	"startColumn": 49,
-	"endLineNumber": 1167,
-	"endColumn": 67
-},{
-	"resource": "/Users/firasbentaleb/Documents/mvp/courseforger/components/dashboard/courses/CourseLayoutClient.tsx",
-	"owner": "typescript",
-	"code": "2322",
-	"severity": 8,
-	"message": "Type '{ lesson: Lesson; onContentChange: (content: string) => void; }' is not assignable to type 'IntrinsicAttributes & LessonEditorProps'.\n  Property 'lesson' does not exist on type 'IntrinsicAttributes & LessonEditorProps'. Did you mean 'lessonId'?",
-	"source": "ts",
-	"startLineNumber": 1185,
-	"startColumn": 25,
-	"endLineNumber": 1185,
-	"endColumn": 31
-},{
-	"resource": "/Users/firasbentaleb/Documents/mvp/courseforger/components/dashboard/courses/CourseLayoutClient.tsx",
-	"owner": "typescript",
-	"code": "2339",
-	"severity": 8,
-	"message": "Property 'explanation' does not exist on type 'Quiz'.",
-	"source": "ts",
-	"startLineNumber": 1308,
-	"startColumn": 39,
-	"endLineNumber": 1308,
-	"endColumn": 50
-},{
-	"resource": "/Users/firasbentaleb/Documents/mvp/courseforger/components/dashboard/courses/CourseLayoutClient.tsx",
-	"owner": "typescript",
-	"code": "2339",
-	"severity": 8,
-	"message": "Property 'explanation' does not exist on type 'Quiz'.",
-	"source": "ts",
-	"startLineNumber": 1310,
-	"startColumn": 43,
-	"endLineNumber": 1310,
-	"endColumn": 54
-}]
+Parsing error: Invalid character.
+Invalid character.
+Unterminated string literal.
+Property 'select' does not exist on type '"subscriptions')"'.
+Invalid character.
+Unterminated string literal.
+Property 'eq' does not exist on type '"user_id', userId)"'.
+Invalid character.
+Unterminated string literal.
+Property 'single' does not exist on type '"is_active', true)"'.
+')' expected.
+Invalid character.
+Unterminated string literal.
+',' expected.
+Invalid character.
+Unterminated string literal.
+',' expected.
+Invalid character.
+Unterminated string literal.
+Property 'select' does not exist on type '"profiles')"'.
+Invalid character.
+Unterminated string literal.
+Property 'eq' does not exist on type '"credits')"'.
+Invalid character.
+Unterminated string literal.
+Property 'single' does not exist on type '"id', userId)"'.
+')' expected.
+Invalid character.
+Unterminated string literal.
+',' expected.
+Invalid character.
+Unterminated string literal.
+Property 'update' does not exist on type '"profiles')"'.
+Invalid character.
+Unterminated string literal.
+',' expected.
+Invalid character.
+Unterminated string literal.
+',' expected.
+Invalid character.
+Unterminated string literal.
+Property 'insert' does not exist on type '"credit_transactions')"'.
+The left-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+Invalid character.
+Unterminated string literal.
+':' expected.
+Cannot find name 'amount'.
+',' expected.
+Property assignment expected.
+Cannot find name 'related_entity_id'. Did you mean 'relatedEntityId'?
+',' expected.
+',' expected.
+Argument expression expected.
+'catch' or 'finally' expected.
+Cannot find name 'transactionError'.
+Invalid character.
+Unterminated string literal.
+',' expected.
+Cannot find name 'newBalance'.
+'try' expected.
+Invalid character.
+Unterminated string literal.
+',' expected.
+Declaration or statement expected.
+Invalid character.
+Unterminated string literal.
+':' expected.
+',' expected.
+'planLimits' is possibly 'null'.
+'planLimits' is possibly 'null'.
+'planLimits' is possibly 'null'.
+'planLimits' is possibly 'null'.
+'planLimits' is possibly 'null'.
+'planLimits' is possibly 'null'.
+Property 'data' does not exist on type 'PostgrestQueryBuilder<any, any, any, unknown>'.
+Property 'error' does not exist on type 'PostgrestQueryBuilder<any, any, any, unknown>'.
+Invalid character.
+Unterminated string literal.
+Property 'select' does not exist on type '"profiles')"'.
+Invalid character.
+Unterminated string literal.
+Property 'eq' does not exist on type '"credits')"'.
+Invalid character.
+Unterminated string literal.
+Property 'single' does not exist on type '"id', user.id)"'.
+')' expected.
+Invalid character.
+Unterminated string literal.
+',' expected.
+Invalid character.
+Unterminated string literal.
+':' expected.
+',' expected.
+'user' is possibly 'null'.
+Invalid character.
+This expression is not callable.
+  Type 'String' has no call signatures.
+Unterminated string literal.
+'file' is possibly 'null'.
+Declaration or statement expected.
+Invalid character.
+Unterminated string literal.
+':' expected.
+',' expected.
+'file' is possibly 'null'.
+Argument of type 'string | null' is not assignable to parameter of type 'PathLike | FileHandle'.
+  Type 'null' is not assignable to type 'PathLike | FileHandle'.
+Argument of type 'string | null' is not assignable to parameter of type 'string | Blob'.
+  Type 'null' is not assignable to type 'string | Blob'.
+'file' is possibly 'null'.
+Expected 5 arguments, but got 4.
+'user' is possibly 'null'.
+Invalid character.
+This expression is not callable.
+  Type 'String' has no call signatures.
+Unterminated string literal.
+'file' is possibly 'null'.
+Expected 5 arguments, but got 4.
+'user' is possibly 'null'.
+Invalid character.
+This expression is not callable.
+  Type 'String' has no call signatures.
+Unterminated string literal.
+'file' is possibly 'null'.
+Expected 5 arguments, but got 4.
+'user' is possibly 'null'.
+Invalid character.
+This expression is not callable.
+  Type 'String' has no call signatures.
+Unterminated string literal.
+'file' is possibly 'null'.
+'try' expected.
+'error' is of type 'unknown'.
+Argument of type 'string | null' is not assignable to parameter of type 'PathLike'.
+  Type 'null' is not assignable to type 'PathLike'.
+'}' expected.

@@ -25,6 +25,21 @@ import {
   Coins,
   Calculator,
   ShoppingCart,
+  Mic,
+  Volume2,
+  MessageSquare,
+  Headphones,
+  Award,
+  Clock,
+  Users,
+  Play,
+  Pause,
+  BarChart,
+  TrendingDown,
+  Activity,
+  Calendar,
+  CheckCircle,
+  Circle,
 } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -64,7 +79,10 @@ interface SubscriptionWithPlan {
 }
 
 // Credit cost calculation functions
-function calculateCourseCreditCost(chapters: number, lessonsPerChapter: number): number {
+function calculateCourseCreditCost(
+  chapters: number,
+  lessonsPerChapter: number
+): number {
   const lessonCost = chapters * lessonsPerChapter;
   const chapterCost = chapters;
   const totalCost = lessonCost + chapterCost;
@@ -272,15 +290,16 @@ export default async function DashboardPage({
 
   // Credit status for UI decisions
   const hasInsufficientCreditsForCourse = userCredits < basicCourseCost;
-  const hasInsufficientCreditsForPresentation = userCredits < basicPresentationCost;
+  const hasInsufficientCreditsForPresentation =
+    userCredits < basicPresentationCost;
 
   return (
-    <div className="flex-1 w-full flex flex-col gap-8 py-8 md:py-12">
+    <div className="flex-1 w-full flex flex-col mr-2 ml-2 gap-8 py-8 md:py-12">
       {/* Enhanced Header */}
-      <header className="px-4 md:px-0 relative">
+      <header className="px-8 mx-4 md:px-0 relative">
         <div className="absolute inset-0 bg-gradient-to-r from-blue-400/10 to-purple-400/10 rounded-3xl blur-2xl"></div>
         <div className="relative">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-6 m-2">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-2xl bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
                 <GraduationCap className="h-6 w-6 text-white" />
@@ -298,20 +317,106 @@ export default async function DashboardPage({
                   ) : (
                     <>
                       <Sparkles className="h-4 w-4" />
-                      Manage your courses and track progress
+                      Welcome back! Ready to learn?
                     </>
                   )}
                 </p>
               </div>
             </div>
-            
+
             {/* Credit Balance Display */}
             <div className="hidden md:block">
-              <CreditBalance initialCredits={userCredits} showTopUpButton={true} />
+              <CreditBalance
+                initialCredits={userCredits}
+                showTopUpButton={true}
+              />
             </div>
           </div>
         </div>
       </header>
+
+      {/* Live Voice Coach Feature Card */}
+      <section className="px-4 md:px-6">
+        <Card className="relative overflow-hidden bg-gradient-to-r from-orange-500 to-red-600 text-white border-0 shadow-2xl">
+          <div className="absolute inset-0 bg-gradient-to-r from-orange-400/20 to-red-500/20 backdrop-blur-sm"></div>
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl transform translate-x-32 -translate-y-32"></div>
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full blur-2xl transform -translate-x-24 translate-y-24"></div>
+
+          <CardContent className="relative p-8">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                    <Mic className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <Badge className="bg-white/20 text-white border-white/30 mb-2">
+                      NEW FEATURE
+                    </Badge>
+                    <h2 className="text-3xl font-bold">Live Voice Coach</h2>
+                  </div>
+                </div>
+
+                <p className="text-xl text-white/90 mb-6 max-w-2xl">
+                  Practice speaking with our AI-powered voice coach. Get
+                  real-time feedback on pronunciation, fluency, and confidence.
+                  Perfect for presentations, interviews, and language learning.
+                </p>
+
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="flex items-center gap-2">
+                    <Volume2 className="h-5 w-5 text-white/80" />
+                    <span className="text-white/80">Real-time feedback</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Brain className="h-5 w-5 text-white/80" />
+                    <span className="text-white/80">AI-powered analysis</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Award className="h-5 w-5 text-white/80" />
+                    <span className="text-white/80">Progress tracking</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <Link href="/dashboard/voice/new">
+                    <Button
+                      size="lg"
+                      className="bg-white text-orange-600 hover:bg-white/90 font-semibold px-8 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                    >
+                      <Play className="h-5 w-5 mr-2" />
+                      Start Voice Session
+                    </Button>
+                  </Link>
+                  <Link href="/dashboard/voice">
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      className="border-white/30 text-black hover:bg-white/10 font-semibold px-6 py-3 rounded-xl backdrop-blur-sm"
+                    >
+                      View All Sessions
+                      <ArrowRight className="h-4 w-4 ml-2" />
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+
+              <div className="hidden lg:block">
+                <div className="relative">
+                  <div className="w-48 h-48 rounded-3xl bg-white/10 backdrop-blur-sm flex items-center justify-center">
+                    <div className="w-32 h-32 rounded-2xl bg-white/20 flex items-center justify-center">
+                      <Headphones className="h-16 w-16 text-white/80" />
+                    </div>
+                  </div>
+                  <div className="absolute -top-4 -right-4 w-8 h-8 rounded-full bg-green-400 flex items-center justify-center animate-pulse">
+                    <Mic className="h-4 w-4 text-white" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
 
       {/* Enhanced Statistics Cards */}
       <section className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 px-4 md:px-6">
@@ -332,8 +437,17 @@ export default async function DashboardPage({
               {totalCourses}
             </div>
             <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
-              courses you have created
+              courses created
             </p>
+            <div className="flex items-center gap-2">
+              <Progress
+                value={(totalCourses / courseLimit) * 100}
+                className="flex-1 h-2"
+              />
+              <span className="text-xs text-slate-500">
+                {totalCourses}/{courseLimit}
+              </span>
+            </div>
           </CardContent>
         </Card>
 
@@ -342,7 +456,7 @@ export default async function DashboardPage({
           <div className="absolute inset-0 bg-gradient-to-br from-green-400/10 to-blue-400/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           <CardHeader className="relative flex flex-row items-center justify-between space-y-0 pb-3">
             <CardTitle className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-              Average Progress
+              Learning Progress
             </CardTitle>
             <div className="relative">
               <TrendingUp className="h-5 w-5 text-green-600 dark:text-green-400" />
@@ -356,7 +470,7 @@ export default async function DashboardPage({
                   value={averageProgress}
                   className="h-3 bg-slate-200 dark:bg-slate-700 rounded-full"
                 />
-                <div 
+                <div
                   className="absolute inset-0 bg-gradient-to-r from-green-500 to-blue-600 rounded-full opacity-20 blur-sm transition-all duration-500"
                   style={{ width: `${averageProgress}%` }}
                 ></div>
@@ -365,8 +479,8 @@ export default async function DashboardPage({
                 {averageProgress}%
               </span>
             </div>
-            <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
-              across all courses with lessons
+            <p className="text-sm text-slate-600 dark:text-slate-400">
+              average completion rate
             </p>
           </CardContent>
         </Card>
@@ -391,10 +505,10 @@ export default async function DashboardPage({
               credits available
             </p>
             <Link
-              href="/dashboard/credits/purchase"
+              href="/dashboard/credit/purchase"
               className="inline-flex items-center gap-2 text-sm font-medium text-yellow-600 dark:text-yellow-400 hover:text-yellow-700 dark:hover:text-yellow-300 transition-colors duration-200 group/link"
             >
-              Top Up Credits 
+              Top Up Credits
               <ArrowRight className="h-4 w-4 group-hover/link:translate-x-1 transition-transform duration-200" />
             </Link>
           </CardContent>
@@ -411,6 +525,196 @@ export default async function DashboardPage({
         </div>
       </section>
 
+      {/* Quick Actions Panel */}
+      <section className="px-4 md:px-6">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-blue-900 dark:from-slate-100 dark:to-blue-100 bg-clip-text text-transparent">
+            Quick Actions
+          </h2>
+          <Badge
+            variant="outline"
+            className="text-slate-600 dark:text-slate-400"
+          >
+            Get started quickly
+          </Badge>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Create Course */}
+          <Card className="relative overflow-hidden bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 shadow-lg hover:shadow-xl transition-all duration-300 group hover:scale-[1.02]">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-400/10 to-purple-400/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <CardContent className="relative p-6">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
+                  <BookOpen className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-lg">Create Course</h3>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                    Generate AI-powered courses
+                  </p>
+                </div>
+              </div>
+              <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+                Create comprehensive courses with AI assistance. Perfect for
+                structured learning paths.
+              </p>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-sm text-slate-500">
+                  <Calculator className="h-4 w-4" />
+                  <span>{basicCourseCost} credits</span>
+                </div>
+                <Link href="/dashboard/courses/new">
+                  <Button
+                    className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                    disabled={hasInsufficientCreditsForCourse}
+                  >
+                    <PlusCircle className="h-4 w-4 mr-2" />
+                    Create
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Voice Session */}
+          <Card className="relative overflow-hidden bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 shadow-lg hover:shadow-xl transition-all duration-300 group hover:scale-[1.02]">
+            <div className="absolute inset-0 bg-gradient-to-br from-orange-400/10 to-red-400/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <CardContent className="relative p-6">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-r from-orange-500 to-red-600 flex items-center justify-center shadow-lg">
+                  <Mic className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold text-lg">Voice Session</h3>
+                    <Badge className="bg-orange-500 text-white text-xs">
+                      NEW
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                    Practice with AI voice coach
+                  </p>
+                </div>
+              </div>
+              <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+                Improve your speaking skills with real-time AI feedback and
+                personalized coaching.
+              </p>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-sm text-slate-500">
+                  <Clock className="h-4 w-4" />
+                  <span>2 credits/session</span>
+                </div>
+                <Link href="/dashboard/voice/new">
+                  <Button className="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white shadow-lg hover:shadow-xl transition-all duration-300">
+                    <Mic className="h-4 w-4 mr-2" />
+                    Start
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Create Presentation */}
+          <Card className="relative overflow-hidden bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 shadow-lg hover:shadow-xl transition-all duration-300 group hover:scale-[1.02]">
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-400/10 to-pink-400/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <CardContent className="relative p-6">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-r from-purple-500 to-pink-600 flex items-center justify-center shadow-lg">
+                  <Users className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-lg">Presentation</h3>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                    Create slide presentations
+                  </p>
+                </div>
+              </div>
+              <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+                Generate professional presentations with AI-powered content and
+                design.
+              </p>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-sm text-slate-500">
+                  <Calculator className="h-4 w-4" />
+                  <span>{basicPresentationCost} credits</span>
+                </div>
+                <Link href="/dashboard/presentations/new">
+                  <Button
+                    className="bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                    disabled={hasInsufficientCreditsForPresentation}
+                  >
+                    <PlusCircle className="h-4 w-4 mr-2" />
+                    Create
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      {/* Recent Activity & Courses Section */}
+      <section className="px-4 md:px-6">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-blue-900 dark:from-slate-100 dark:to-blue-100 bg-clip-text text-transparent">
+            {searchQuery ? "Search Results" : "Your Courses"}
+          </h2>
+          <div className="flex items-center gap-4">
+            {!searchQuery && (
+              <Badge
+                variant="outline"
+                className="text-slate-600 dark:text-slate-400"
+              >
+                {courses.length} total
+              </Badge>
+            )}
+            <Link href="/dashboard/courses/new">
+              <Button className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300">
+                <PlusCircle className="h-4 w-4 mr-2" />
+                New Course
+              </Button>
+            </Link>
+          </div>
+        </div>
+
+        {courses.length === 0 ? (
+          <Card className="relative overflow-hidden bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 shadow-lg">
+            <CardContent className="flex flex-col items-center justify-center py-16">
+              <div className="w-24 h-24 rounded-3xl bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center mb-6 shadow-lg">
+                <BookOpen className="h-12 w-12 text-white" />
+              </div>
+              <h3 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">
+                {searchQuery ? "No courses found" : "No courses yet"}
+              </h3>
+              <p className="text-slate-600 dark:text-slate-400 text-center max-w-md mb-8">
+                {searchQuery
+                  ? `No courses match "${searchQuery}". Try a different search term.`
+                  : "Start your learning journey by creating your first course with AI assistance."}
+              </p>
+              {!searchQuery && (
+                <Link href="/dashboard/courses/new">
+                  <Button
+                    size="lg"
+                    className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                  >
+                    <PlusCircle className="h-5 w-5 mr-2" />
+                    Create Your First Course
+                  </Button>
+                </Link>
+              )}
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {courses.map((course) => (
+              <CourseCard key={course.id} course={course} />
+            ))}
+          </div>
+        )}
+      </section>
+
       {/* Credit Cost Information */}
       <section className="px-4 md:px-6">
         <Card className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 border border-blue-200/50 dark:border-blue-800/50">
@@ -421,310 +725,38 @@ export default async function DashboardPage({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex items-center justify-between p-3 bg-white/50 dark:bg-slate-800/50 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <BookOpen className="h-4 w-4 text-blue-600" />
-                  <span className="text-sm font-medium">Basic Course (3 chapters, 2 lessons each)</span>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="flex items-center gap-3 p-4 rounded-xl bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm">
+                <BookOpen className="h-8 w-8 text-blue-600" />
+                <div>
+                  <p className="font-semibold">Course Generation</p>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                    {basicCourseCost} credits for basic course
+                  </p>
                 </div>
-                <Badge variant="secondary" className="bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400">
-                  {basicCourseCost} credits
-                </Badge>
               </div>
-              <div className="flex items-center justify-between p-3 bg-white/50 dark:bg-slate-800/50 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <LayoutGrid className="h-4 w-4 text-purple-600" />
-                  <span className="text-sm font-medium">Basic Presentation (10 slides)</span>
+              <div className="flex items-center gap-3 p-4 rounded-xl bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm">
+                <Users className="h-8 w-8 text-purple-600" />
+                <div>
+                  <p className="font-semibold">Presentation</p>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                    {basicPresentationCost} credits for 10 slides
+                  </p>
                 </div>
-                <Badge variant="secondary" className="bg-purple-100 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400">
-                  {basicPresentationCost} credits
-                </Badge>
+              </div>
+              <div className="flex items-center gap-3 p-4 rounded-xl bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm">
+                <Mic className="h-8 w-8 text-orange-600" />
+                <div>
+                  <p className="font-semibold">Voice Session</p>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                    2 credits per session
+                  </p>
+                </div>
               </div>
             </div>
-            <p className="text-xs text-slate-600 dark:text-slate-400 mt-3">
-              Costs vary based on content complexity. Larger courses and presentations require more credits.
-            </p>
           </CardContent>
         </Card>
-      </section>
-
-      {/* Enhanced Generation Actions */}
-      <section className="px-4 md:px-6">
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-purple-500 to-pink-600 flex items-center justify-center shadow-lg">
-              <Rocket className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <h2 className="text-3xl font-bold bg-gradient-to-r from-slate-900 to-purple-900 dark:from-slate-100 dark:to-purple-100 bg-clip-text text-transparent">
-                Create Content
-              </h2>
-              <p className="text-slate-600 dark:text-slate-400">
-                Generate courses and presentations with AI
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {/* Create Course Card */}
-          <Card className="relative overflow-hidden bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 shadow-lg hover:shadow-xl transition-all duration-300 group">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-400/5 to-purple-400/5 group-hover:from-blue-400/10 group-hover:to-purple-400/10 transition-all duration-300"></div>
-            <CardContent className="relative p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
-                  <BookOpen className="h-6 w-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold">Create Course</h3>
-                  <p className="text-sm text-slate-600 dark:text-slate-400">
-                    Generate comprehensive courses with AI
-                  </p>
-                </div>
-              </div>
-              
-              <div className="space-y-3 mb-6">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-slate-600 dark:text-slate-400">Starting from:</span>
-                  <Badge variant="outline" className="border-blue-200 text-blue-700 dark:border-blue-800 dark:text-blue-400">
-                    {basicCourseCost} credits
-                  </Badge>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-slate-600 dark:text-slate-400">Your balance:</span>
-                  <span className={`font-medium ${userCredits >= basicCourseCost ? 'text-green-600' : 'text-red-600'}`}>
-                    {userCredits} credits
-                  </span>
-                </div>
-              </div>
-
-              {hasInsufficientCreditsForCourse ? (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-950/20 rounded-lg border border-red-200 dark:border-red-800">
-                    <AlertTriangle className="h-4 w-4 text-red-600" />
-                    <span className="text-sm text-red-700 dark:text-red-400">
-                      Insufficient credits
-                    </span>
-                  </div>
-                  <Button
-                    asChild
-                    className="w-full bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white"
-                  >
-                    <Link href="/dashboard/credits/purchase" className="flex items-center gap-2">
-                      <ShoppingCart className="h-4 w-4" />
-                      Buy Credits
-                    </Link>
-                  </Button>
-                </div>
-              ) : (
-                <Button
-                  asChild
-                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
-                >
-                  <Link href="/dashboard/courses/new" className="flex items-center gap-2">
-                    <PlusCircle className="h-4 w-4" />
-                    Create Course
-                  </Link>
-                </Button>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Create Presentation Card */}
-          <Card className="relative overflow-hidden bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 shadow-lg hover:shadow-xl transition-all duration-300 group">
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-400/5 to-pink-400/5 group-hover:from-purple-400/10 group-hover:to-pink-400/10 transition-all duration-300"></div>
-            <CardContent className="relative p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-purple-500 to-pink-600 flex items-center justify-center shadow-lg">
-                  <LayoutGrid className="h-6 w-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold">Create Presentation</h3>
-                  <p className="text-sm text-slate-600 dark:text-slate-400">
-                    Generate presentations from PDFs
-                  </p>
-                </div>
-              </div>
-              
-              <div className="space-y-3 mb-6">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-slate-600 dark:text-slate-400">Starting from:</span>
-                  <Badge variant="outline" className="border-purple-200 text-purple-700 dark:border-purple-800 dark:text-purple-400">
-                    {basicPresentationCost} credits
-                  </Badge>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-slate-600 dark:text-slate-400">Your balance:</span>
-                  <span className={`font-medium ${userCredits >= basicPresentationCost ? 'text-green-600' : 'text-red-600'}`}>
-                    {userCredits} credits
-                  </span>
-                </div>
-              </div>
-
-              {hasInsufficientCreditsForPresentation ? (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-950/20 rounded-lg border border-red-200 dark:border-red-800">
-                    <AlertTriangle className="h-4 w-4 text-red-600" />
-                    <span className="text-sm text-red-700 dark:text-red-400">
-                      Insufficient credits
-                    </span>
-                  </div>
-                  <Button
-                    asChild
-                    className="w-full bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white"
-                  >
-                    <Link href="/dashboard/credits/purchase" className="flex items-center gap-2">
-                      <ShoppingCart className="h-4 w-4" />
-                      Buy Credits
-                    </Link>
-                  </Button>
-                </div>
-              ) : (
-                <Button
-                  asChild
-                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
-                >
-                  <Link href="/dashboard/presentations/new" className="flex items-center gap-2">
-                    <PlusCircle className="h-4 w-4" />
-                    Create Presentation
-                  </Link>
-                </Button>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Credit Management Card */}
-          <Card className="relative overflow-hidden bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 shadow-lg hover:shadow-xl transition-all duration-300 group">
-            <div className="absolute inset-0 bg-gradient-to-br from-yellow-400/5 to-orange-400/5 group-hover:from-yellow-400/10 group-hover:to-orange-400/10 transition-all duration-300"></div>
-            <CardContent className="relative p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-yellow-500 to-orange-600 flex items-center justify-center shadow-lg">
-                  <Coins className="h-6 w-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold">Manage Credits</h3>
-                  <p className="text-sm text-slate-600 dark:text-slate-400">
-                    View usage and purchase more
-                  </p>
-                </div>
-              </div>
-              
-              <div className="space-y-3 mb-6">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-slate-600 dark:text-slate-400">Current balance:</span>
-                  <span className="font-bold text-lg text-yellow-600">{userCredits}</span>
-                </div>
-                <div className="text-xs text-slate-600 dark:text-slate-400">
-                  Track your usage and purchase additional credits as needed.
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Button
-                  asChild
-                  className="w-full bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 text-white"
-                >
-                  <Link href="/dashboard/credits/purchase" className="flex items-center gap-2">
-                    <ShoppingCart className="h-4 w-4" />
-                    Buy Credits
-                  </Link>
-                </Button>
-                <Button
-                  asChild
-                  variant="outline"
-                  className="w-full"
-                >
-                  <Link href="/dashboard/credits" className="flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4" />
-                    View Usage
-                  </Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </section>
-
-      {/* Enhanced Courses Section */}
-      <section className="px-4 md:px-6">
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-purple-500 to-pink-600 flex items-center justify-center shadow-lg">
-              <LayoutGrid className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <h2 className="text-3xl font-bold bg-gradient-to-r from-slate-900 to-purple-900 dark:from-slate-100 dark:to-purple-100 bg-clip-text text-transparent">
-                My Courses
-              </h2>
-              <p className="text-slate-600 dark:text-slate-400">
-                Continue your learning journey
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {courses.length > 0 ? (
-          <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-            {courses.map((course) => (
-              <CourseCard
-                key={course.id}
-                course={course}
-                isFreePlan={isFreePlan}
-              />
-            ))}
-          </div>
-        ) : (
-          <Card className="relative overflow-hidden bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 shadow-xl">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-400/5 to-purple-400/5"></div>
-            <CardContent className="relative flex flex-col items-center justify-center gap-6 p-12 text-center">
-              <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full blur-2xl opacity-20"></div>
-                <AlertTriangle className="relative h-20 w-20 text-slate-400 dark:text-slate-500" />
-              </div>
-              
-              <div className="space-y-3">
-                <h3 className="text-2xl font-bold bg-gradient-to-r from-slate-700 to-blue-700 dark:from-slate-300 dark:to-blue-300 bg-clip-text text-transparent">
-                  {searchQuery ? "No Courses Found" : "Ready to Start Learning?"}
-                </h3>
-                <p className="text-lg text-slate-600 dark:text-slate-400 max-w-md">
-                  {searchQuery
-                    ? `Your search for "${searchQuery}" did not match any courses.`
-                    : "Create your first course and begin an amazing learning journey!"}
-                </p>
-              </div>
-              
-              {!searchQuery && !hasInsufficientCreditsForCourse && (
-                <Button
-                  asChild
-                  size="lg"
-                  className="mt-6 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 group px-8 py-3"
-                >
-                  <Link href="/dashboard/courses/new" className="flex items-center gap-3">
-                    <Rocket className="h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
-                    Create Your First Course
-                    <Sparkles className="h-4 w-4 text-yellow-300" />
-                  </Link>
-                </Button>
-              )}
-
-              {!searchQuery && hasInsufficientCreditsForCourse && (
-                <Button
-                  asChild
-                  size="lg"
-                  className="mt-6 bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 group px-8 py-3"
-                >
-                  <Link href="/dashboard/credits/purchase" className="flex items-center gap-3">
-                    <ShoppingCart className="h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
-                    Buy Credits to Create Courses
-                    <Star className="h-4 w-4 text-yellow-300" />
-                  </Link>
-                </Button>
-              )}
-            </CardContent>
-          </Card>
-        )}
       </section>
     </div>
   );
 }
-

@@ -150,8 +150,8 @@ export default function EnhancedCourseGenerationPage() {
 
   // Credit cost calculation function (same as API)
   const calculateCourseCreditCost = useCallback((chapters: number, lessonsPerChapter: number): number => {
-    const lessonCost = chapters * lessonsPerChapter; // 1 credit per lesson
-    const chapterCost = chapters; // 1 credit per chapter
+    const lessonCost = lessonsPerChapter * chapters * 3; // 3 credits per lesson
+    const chapterCost = chapters * 5; // 5 credits per chapter
     const totalCost = lessonCost + chapterCost;
     return Math.max(totalCost, 3); // Minimum cost of 3 credits
   }, []);
@@ -572,7 +572,7 @@ export default function EnhancedCourseGenerationPage() {
                     <div className="absolute inset-0 bg-gradient-to-r from-blue-400/10 to-purple-400/10 rounded-xl blur"></div>
                     <Textarea
                       id="prompt"
-                      placeholder="Describe the course you want to create. For example: 'A comprehensive introduction to machine learning covering supervised and unsupervised learning algorithms, neural networks, and practical applications.'"
+                      placeholder="Describe the course you want to create. For example: \'A comprehensive introduction to machine learning covering supervised and unsupervised learning algorithms, neural networks, and practical applications.\'"
                       value={prompt}
                       onChange={(e) => setPrompt(e.target.value)}
                       className="relative min-h-[140px] bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 focus:border-blue-500/50 transition-all duration-300"
@@ -857,11 +857,11 @@ export default function EnhancedCourseGenerationPage() {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                     <div className="flex items-center justify-between p-2 rounded-lg bg-white/50 dark:bg-slate-800/50">
                       <span className="text-muted-foreground">Chapters</span>
-                      <span className="font-medium">{chapters} × 1 = {parseInt(chapters)} credits</span>
+                      <span className="font-medium">{chapters} × 5 = {parseInt(chapters) * 5} credits</span>
                     </div>
                     <div className="flex items-center justify-between p-2 rounded-lg bg-white/50 dark:bg-slate-800/50">
                       <span className="text-muted-foreground">Lessons</span>
-                      <span className="font-medium">{parseInt(chapters) * parseInt(lessonsPerChapter)} × 1 = {parseInt(chapters) * parseInt(lessonsPerChapter)} credits</span>
+                      <span className="font-medium">{parseInt(chapters) * parseInt(lessonsPerChapter)} × 3 = {parseInt(chapters) * parseInt(lessonsPerChapter) * 3} credits</span>
                     </div>
                     <div className="flex items-center justify-between p-2 rounded-lg bg-white/50 dark:bg-slate-800/50">
                       <span className="text-muted-foreground">Minimum</span>
@@ -993,4 +993,6 @@ export default function EnhancedCourseGenerationPage() {
     </div>
   );
 }
+
+
 

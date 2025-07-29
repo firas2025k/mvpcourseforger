@@ -1,4 +1,3 @@
-// app/api/generate-course/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
@@ -99,8 +98,8 @@ async function getUserPlanLimits(supabase: any, userId: string): Promise<UserPla
  * @returns Credit cost for the course generation
  */
 function calculateCourseCreditCost(chapters: number, lessonsPerChapter: number): number {
-  const lessonCost = chapters * lessonsPerChapter; // 1 credit per lesson
-  const chapterCost = chapters; // 1 credit per chapter
+  const lessonCost = lessonsPerChapter * chapters * 3; // 3 credits per lesson
+  const chapterCost = chapters * 5; // 5 credits per chapter
   const totalCost = lessonCost + chapterCost;
   return Math.max(totalCost, 3); // Minimum cost of 3 credits
 }
@@ -506,4 +505,5 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: `Failed to retrieve plan limits: ${errorMessage}` }, { status: 500 });
   }
 }
+
 
