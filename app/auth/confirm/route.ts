@@ -5,20 +5,22 @@ import { type NextRequest } from "next/server";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const token_hash = searchParams.get("token_hash");
+  const token = searchParams.get("token");
   const type = searchParams.get("type") as EmailOtpType | null;
-  const next = searchParams.get("next") ?? "/auth/confirm-success";
+  const redirectTo = searchParams.get("redirect_to") ?? "/auth/confirm-success";
 
-  if (token_hash && type) {
+  if (token && type) {
     const supabase = await createClient();
 
+    // Supabase's verifyOtp for email confirmation expects 'token_hash' for 'signup' type
+    // The URL provides 'token', so we use it as 'token_hash'
     const { error } = await supabase.auth.verifyOtp({
       type,
-      token_hash,
+      token_hash: token,
     });
     if (!error) {
-      // redirect user to success page after successful email confirmation
-      redirect("/auth/confirm-success");
+      // redirect user to specified redirect URL or success page
+      redirect(redirectTo);
     } else {
       // redirect the user to an error page with some instructions
       redirect(`/auth/error?error=${error?.message}`);
