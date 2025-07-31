@@ -1,15 +1,22 @@
 "use client";
 
-import { createClient } from '@/lib/supabase/client';
-import { useEffect, useState } from 'react';
-import { User } from '@supabase/supabase-js';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import ManageSubscriptionButton from '@/components/dashboard/ManageSubscriptionButton';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { useRouter } from 'next/navigation';
+import { createClient } from "@/lib/supabase/client";
+import { useEffect, useState } from "react";
+import { User } from "@supabase/supabase-js";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import ManageSubscriptionButton from "@/components/dashboard/ManageSubscriptionButton";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { useRouter } from "next/navigation";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,7 +27,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
+} from "@/components/ui/alert-dialog";
 import {
   Settings,
   User as UserIcon,
@@ -34,8 +41,8 @@ import {
   Lock,
   Trash2,
   CheckCircle,
-  Info
-} from 'lucide-react';
+  Info,
+} from "lucide-react";
 
 export default function SettingsPage() {
   const supabase = createClient();
@@ -48,22 +55,25 @@ export default function SettingsPage() {
   useEffect(() => {
     const fetchUserAndSubscription = async () => {
       setLoadingUser(true);
-      const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
+      const {
+        data: { user: authUser },
+        error: authError,
+      } = await supabase.auth.getUser();
       if (authUser) {
         setUser(authUser);
         const { data: subData, error: subError } = await supabase
-          .from('subscriptions')
-          .select('is_active, stripe_subscription_id')
-          .eq('user_id', authUser.id)
-          .eq('is_active', true)
+          .from("subscriptions")
+          .select("is_active, stripe_subscription_id")
+          .eq("user_id", authUser.id)
+          .eq("is_active", true)
           .maybeSingle();
-        
+
         if (subData && subData.is_active && subData.stripe_subscription_id) {
           setHasActiveSubscription(true);
         }
       } else if (authError) {
-        console.error('Error fetching user:', authError);
-        router.push('/auth/login');
+        console.error("Error fetching user:", authError);
+        router.push("/auth/login");
       }
       setLoadingUser(false);
     };
@@ -74,18 +84,25 @@ export default function SettingsPage() {
     if (!user) return;
     setIsDeleting(true);
     try {
-      // Ensure you have an RPC function in Supabase named 'delete_user_account'
-      // that handles deleting user data from auth.users, profiles, and any related tables.
-      // It should also handle Stripe subscription cancellation if applicable.
-      const { error } = await supabase.rpc('delete_user_account'); 
+      // Call the delete_user_account function with the user's ID as parameter
+      const { error } = await supabase.rpc("delete_user_account", {
+        user_id_to_delete: user.id,
+      });
+
       if (error) {
         throw error;
       }
-      alert('Account deleted successfully. You will be logged out.');
+
+      // Show success message
+      alert("Account deleted successfully. You will be logged out.");
+
+      // Sign out the user
       await supabase.auth.signOut();
-      router.push('/'); // Redirect to homepage
+
+      // Redirect to homepage
+      router.push("/");
     } catch (error: any) {
-      console.error('Error deleting account:', error);
+      console.error("Error deleting account:", error);
       alert(`Failed to delete account: ${error.message}`);
     } finally {
       setIsDeleting(false);
@@ -170,16 +187,19 @@ export default function SettingsPage() {
         </CardHeader>
         <CardContent className="relative space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email" className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
+            <Label
+              htmlFor="email"
+              className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2"
+            >
               <Mail className="h-4 w-4 text-slate-500" />
               Email Address
             </Label>
             <div className="relative">
-              <Input 
-                id="email" 
-                type="email" 
-                value={user.email || ''} 
-                disabled 
+              <Input
+                id="email"
+                type="email"
+                value={user.email || ""}
+                disabled
                 className="bg-slate-50/80 dark:bg-slate-700/50 border-slate-200/50 dark:border-slate-600/50 pl-10"
               />
               <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
@@ -270,13 +290,13 @@ export default function SettingsPage() {
                   Delete Account
                 </h4>
                 <p className="text-sm text-red-700 dark:text-red-300 mb-3">
-                  Permanently delete your account, all courses, and associated data. 
-                  Your subscription will also be cancelled if active.
+                  Permanently delete your account, all courses, and associated
+                  data. Your subscription will also be cancelled if active.
                 </p>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button 
-                      variant="destructive" 
+                    <Button
+                      variant="destructive"
                       className="bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
                     >
                       <Trash2 className="h-4 w-4 mr-2" />
@@ -291,26 +311,28 @@ export default function SettingsPage() {
                       </AlertDialogTitle>
                       <AlertDialogDescription className="text-slate-600 dark:text-slate-400 space-y-2">
                         <p>
-                          This action cannot be undone. This will permanently delete your account,
-                          all your courses, and all associated data.
+                          This action cannot be undone. This will permanently
+                          delete your account, all your courses, and all
+                          associated data.
                         </p>
                         <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
                           <p className="text-sm text-red-700 dark:text-red-300 font-medium">
-                            Your subscription, if active, will also be cancelled.
+                            Your subscription, if active, will also be
+                            cancelled.
                           </p>
                         </div>
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                      <AlertDialogCancel 
+                      <AlertDialogCancel
                         disabled={isDeleting}
                         className="hover:bg-slate-100 dark:hover:bg-slate-800"
                       >
                         Cancel
                       </AlertDialogCancel>
-                      <AlertDialogAction 
-                        onClick={handleDeleteAccount} 
-                        disabled={isDeleting} 
+                      <AlertDialogAction
+                        onClick={handleDeleteAccount}
+                        disabled={isDeleting}
                         className="bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white"
                       >
                         {isDeleting ? (
@@ -336,4 +358,3 @@ export default function SettingsPage() {
     </div>
   );
 }
-
