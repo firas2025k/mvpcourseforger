@@ -1,192 +1,75 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Confirm Your Email</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            line-height: 1.6;
-            color: #333333;
-            background-color: #f8f9fa;
-        }
-        
-        .email-container {
-            max-width: 600px;
-            margin: 0 auto;
-            background-color: #ffffff;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-        }
-        
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 40px 30px;
-            text-align: center;
-            color: white;
-        }
-        
-        .header h1 {
-            font-size: 28px;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-        
-        .header p {
-            font-size: 16px;
-            opacity: 0.9;
-        }
-        
-        .content {
-            padding: 40px 30px;
-        }
-        
-        .welcome-text {
-            font-size: 18px;
-            margin-bottom: 24px;
-            color: #2c3e50;
-        }
-        
-        .instruction {
-            font-size: 16px;
-            margin-bottom: 32px;
-            color: #5a6c7d;
-            line-height: 1.7;
-        }
-        
-        .confirm-button {
-            display: inline-block;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            text-decoration: none;
-            padding: 16px 32px;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 16px;
-            text-align: center;
-            margin: 0 auto;
-            display: block;
-            max-width: 280px;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-        
-        .confirm-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
-        }
-        
-        .alternative-link {
-            margin-top: 32px;
-            padding: 20px;
-            background-color: #f8f9fa;
-            border-radius: 8px;
-            border-left: 4px solid #667eea;
-        }
-        
-        .alternative-link p {
-            font-size: 14px;
-            color: #6c757d;
-            margin-bottom: 8px;
-        }
-        
-        .alternative-link a {
-            color: #667eea;
-            word-break: break-all;
-            font-size: 13px;
-        }
-        
-        .footer {
-            background-color: #f8f9fa;
-            padding: 30px;
-            text-align: center;
-            border-top: 1px solid #e9ecef;
-        }
-        
-        .footer p {
-            font-size: 14px;
-            color: #6c757d;
-            margin-bottom: 8px;
-        }
-        
-        .security-note {
-            margin-top: 24px;
-            padding: 16px;
-            background-color: #fff3cd;
-            border: 1px solid #ffeaa7;
-            border-radius: 6px;
-            font-size: 14px;
-            color: #856404;
-        }
-        
-        /* Mobile responsiveness */
-        @media (max-width: 600px) {
-            .email-container {
-                margin: 0;
-                border-radius: 0;
-            }
-            
-            .header, .content, .footer {
-                padding-left: 20px;
-                padding-right: 20px;
-            }
-            
-            .header h1 {
-                font-size: 24px;
-            }
-            
-            .confirm-button {
-                padding: 14px 24px;
-                font-size: 15px;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="email-container">
-        <div class="header">
-            <h1>Welcome!</h1>
-            <p>We're excited to have you on board</p>
-        </div>
-        
-        <div class="content">
-            <p class="welcome-text">Hello there! 👋</p>
-            
-            <p class="instruction">
-                Thank you for signing up! To complete your registration and start using your account, 
-                please confirm your email address by clicking the button below.
-            </p>
-            
-            <a href="{{ .ConfirmationURL }}" class="confirm-button">
-                Confirm Email Address
-            </a>
-            
-            <div class="alternative-link">
-                <p><strong>Having trouble with the button?</strong></p>
-                <p>Copy and paste this link into your browser:</p>
-                <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type={{ .TokenType }}">{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type={{ .TokenType }}</a>
-            </div>
-            
-            <div class="security-note">
-                <strong>🔒 Security Note:</strong> This confirmation link will expire in 24 hours. 
-                If you didn't create an account, you can safely ignore this email.
-            </div>
-        </div>
-        
-        <div class="footer">
-            <p><strong>Need help?</strong></p>
-            <p>If you have any questions, feel free to contact our support team.</p>
-            <p style="margin-top: 16px; font-size: 12px; color: #9ca3af;">
-                This email was sent from an automated system. Please do not reply to this email.
-            </p>
-        </div>
-    </div>
-</body>
-</html>
+npm run build
+
+> build
+> next build
+
+▲ Next.js 14.2.29
+
+- Environments: .env.local
+
+Creating an optimized production build ...
+⚠ For production Image Optimization with Next.js, the optional 'sharp' package is strongly recommended. Run 'npm i sharp', and Next.js will use it automatically for Image Optimization.
+Read more: https://nextjs.org/docs/messages/sharp-missing-in-production
+⚠ Compiled with warnings
+
+./node_modules/@supabase/realtime-js/dist/main/RealtimeClient.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@supabase/realtime-js/dist/main/RealtimeClient.js
+./node_modules/@supabase/realtime-js/dist/main/index.js
+./node_modules/@supabase/supabase-js/dist/module/index.js
+./node_modules/@supabase/ssr/dist/module/createBrowserClient.js
+./node_modules/@supabase/ssr/dist/module/index.js
+./app/actions/search.ts
+
+<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (100kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+⚠ Compiled with warnings
+
+./lib/supabase/middleware.ts
+Attempted import error: 'hasEnvVars' is not exported from '../utils' (imported as 'hasEnvVars').
+
+Import trace for requested module:
+./lib/supabase/middleware.ts
+
+⚠ For production Image Optimization with Next.js, the optional 'sharp' package is strongly recommended. Run 'npm i sharp', and Next.js will use it automatically for Image Optimization.
+Read more: https://nextjs.org/docs/messages/sharp-missing-in-production
+✓ Compiled successfully
+Skipping validation of types
+Skipping linting
+Collecting page data .[PDF Export] NODE_ENV: production
+Collecting page data ..[PDF Export] Using puppeteer-core and @sparticuz/chromium (Production)
+✓ Collecting page data  
+ Generating static pages (8/48) [ ==]Error in credit transactions API: n [Error]: Dynamic server usage: Route /api/user/credit-transactions couldn't be rendered statically because it used `cookies`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+at l (/Users/firasbentaleb/Documents/mvp/courseforger/.next/server/chunks/8948.js:1:37220)
+at u (/Users/firasbentaleb/Documents/mvp/courseforger/.next/server/chunks/7234.js:6:96718)
+at p (/Users/firasbentaleb/Documents/mvp/courseforger/.next/server/app/api/user/credit-transactions/route.js:1:1649)
+at /Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38417
+at /Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+at NoopContextManager.with (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:7062)
+at ContextAPI.with (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:518)
+at NoopTracer.startActiveSpan (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:18093)
+at ProxyTracer.startActiveSpan (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:18854)
+at /Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/lib/trace/tracer.js:122:103 {
+description: "Route /api/user/credit-transactions couldn't be rendered statically because it used `cookies`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+digest: 'DYNAMIC_SERVER_USAGE'
+}
+Generating static pages (30/48) [== ] ⨯ useSearchParams() should be wrapped in a suspense boundary at page "/auth/verify-otp". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+at o (/Users/firasbentaleb/Documents/mvp/courseforger/.next/server/chunks/9840.js:1:11071)
+at c (/Users/firasbentaleb/Documents/mvp/courseforger/.next/server/chunks/9840.js:1:22054)
+at x (/Users/firasbentaleb/Documents/mvp/courseforger/.next/server/app/auth/verify-otp/page.js:1:3898)
+at nj (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:46252)
+at nM (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:47572)
+at nN (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:64547)
+at nI (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:47011)
+at nM (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:47718)
+at nM (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:61547)
+at nN (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:64547)
+
+Error occurred prerendering page "/auth/verify-otp". Read more: https://nextjs.org/docs/messages/prerender-error
+
+✓ Generating static pages (48/48)
+
+> Export encountered errors on following paths:
+
+        /auth/verify-otp/page: /auth/verify-otp
