@@ -3,6 +3,11 @@ import { twMerge } from "tailwind-merge";
 import { subjectsColors, voices } from "@/constants";
 import { CreateAssistantDTO } from "@vapi-ai/web/dist/api";
 
+// Add this export for hasEnvVars
+export const hasEnvVars = !!(
+  process.env.NEXT_PUBLIC_SUPABASE_URL &&
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+);
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
