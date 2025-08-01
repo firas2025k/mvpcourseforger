@@ -16,7 +16,7 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Loader2 } from "lucide-react"; // For loading spinner
+import { Loader2 } from "lucide-react";
 
 export function SignUpForm({
   className,
@@ -28,12 +28,14 @@ export function SignUpForm({
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [success, setSuccess] = useState<string | null>(null);
   const router = useRouter();
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
+    setSuccess(null);
 
     if (password.length < 6) {
       setError("Password must be at least 6 characters long.");
@@ -48,18 +50,61 @@ export function SignUpForm({
     }
 
     const supabase = createClient();
+
     try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/confirm`,
-        },
-      });
-      if (error) throw error;
-      router.push("/auth/sign-up-success"); // Or a page indicating to check email
+      console.log("Starting sign up process for:", email);
+
+      // Sign up the user with email and password
+      const { data: signUpData, error: signUpError } =
+        await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/auth/confirm`,
+          },
+        });
+
+      console.log("Sign up response:", { signUpData, signUpError });
+
+      if (signUpError) {
+        console.error("Sign up error:", signUpError);
+        throw signUpError;
+      }
+
+      // Check if user was created successfully
+      if (!signUpData.user) {
+        throw new Error("User creation failed - no user data returned");
+      }
+
+      console.log("User created successfully:", signUpData.user.id);
+
+      // If user needs email confirmation, redirect to verify page
+      if (!signUpData.session) {
+        console.log(
+          "User needs email confirmation, redirecting to verify page"
+        );
+        setSuccess(
+          "Account created! Please check your email for verification."
+        );
+
+        // Add a small delay to ensure the success message is visible
+        setTimeout(() => {
+          router.push(`/auth/verify-otp?email=${encodeURIComponent(email)}`);
+        }, 1000);
+
+        return;
+      }
+
+      // If user is immediately confirmed (shouldn't happen with email confirmation enabled)
+      console.log("User immediately confirmed, redirecting to dashboard");
+      router.push("/dashboard");
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "Could not create account. Please try again.");
+      console.error("Sign up process error:", error);
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Could not create account. Please try again."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -69,9 +114,11 @@ export function SignUpForm({
     const supabase = createClient();
     setIsGoogleLoading(true);
     setError(null);
+    setSuccess(null);
+
     try {
       const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
+        provider: "google",
         options: {
           redirectTo: `${location.origin}/auth/confirm`,
         },
@@ -79,7 +126,11 @@ export function SignUpForm({
       if (error) throw error;
       // Redirect will happen via Supabase
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "Could not sign up with Google.");
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Could not sign up with Google."
+      );
       setIsGoogleLoading(false);
     }
   };
@@ -88,7 +139,9 @@ export function SignUpForm({
     <div className={cn("w-full", className)} {...props}>
       <Card className="bg-white dark:bg-gray-800/80 shadow-xl border-gray-200 dark:border-gray-700/60 rounded-xl overflow-hidden">
         <CardHeader className="space-y-1 text-center p-6 bg-gray-50 dark:bg-gray-800/50 border-b dark:border-gray-700/60">
-          <CardTitle className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-50">Create Your Account</CardTitle>
+          <CardTitle className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-50">
+            Create Your Account
+          </CardTitle>
           <CardDescription className="text-gray-600 dark:text-gray-400">
             Join NexusEd and start building AI-powered courses today!
           </CardDescription>
@@ -96,7 +149,12 @@ export function SignUpForm({
         <CardContent className="p-6 sm:p-8">
           <form onSubmit={handleSignUp} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-gray-700 dark:text-gray-300 font-medium">Email</Label>
+              <Label
+                htmlFor="email"
+                className="text-gray-700 dark:text-gray-300 font-medium"
+              >
+                Email
+              </Label>
               <Input
                 id="email"
                 type="email"
@@ -109,7 +167,12 @@ export function SignUpForm({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-gray-700 dark:text-gray-300 font-medium">Password</Label>
+              <Label
+                htmlFor="password"
+                className="text-gray-700 dark:text-gray-300 font-medium"
+              >
+                Password
+              </Label>
               <Input
                 id="password"
                 type="password"
@@ -122,7 +185,12 @@ export function SignUpForm({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="repeat-password" className="text-gray-700 dark:text-gray-300 font-medium">Confirm Password</Label>
+              <Label
+                htmlFor="repeat-password"
+                className="text-gray-700 dark:text-gray-300 font-medium"
+              >
+                Confirm Password
+              </Label>
               <Input
                 id="repeat-password"
                 type="password"
@@ -134,17 +202,27 @@ export function SignUpForm({
                 disabled={isLoading || isGoogleLoading}
               />
             </div>
+
             {error && (
               <p className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30 p-3 rounded-md border border-red-200 dark:border-red-500/50">
                 {error}
               </p>
             )}
-            <Button 
-              type="submit" 
+
+            {success && (
+              <p className="text-sm text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 p-3 rounded-md border border-green-200 dark:border-green-500/50">
+                {success}
+              </p>
+            )}
+
+            <Button
+              type="submit"
               className="w-full bg-purple-600 hover:bg-purple-700 text-white dark:bg-purple-500 dark:hover:bg-purple-600 focus:ring-purple-500 dark:focus:ring-purple-400 shadow-md transform hover:scale-[1.02] transition-transform duration-150 py-3"
               disabled={isLoading || isGoogleLoading}
             >
-              {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              {isLoading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : null}
               {isLoading ? "Creating Account..." : "Create Account"}
             </Button>
 
@@ -159,18 +237,33 @@ export function SignUpForm({
               </div>
             </div>
 
-            <Button 
-              variant="outline" 
-              type="button" 
-              onClick={handleGoogleSignUp} 
+            <Button
+              variant="outline"
+              type="button"
+              onClick={handleGoogleSignUp}
               className="w-full border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700/50 focus:ring-gray-500 dark:focus:ring-gray-400 shadow-sm transform hover:scale-[1.02] transition-transform duration-150 py-3"
               disabled={isLoading || isGoogleLoading}
             >
-              {isGoogleLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              <svg className="mr-2 h-4 w-4" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512"><path fill="currentColor" d="M488 261.8C488 403.3 381.5 512 244 512 110.3 512 0 398.8 0 256S110.3 0 244 0c69.8 0 130.8 28.5 173.4 74.9L346.5 149.6c-29.3-27.8-69.7-46.6-111.4-46.6-86.6 0-153.2 67.5-153.2 153.2s66.6 153.2 153.2 153.2c72.5 0 128.7-45.6 146.4-107.4H244V261.8h244z"></path></svg>
+              {isGoogleLoading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : null}
+              <svg
+                className="mr-2 h-4 w-4"
+                aria-hidden="true"
+                focusable="false"
+                data-prefix="fab"
+                data-icon="google"
+                role="img"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 488 512"
+              >
+                <path
+                  fill="currentColor"
+                  d="M488 261.8C488 403.3 381.5 512 244 512 110.3 512 0 398.8 0 256S110.3 0 244 0c69.8 0 130.8 28.5 173.4 74.9L346.5 149.6c-29.3-27.8-69.7-46.6-111.4-46.6-86.6 0-153.2 67.5-153.2 153.2s66.6 153.2 153.2 153.2c72.5 0 128.7-45.6 146.4-107.4H244V261.8h244z"
+                ></path>
+              </svg>
               Sign up with Google
             </Button>
-
           </form>
         </CardContent>
         <CardFooter className="p-6 bg-gray-50 dark:bg-gray-800/50 border-t dark:border-gray-700/60">
