@@ -114,6 +114,8 @@ Ultimate → 50 courses, 10 chapters, 6 lessons/chapter
 │ ├── auth
 │ │ ├── confirm
 │ │ │ └── route.ts
+│ │ ├── confirm-success
+│ │ │ └── page.tsx
 │ │ ├── error
 │ │ │ └── page.tsx
 │ │ ├── forgot-password
@@ -124,7 +126,9 @@ Ultimate → 50 courses, 10 chapters, 6 lessons/chapter
 │ │ │ └── page.tsx
 │ │ ├── sign-up-success
 │ │ │ └── page.tsx
-│ │ └── update-password
+│ │ ├── update-password
+│ │ │ └── page.tsx
+│ │ └── verify-otp
 │ │ └── page.tsx
 │ ├── course-content-styles.css
 │ ├── dashboard
@@ -135,6 +139,7 @@ Ultimate → 50 courses, 10 chapters, 6 lessons/chapter
 │ │ │ │ └── page.tsx
 │ │ │ ├── new
 │ │ │ │ └── page.tsx
+│ │ │ ├── page.tsx
 │ │ │ └── preview
 │ │ │ └── page.tsx
 │ │ ├── credit
@@ -171,6 +176,7 @@ Ultimate → 50 courses, 10 chapters, 6 lessons/chapter
 │ ├── print-presentation
 │ │ └── [presentationId]
 │ │ └── page.tsx
+│ ├── real-landingpage.tsx
 │ └── twitter-image.png
 ├── build.log
 ├── components
@@ -188,6 +194,7 @@ Ultimate → 50 courses, 10 chapters, 6 lessons/chapter
 │ │ ├── forgot-password-form.tsx
 │ │ ├── login-form.tsx
 │ │ ├── logout-button.tsx
+│ │ ├── otp-verification.tsx
 │ │ ├── sign-up-form.tsx
 │ │ └── update-password-form.tsx
 │ ├── dashboard
@@ -204,6 +211,7 @@ Ultimate → 50 courses, 10 chapters, 6 lessons/chapter
 │ │ ├── courses
 │ │ │ ├── CourseLayoutClient.tsx
 │ │ │ ├── CourseLayoutClient.tsx.backup
+│ │ │ ├── CoursesSearchFilter.tsx
 │ │ │ ├── LessonContent.tsx
 │ │ │ ├── LessonEditor.tsx
 │ │ │ ├── ReadAloudButton.tsx
@@ -286,6 +294,8 @@ Ultimate → 50 courses, 10 chapters, 6 lessons/chapter
 ├── html2pdf.d.ts
 ├── lib
 │ ├── gemini.ts
+│ ├── mistral.ts
+│ ├── multi-model.ts
 │ ├── pixabay.ts
 │ ├── stripe.ts
 │ ├── supabase

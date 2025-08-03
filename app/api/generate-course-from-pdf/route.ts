@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
-import { model, generationConfig, safetySettings } from "@/lib/gemini";
+import {
+  makeMultiModelAPICall,
+  parseMultiModelAIResponse,
+} from "@/lib/multi-model";
 import { writeFile, unlink } from "fs/promises";
 import { join } from "path";
 import { tmpdir } from "os";
@@ -79,41 +82,46 @@ interface UserPlanLimits {
  * @param userId User ID
  * @returns Promise<UserPlanLimits | null> User's plan limits or null if not found
  */
-async function getUserPlanLimits(supabase: any, userId: string): Promise<UserPlanLimits | null> {
+async function getUserPlanLimits(
+  supabase: any,
+  userId: string
+): Promise<UserPlanLimits | null> {
   try {
     // First, get the user's active subscription
     const { data: subscription, error: subscriptionError } = await supabase
-      .from('subscriptions')
-      .select(`
+      .from("subscriptions")
+      .select(
+        `
         plan_id,
         plans!inner (
           max_chapters,
           max_lessons_per_chapter
         )
-      `)
-      .eq('user_id', userId)
-      .eq('is_active', true)
+      `
+      )
+      .eq("user_id", userId)
+      .eq("is_active", true)
       .single();
 
     if (subscriptionError || !subscription) {
-      console.log('No active subscription found for user:', userId);
+      console.log("No active subscription found for user:", userId);
       // Return default limits for users without active subscription
       return {
         max_chapters: 3,
-        max_lessons_per_chapter: 3
+        max_lessons_per_chapter: 3,
       };
     }
 
     return {
       max_chapters: subscription.plans.max_chapters,
-      max_lessons_per_chapter: subscription.plans.max_lessons_per_chapter
+      max_lessons_per_chapter: subscription.plans.max_lessons_per_chapter,
     };
   } catch (error) {
-    console.error('Error fetching user plan limits:', error);
+    console.error("Error fetching user plan limits:", error);
     // Return default limits on error
     return {
       max_chapters: 3,
-      max_lessons_per_chapter: 3
+      max_lessons_per_chapter: 3,
     };
   }
 }
@@ -126,7 +134,10 @@ async function getUserPlanLimits(supabase: any, userId: string): Promise<UserPla
  * @param lessonsPerChapter Number of lessons per chapter
  * @returns Credit cost for the course generation
  */
-function calculateCourseCreditCost(chapters: number, lessonsPerChapter: number): number {
+function calculateCourseCreditCost(
+  chapters: number,
+  lessonsPerChapter: number
+): number {
   const lessonCost = lessonsPerChapter * chapters * 3; // 3 credits per lesson
   const chapterCost = chapters * 5; // 5 credits per chapter
   const totalCost = lessonCost + chapterCost;
@@ -151,13 +162,16 @@ async function deductCreditsAndRecordTransaction(
 ): Promise<boolean> {
   try {
     const { data: profile, error: fetchError } = await supabase
-      .from('profiles')
-      .select('credits')
-      .eq('id', userId)
+      .from("profiles")
+      .select("credits")
+      .eq("id", userId)
       .single();
 
     if (fetchError || !profile) {
-      console.error('Error fetching user profile for credit deduction:', fetchError);
+      console.error(
+        "Error fetching user profile for credit deduction:",
+        fetchError
+      );
       return false;
     }
 
@@ -165,33 +179,35 @@ async function deductCreditsAndRecordTransaction(
     const newBalance = currentCredits - creditCost;
 
     const { error: updateError } = await supabase
-      .from('profiles')
+      .from("profiles")
       .update({ credits: newBalance })
-      .eq('id', userId);
+      .eq("id", userId);
 
     if (updateError) {
-      console.error('Error updating credit balance:', updateError);
+      console.error("Error updating credit balance:", updateError);
       return false;
     }
 
     const { error: transactionError } = await supabase
-      .from('credit_transactions')
+      .from("credit_transactions")
       .insert({
         user_id: userId,
-        type: 'consumption',
+        type: "consumption",
         amount: -creditCost,
         related_entity_id: relatedEntityId,
         description: description,
       });
 
     if (transactionError) {
-      console.error('Error recording credit transaction:', transactionError);
+      console.error("Error recording credit transaction:", transactionError);
     }
 
-    console.log(`Successfully deducted ${creditCost} credits from user ${userId}. New balance: ${newBalance}`);
+    console.log(
+      `Successfully deducted ${creditCost} credits from user ${userId}. New balance: ${newBalance}`
+    );
     return true;
   } catch (error) {
-    console.error('Error in credit deduction process:', error);
+    console.error("Error in credit deduction process:", error);
     return false;
   }
 }
@@ -273,22 +289,34 @@ export async function POST(request: NextRequest) {
     // 3. Get user's plan limits
     const planLimits = await getUserPlanLimits(supabase, user.id);
     if (!planLimits) {
-      return NextResponse.json({ error: 'Could not retrieve user plan limits.' }, { status: 500 });
+      return NextResponse.json(
+        { error: "Could not retrieve user plan limits." },
+        { status: 500 }
+      );
     }
 
     // 4. Validate input ranges against user's plan limits
     if (chapters < 1 || chapters > planLimits.max_chapters) {
-      return NextResponse.json({ 
-        error: `Invalid number of chapters. Your plan allows 1-${planLimits.max_chapters} chapters.`,
-        max_chapters: planLimits.max_chapters
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: `Invalid number of chapters. Your plan allows 1-${planLimits.max_chapters} chapters.`,
+          max_chapters: planLimits.max_chapters,
+        },
+        { status: 400 }
+      );
     }
 
-    if (lessons_per_chapter < 1 || lessons_per_chapter > planLimits.max_lessons_per_chapter) {
-      return NextResponse.json({ 
-        error: `Invalid number of lessons per chapter. Your plan allows 1-${planLimits.max_lessons_per_chapter} lessons per chapter.`,
-        max_lessons_per_chapter: planLimits.max_lessons_per_chapter
-      }, { status: 400 });
+    if (
+      lessons_per_chapter < 1 ||
+      lessons_per_chapter > planLimits.max_lessons_per_chapter
+    ) {
+      return NextResponse.json(
+        {
+          error: `Invalid number of lessons per chapter. Your plan allows 1-${planLimits.max_lessons_per_chapter} lessons per chapter.`,
+          max_lessons_per_chapter: planLimits.max_lessons_per_chapter,
+        },
+        { status: 400 }
+      );
     }
 
     // 5. Calculate credit cost
@@ -296,24 +324,30 @@ export async function POST(request: NextRequest) {
 
     // 6. Check user's credit balance
     const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('credits')
-      .eq('id', user.id)
+      .from("profiles")
+      .select("credits")
+      .eq("id", user.id)
       .single();
 
     if (profileError || !profile) {
-      console.error('Error fetching profile:', profileError?.message);
-      return NextResponse.json({ error: 'Could not retrieve user profile.' }, { status: 500 });
+      console.error("Error fetching profile:", profileError?.message);
+      return NextResponse.json(
+        { error: "Could not retrieve user profile." },
+        { status: 500 }
+      );
     }
 
     const currentCredits = profile.credits || 0;
 
     if (currentCredits < creditCost) {
-      return NextResponse.json({ 
-        error: `Insufficient credits. This course requires ${creditCost} credits, but you have ${currentCredits} credits available. Please purchase more credits to continue.`,
-        required_credits: creditCost,
-        available_credits: currentCredits
-      }, { status: 402 });
+      return NextResponse.json(
+        {
+          error: `Insufficient credits. This course requires ${creditCost} credits, but you have ${currentCredits} credits available. Please purchase more credits to continue.`,
+          required_credits: creditCost,
+          available_credits: currentCredits,
+        },
+        { status: 402 }
+      );
     }
 
     // 7. Deduct credits BEFORE generation
@@ -321,13 +355,23 @@ export async function POST(request: NextRequest) {
       supabase,
       user.id,
       creditCost,
-      'pending',
+      "pending",
       `Course generation from PDF: ${file.name} (${chapters} chapters, ${lessons_per_chapter} lessons each)`
     );
 
     if (!creditDeductionSuccess) {
-      return NextResponse.json({ error: 'Failed to process credit payment.' }, { status: 500 });
+      return NextResponse.json(
+        { error: "Failed to process credit payment." },
+        { status: 500 }
+      );
     }
+
+    // Initialize model usage statistics
+    let modelUsageStats = {
+      gemini_calls: 0,
+      mistral_calls: 0,
+      total_calls: 0,
+    };
 
     // 8. Save uploaded file temporarily
     const buffer = Buffer.from(await file.arrayBuffer());
@@ -385,7 +429,7 @@ export async function POST(request: NextRequest) {
         supabase,
         user.id,
         -creditCost,
-        'failed',
+        "failed",
         `Refund for failed PDF course generation: ${file.name}`
       );
       return NextResponse.json(
@@ -397,156 +441,257 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 10. Generate course title and outline based on PDF content
-    const outlinePrompt = `
-      You are an AI course planner. Based on the extracted content from a PDF document, generate a course outline.\n      \n      Document Title: "${extractedContent.metadata.title}"\n      Document Content Preview: "${extractedContent.text.substring(
-      0,
-      2000
-    )}..."\n      \n      Requested Parameters:\n      - Chapters: ${chapters}\n      - Lessons per chapter: ${lessons_per_chapter}\n      - Difficulty: ${difficulty}\n      \n      Generate a JSON object with a course title based on the document content, and exactly ${chapters} chapter titles.\n      For each chapter, generate exactly ${lessons_per_chapter} unique and compelling lesson titles that reflect the document's content.\n      \n      Return ONLY a valid JSON object with this structure:\n      { "courseTitle": "...", "chapters": [ { "chapterTitle": "...", "lessonTitles": ["...", "..."] } ] }\n    `;
-
-    const chatSession = model.startChat({ generationConfig, safetySettings });
-    let outlineText: string;
     try {
-      const outlineResult = await chatSession.sendMessage(outlinePrompt);
-      outlineText = outlineResult.response
-        .text()
-        .replace(/^```json\n|\n```$/g, "");
-    } catch (geminiError) {
-      console.error("Gemini API error during outline generation:", geminiError);
-      // Refund credits if Gemini API call fails
-      await deductCreditsAndRecordTransaction(
-        supabase,
-        user.id,
-        -creditCost,
-        'failed',
-        `Refund for failed PDF course generation (outline): ${file.name}`
-      );
-      return NextResponse.json(
-        { error: "Failed to generate course outline. Your credits have been refunded." },
-        { status: 500 }
-      );
-    }
+      // 10. Generate course title and outline based on PDF content using multi-model approach
+      const outlinePrompt = `
+        You are an AI course planner. Based on the extracted content from a PDF document, generate a course outline.
+        
+        Document Title: "${extractedContent.metadata.title}"
+        Document Content Preview: "${extractedContent.text.substring(
+          0,
+          2000
+        )}..."
+        
+        Requested Parameters:
+        - Chapters: ${chapters}
+        - Lessons per chapter: ${lessons_per_chapter}
+        - Difficulty: ${difficulty}
+        
+        Generate a JSON object with a course title based on the document content, and exactly ${chapters} chapter titles.
+        For each chapter, generate exactly ${lessons_per_chapter} unique and compelling lesson titles that reflect the document's content.
+        
+        IMPORTANT: Return ONLY a valid JSON object with this exact structure:
+        {
+          "courseTitle": "Course Title Based on PDF Content",
+          "chapters": [
+            {
+              "chapterTitle": "Chapter 1 Title",
+              "lessonTitles": ["Lesson 1", "Lesson 2", "Lesson 3"]
+            }
+          ]
+        }
+      `;
 
-    let courseOutline: CourseOutline;
-
-    try {
-      courseOutline = JSON.parse(outlineText);
-    } catch (e) {
-      console.error("Failed to parse course outline JSON:", e);
-      console.error("Raw outline response from Gemini:", outlineText);
-      // Refund credits if JSON parsing fails
-      await deductCreditsAndRecordTransaction(
-        supabase,
-        user.id,
-        -creditCost,
-        'failed',
-        `Refund for failed PDF course generation (parse outline): ${file.name}`
+      const outlineResult = await makeMultiModelAPICall(
+        outlinePrompt,
+        "PDF Course outline generation"
       );
+      modelUsageStats.total_calls++;
+      if (outlineResult.modelUsed === "gemini") {
+        modelUsageStats.gemini_calls++;
+      } else {
+        modelUsageStats.mistral_calls++;
+      }
+
+      const courseOutline = parseMultiModelAIResponse(
+        outlineResult.response,
+        "PDF course outline",
+        outlineResult.modelUsed
+      );
+
+      if (
+        !courseOutline ||
+        !courseOutline.courseTitle ||
+        !courseOutline.chapters
+      ) {
+        throw new Error(
+          "Failed to generate a valid course outline from PDF content."
+        );
+      }
+
+      // 11. Generate content for each lesson based on PDF content using multi-model approach
+      const finalChapters: AiChapter[] = [];
+
+      for (const chapterOutline of courseOutline.chapters) {
+        const generatedLessons: AiLesson[] = [];
+
+        for (const lessonTitle of chapterOutline.lessonTitles) {
+          const lessonPrompt = `
+            You are an AI educator creating content for a single lesson based on PDF document content.
+            
+            Document Title: "${extractedContent.metadata.title}"
+            Chapter: "${chapterOutline.chapterTitle}"
+            Lesson: "${lessonTitle}"
+            Difficulty: ${difficulty}
+            
+            Source Content: "${extractedContent.text}"
+            
+            Generate detailed lesson content with a quiz. Return ONLY a valid JSON object with this exact structure:
+            {
+              "content": "Detailed lesson content here (5-7 paragraphs for ${difficulty} level) based on the PDF content",
+              "quiz": {
+                "questions": [
+                  {
+                    "question": "Question text here based on lesson content?",
+                    "choices": ["Option A", "Option B", "Option C", "Option D"],
+                    "answer": "Correct option text"
+                  }
+                ]
+              }
+            }
+            
+            Instructions:
+            - The "content" must be detailed, 5-7 paragraphs long, and tailored for a ${difficulty} audience.
+            - Base the content on the provided source material from the PDF.
+            - The "quiz" must have at least one question with 4 choices based on the lesson content.
+          `;
+
+          // Add delay between requests to avoid rate limiting
+          await new Promise((resolve) => setTimeout(resolve, 1500));
+
+          try {
+            const lessonResult = await makeMultiModelAPICall(
+              lessonPrompt,
+              `PDF Lesson "${lessonTitle}"`
+            );
+            modelUsageStats.total_calls++;
+            if (lessonResult.modelUsed === "gemini") {
+              modelUsageStats.gemini_calls++;
+            } else {
+              modelUsageStats.mistral_calls++;
+            }
+
+            const lessonContent = parseMultiModelAIResponse(
+              lessonResult.response,
+              `PDF lesson "${lessonTitle}"`,
+              lessonResult.modelUsed
+            );
+
+            if (lessonContent && lessonContent.content) {
+              generatedLessons.push({
+                title: lessonTitle,
+                content: lessonContent.content,
+                quiz: lessonContent.quiz || { questions: [] },
+              });
+            } else {
+              // Fallback content if parsing fails
+              generatedLessons.push({
+                title: lessonTitle,
+                content: `This lesson covers ${lessonTitle} in the context of ${chapterOutline.chapterTitle}, based on the provided PDF document.`,
+                quiz: { questions: [] },
+              });
+            }
+          } catch (lessonError) {
+            console.warn(
+              `Failed to generate lesson "${lessonTitle}" from PDF:`,
+              lessonError
+            );
+            // Add fallback lesson content
+            generatedLessons.push({
+              title: lessonTitle,
+              content: `This lesson covers ${lessonTitle} in the context of ${chapterOutline.chapterTitle}, based on the provided PDF document.`,
+              quiz: { questions: [] },
+            });
+          }
+        }
+
+        finalChapters.push({
+          title: chapterOutline.chapterTitle,
+          lessons: generatedLessons,
+        });
+      }
+
+      // 12. Clean up temporary file
+      if (tempFilePath) {
+        try {
+          await unlink(tempFilePath);
+        } catch (unlinkError) {
+          console.warn("Failed to delete temporary file:", unlinkError);
+        }
+      }
+
+      // 13. Return course data for preview - including plan limits and model usage stats
+      console.log(
+        `PDF Course generation completed. Model usage: Gemini: ${modelUsageStats.gemini_calls}, Mistral: ${modelUsageStats.mistral_calls}, Total: ${modelUsageStats.total_calls}`
+      );
+
       return NextResponse.json(
         {
-          error: "Failed to generate a valid course outline from PDF content. Your credits have been refunded.",
+          success: true,
+          courseId: null,
+          courseTitle: courseOutline.courseTitle,
+          creditCost: creditCost,
+          chaptersGenerated: finalChapters.length,
+          lessonsGenerated: finalChapters.reduce(
+            (total, chapter) => total + chapter.lessons.length,
+            0
+          ),
+          redirectUrl: `/dashboard/courses/preview`,
+          aiGeneratedCourse: {
+            title: courseOutline.courseTitle,
+            difficulty: difficulty,
+            chapters: finalChapters,
+          },
+          sourceDocument: {
+            name: file.name,
+            title: extractedContent.metadata.title,
+            author: extractedContent.metadata.author,
+            subject: extractedContent.metadata.subject,
+            pageCount: extractedContent.metadata.pageCount,
+          },
+          originalChapterCount: chapters,
+          originalLessonsPerChapter: lessons_per_chapter,
+          planLimits: planLimits,
+          modelUsage: modelUsageStats, // Include model usage statistics
+        },
+        { status: 200 }
+      );
+    } catch (generationError) {
+      // Clean up temporary file on error
+      if (tempFilePath) {
+        try {
+          await unlink(tempFilePath);
+        } catch (unlinkError) {
+          console.warn("Failed to delete temporary file:", unlinkError);
+        }
+      }
+
+      // Refund credits
+      const refundSuccess = await deductCreditsAndRecordTransaction(
+        supabase,
+        user.id,
+        -creditCost,
+        "failed",
+        `Refund for failed PDF course generation: ${file.name}`
+      );
+
+      if (refundSuccess) {
+        console.log(`Refunded ${creditCost} credits to user ${user.id}`);
+      }
+
+      console.error(
+        "PDF Course generation failed with model usage stats:",
+        modelUsageStats
+      );
+
+      return NextResponse.json(
+        {
+          error: `Failed to generate course content from PDF: ${
+            generationError instanceof Error
+              ? generationError.message
+              : "Unknown error"
+          }. Your credits have been refunded.`,
+          modelUsage: modelUsageStats,
         },
         { status: 500 }
       );
     }
-
-    // 11. Generate content for each lesson based on PDF content
-    const finalChapters: AiChapter[] = [];
-
-    for (const chapterOutline of courseOutline.chapters) {
-      const generatedLessons: AiLesson[] = [];
-      for (const lessonTitle of chapterOutline.lessonTitles) {
-        const lessonPrompt = `\n          You are an AI educator creating content for a single lesson based on PDF document content.\n          \n          Document Title: "${extractedContent.metadata.title}"\n          Chapter: "${chapterOutline.chapterTitle}"\n          Lesson: "${lessonTitle}"\n          Difficulty: ${difficulty}\n          \n          Source Content: "${extractedContent.text}"\n          \n          Generate a JSON object with this structure: \n          { "content": "...", "quiz": { "questions": [ { "question": "...", "choices": ["...", "...", "...", "..."], "answer": "..." } ] } }\n          \n          Instructions:\n          - The "content" must be detailed, 5-7 paragraphs long, and tailored for a ${difficulty} audience.\n          - Base the content on the provided source material from the PDF.\n          - The "quiz" must have at least one question with 4 choices based on the lesson content.\n          - Output only the valid JSON object.\n        `;
-
-        await new Promise((resolve) => setTimeout(resolve, 1500));
-        let lessonText: string;
-        try {
-          const lessonChat = model.startChat({
-            generationConfig,
-            safetySettings,
-          });
-          const result = await lessonChat.sendMessage(lessonPrompt);
-          lessonText = result.response.text();
-        } catch (geminiError) {
-          console.error("Gemini API error during lesson generation:", geminiError);
-          generatedLessons.push({
-            title: lessonTitle,
-            content:
-              "Error: Failed to generate content for this lesson due to an API error.",
-            quiz: { questions: [] },
-          });
-          continue; // Continue to next lesson even if one fails
-        }
-
-        try {
-          const sanitizedLessonText = lessonText
-            .replace(/^```json\n|\n```$/g, "")
-            .replace(/[\x00-\x1F\x7F-\x9F]/g, "")
-            .replace(/\n/g, "\\n")
-            .replace(/\t/g, "\\t");
-          const lessonContent: LessonContent = JSON.parse(sanitizedLessonText);
-          generatedLessons.push({ title: lessonTitle, ...lessonContent });
-        } catch (error) {
-          console.error(
-            `Failed to parse content for lesson: "${lessonTitle}"`,
-            error
-          );
-          console.error(`Raw lesson text: ${lessonText}`);
-          generatedLessons.push({
-            title: lessonTitle,
-            content:
-              "Error: Failed to generate content for this lesson based on the PDF content.",
-            quiz: { questions: [] },
-          });
-        }
-      }
-      finalChapters.push({
-        title: chapterOutline.chapterTitle,
-        lessons: generatedLessons,
-      });
-    }
-
-    // 12. Assemble final payload
-    const finalPayload = {
-      success: true,
-      courseId: null, // Will be set after saving to DB
-      courseTitle: courseOutline.courseTitle,
-      creditCost: creditCost, // Include credit cost in response
-      chaptersGenerated: finalChapters.length,
-      lessonsGenerated: finalChapters.reduce((total, chapter) => total + chapter.lessons.length, 0),
-      redirectUrl: `/dashboard/courses/preview`,
-      aiGeneratedCourse: {
-        title: courseOutline.courseTitle,
-        difficulty: difficulty,
-        chapters: finalChapters,
-      },
-      originalPrompt: `Generated from PDF: ${extractedContent.metadata.title}`,
-      originalChapterCount: chapters,
-      originalLessonsPerChapter: lessons_per_chapter,
-      planLimits: planLimits, // Include plan limits in response
-    };
-
-    return NextResponse.json(finalPayload, { status: 200 });
   } catch (error) {
-    console.error("Error in /api/generate-course-from-pdf:", error);
-    const errorMessage =
-      error instanceof Error ? error.message : "An unknown error occurred.";
-    // If an error occurs before credit deduction, no refund is needed.
-    // If an error occurs after deduction but before successful generation, refund is handled in specific catch blocks.
-    return NextResponse.json(
-      { error: `Failed to generate course from PDF: ${errorMessage}` },
-      { status: 500 }
-    );
-  } finally {
-    // Clean up temporary file
+    // Clean up temporary file on any error
     if (tempFilePath) {
       try {
         await unlink(tempFilePath);
-      } catch (cleanupError) {
-        console.error("Error cleaning up temporary file:", cleanupError);
+      } catch (unlinkError) {
+        console.warn("Failed to delete temporary file:", unlinkError);
       }
     }
+
+    console.error("Error in /api/generate-course-from-pdf:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "An unknown error occurred.";
+    return NextResponse.json(
+      { error: `Failed to generate course content from PDF: ${errorMessage}` },
+      { status: 500 }
+    );
   }
 }
-
-

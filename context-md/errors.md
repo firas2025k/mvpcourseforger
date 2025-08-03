@@ -1,75 +1,217 @@
-npm run build
-
-> build
-> next build
-
-▲ Next.js 14.2.29
-
-- Environments: .env.local
-
-Creating an optimized production build ...
-⚠ For production Image Optimization with Next.js, the optional 'sharp' package is strongly recommended. Run 'npm i sharp', and Next.js will use it automatically for Image Optimization.
-Read more: https://nextjs.org/docs/messages/sharp-missing-in-production
-⚠ Compiled with warnings
-
-./node_modules/@supabase/realtime-js/dist/main/RealtimeClient.js
-Critical dependency: the request of a dependency is an expression
-
-Import trace for requested module:
-./node_modules/@supabase/realtime-js/dist/main/RealtimeClient.js
-./node_modules/@supabase/realtime-js/dist/main/index.js
-./node_modules/@supabase/supabase-js/dist/module/index.js
-./node_modules/@supabase/ssr/dist/module/createBrowserClient.js
-./node_modules/@supabase/ssr/dist/module/index.js
-./app/actions/search.ts
-
-<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (100kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
-⚠ Compiled with warnings
-
-./lib/supabase/middleware.ts
-Attempted import error: 'hasEnvVars' is not exported from '../utils' (imported as 'hasEnvVars').
-
-Import trace for requested module:
-./lib/supabase/middleware.ts
-
-⚠ For production Image Optimization with Next.js, the optional 'sharp' package is strongly recommended. Run 'npm i sharp', and Next.js will use it automatically for Image Optimization.
-Read more: https://nextjs.org/docs/messages/sharp-missing-in-production
-✓ Compiled successfully
-Skipping validation of types
-Skipping linting
-Collecting page data .[PDF Export] NODE_ENV: production
-Collecting page data ..[PDF Export] Using puppeteer-core and @sparticuz/chromium (Production)
-✓ Collecting page data  
- Generating static pages (8/48) [ ==]Error in credit transactions API: n [Error]: Dynamic server usage: Route /api/user/credit-transactions couldn't be rendered statically because it used `cookies`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
-at l (/Users/firasbentaleb/Documents/mvp/courseforger/.next/server/chunks/8948.js:1:37220)
-at u (/Users/firasbentaleb/Documents/mvp/courseforger/.next/server/chunks/7234.js:6:96718)
-at p (/Users/firasbentaleb/Documents/mvp/courseforger/.next/server/app/api/user/credit-transactions/route.js:1:1649)
-at /Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38417
+Error fetching credit data: TypeError: supabase.from is not a function
+at GET (webpack-internal:///(rsc)/./app/api/admin/credits/route.ts:22:30)
+at /Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:57234
 at /Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/lib/trace/tracer.js:140:36
 at NoopContextManager.with (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:7062)
 at ContextAPI.with (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:518)
 at NoopTracer.startActiveSpan (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:18093)
 at ProxyTracer.startActiveSpan (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:18854)
-at /Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/lib/trace/tracer.js:122:103 {
-description: "Route /api/user/credit-transactions couldn't be rendered statically because it used `cookies`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
-digest: 'DYNAMIC_SERVER_USAGE'
-}
-Generating static pages (30/48) [== ] ⨯ useSearchParams() should be wrapped in a suspense boundary at page "/auth/verify-otp". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
-at o (/Users/firasbentaleb/Documents/mvp/courseforger/.next/server/chunks/9840.js:1:11071)
-at c (/Users/firasbentaleb/Documents/mvp/courseforger/.next/server/chunks/9840.js:1:22054)
-at x (/Users/firasbentaleb/Documents/mvp/courseforger/.next/server/app/auth/verify-otp/page.js:1:3898)
-at nj (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:46252)
-at nM (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:47572)
-at nN (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:64547)
-at nI (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:47011)
-at nM (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:47718)
-at nM (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:61547)
-at nN (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:64547)
-
-Error occurred prerendering page "/auth/verify-otp". Read more: https://nextjs.org/docs/messages/prerender-error
-
-✓ Generating static pages (48/48)
-
-> Export encountered errors on following paths:
-
-        /auth/verify-otp/page: /auth/verify-otp
+at /Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/lib/trace/tracer.js:122:103
+at NoopContextManager.with (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:7062)
+at ContextAPI.with (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:518)
+at NextTracerImpl.trace (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/lib/trace/tracer.js:122:28)
+at /Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:48896
+at AsyncLocalStorage.run (node:async_hooks:346:14)
+at Object.wrap (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:40958)
+at /Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:47472
+at AsyncLocalStorage.run (node:async_hooks:346:14)
+at Object.wrap (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:38293)
+at /Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:47434
+at AsyncLocalStorage.run (node:async_hooks:346:14)
+at eT.execute (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:46881)
+at eT.handle (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:58771)
+at doRender (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/base-server.js:1366:60)
+at cacheEntry.responseCache.get.routeKind (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/base-server.js:1588:34)
+at ResponseCache.get (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/response-cache/index.js:49:26)
+at DevServer.renderToResponseWithComponentsImpl (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/base-server.js:1496:53)
+GET /api/admin/credits?page=1&limit=50&search=&type=all&dateFrom=&dateTo= 500 in 1699ms
+Error fetching credit data: TypeError: supabase.from is not a function
+at GET (webpack-internal:///(rsc)/./app/api/admin/credits/route.ts:22:30)
+at /Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:57234
+at /Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+at NoopContextManager.with (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:7062)
+at ContextAPI.with (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:518)
+at NoopTracer.startActiveSpan (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:18093)
+at ProxyTracer.startActiveSpan (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:18854)
+at /Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/lib/trace/tracer.js:122:103
+at NoopContextManager.with (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:7062)
+at ContextAPI.with (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:518)
+at NextTracerImpl.trace (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/lib/trace/tracer.js:122:28)
+at /Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:48896
+at AsyncLocalStorage.run (node:async_hooks:346:14)
+at Object.wrap (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:40958)
+at /Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:47472
+at AsyncLocalStorage.run (node:async_hooks:346:14)
+at Object.wrap (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:38293)
+at /Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:47434
+at AsyncLocalStorage.run (node:async_hooks:346:14)
+at eT.execute (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:46881)
+at eT.handle (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:58771)
+at doRender (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/base-server.js:1366:60)
+at cacheEntry.responseCache.get.routeKind (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/base-server.js:1588:34)
+at ResponseCache.get (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/response-cache/index.js:49:26)
+at DevServer.renderToResponseWithComponentsImpl (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/base-server.js:1496:53)
+GET /api/admin/credits?page=1&limit=50&search=&type=all&dateFrom=&dateTo= 500 in 448ms
+Error fetching users: TypeError: supabase.from is not a function
+at GET (webpack-internal:///(rsc)/./app/api/admin/users/route.ts:23:30)
+at /Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:57234
+at /Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+at NoopContextManager.with (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:7062)
+at ContextAPI.with (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:518)
+at NoopTracer.startActiveSpan (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:18093)
+at ProxyTracer.startActiveSpan (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:18854)
+at /Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/lib/trace/tracer.js:122:103
+at NoopContextManager.with (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:7062)
+at ContextAPI.with (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:518)
+at NextTracerImpl.trace (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/lib/trace/tracer.js:122:28)
+at /Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:48896
+at AsyncLocalStorage.run (node:async_hooks:346:14)
+at Object.wrap (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:40958)
+at /Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:47472
+at AsyncLocalStorage.run (node:async_hooks:346:14)
+at Object.wrap (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:38293)
+at /Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:47434
+at AsyncLocalStorage.run (node:async_hooks:346:14)
+at eT.execute (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:46881)
+at eT.handle (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:58771)
+at doRender (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/base-server.js:1366:60)
+at cacheEntry.responseCache.get.routeKind (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/base-server.js:1588:34)
+at ResponseCache.get (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/response-cache/index.js:49:26)
+at DevServer.renderToResponseWithComponentsImpl (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/base-server.js:1496:53)
+GET /api/admin/users?page=1&limit=20&search=&plan=all&status=all 500 in 86ms
+Error fetching users: TypeError: supabase.from is not a function
+at GET (webpack-internal:///(rsc)/./app/api/admin/users/route.ts:23:30)
+at /Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:57234
+at /Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+at NoopContextManager.with (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:7062)
+at ContextAPI.with (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:518)
+at NoopTracer.startActiveSpan (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:18093)
+at ProxyTracer.startActiveSpan (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:18854)
+at /Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/lib/trace/tracer.js:122:103
+at NoopContextManager.with (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:7062)
+at ContextAPI.with (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:518)
+at NextTracerImpl.trace (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/lib/trace/tracer.js:122:28)
+at /Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:48896
+at AsyncLocalStorage.run (node:async_hooks:346:14)
+at Object.wrap (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:40958)
+at /Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:47472
+at AsyncLocalStorage.run (node:async_hooks:346:14)
+at Object.wrap (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:38293)
+at /Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:47434
+at AsyncLocalStorage.run (node:async_hooks:346:14)
+at eT.execute (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:46881)
+at eT.handle (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:58771)
+at doRender (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/base-server.js:1366:60)
+at cacheEntry.responseCache.get.routeKind (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/base-server.js:1588:34)
+at ResponseCache.get (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/response-cache/index.js:49:26)
+at DevServer.renderToResponseWithComponentsImpl (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/base-server.js:1496:53)
+GET /api/admin/users?page=1&limit=20&search=&plan=all&status=all 500 in 38ms
+Error fetching dashboard stats: TypeError: supabase.from is not a function
+at GET (webpack-internal:///(rsc)/./app/api/admin/dashboard-stats/route.ts:13:54)
+at /Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:57234
+at /Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+at NoopContextManager.with (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:7062)
+at ContextAPI.with (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:518)
+at NoopTracer.startActiveSpan (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:18093)
+at ProxyTracer.startActiveSpan (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:18854)
+at /Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/lib/trace/tracer.js:122:103
+at NoopContextManager.with (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:7062)
+at ContextAPI.with (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:518)
+at NextTracerImpl.trace (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/lib/trace/tracer.js:122:28)
+at /Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:48896
+at AsyncLocalStorage.run (node:async_hooks:346:14)
+at Object.wrap (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:40958)
+at /Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:47472
+at AsyncLocalStorage.run (node:async_hooks:346:14)
+at Object.wrap (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:38293)
+at /Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:47434
+at AsyncLocalStorage.run (node:async_hooks:346:14)
+at eT.execute (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:46881)
+at eT.handle (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:58771)
+at doRender (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/base-server.js:1366:60)
+at cacheEntry.responseCache.get.routeKind (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/base-server.js:1588:34)
+at ResponseCache.get (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/response-cache/index.js:49:26)
+at DevServer.renderToResponseWithComponentsImpl (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/base-server.js:1496:53)
+GET /api/admin/dashboard-stats 500 in 70ms
+Error fetching dashboard stats: TypeError: supabase.from is not a function
+at GET (webpack-internal:///(rsc)/./app/api/admin/dashboard-stats/route.ts:13:54)
+at /Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:57234
+at /Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+at NoopContextManager.with (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:7062)
+at ContextAPI.with (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:518)
+at NoopTracer.startActiveSpan (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:18093)
+at ProxyTracer.startActiveSpan (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:18854)
+at /Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/lib/trace/tracer.js:122:103
+at NoopContextManager.with (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:7062)
+at ContextAPI.with (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:518)
+at NextTracerImpl.trace (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/lib/trace/tracer.js:122:28)
+at /Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:48896
+at AsyncLocalStorage.run (node:async_hooks:346:14)
+at Object.wrap (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:40958)
+at /Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:47472
+at AsyncLocalStorage.run (node:async_hooks:346:14)
+at Object.wrap (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:38293)
+at /Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:47434
+at AsyncLocalStorage.run (node:async_hooks:346:14)
+at eT.execute (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:46881)
+at eT.handle (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:58771)
+at doRender (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/base-server.js:1366:60)
+at cacheEntry.responseCache.get.routeKind (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/base-server.js:1588:34)
+at ResponseCache.get (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/response-cache/index.js:49:26)
+at DevServer.renderToResponseWithComponentsImpl (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/base-server.js:1496:53)
+GET /api/admin/dashboard-stats 500 in 29ms
+GET /admin/subscriptions 200 in 342ms
+Error fetching subscriptions: TypeError: supabase.from is not a function
+at GET (webpack-internal:///(rsc)/./app/api/admin/subscriptions/route.ts:20:30)
+at /Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:57234
+at /Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+at NoopContextManager.with (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:7062)
+at ContextAPI.with (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:518)
+at NoopTracer.startActiveSpan (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:18093)
+at ProxyTracer.startActiveSpan (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:18854)
+at /Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/lib/trace/tracer.js:122:103
+at NoopContextManager.with (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:7062)
+at ContextAPI.with (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:518)
+at NextTracerImpl.trace (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/lib/trace/tracer.js:122:28)
+at /Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:48896
+at AsyncLocalStorage.run (node:async_hooks:346:14)
+at Object.wrap (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:40958)
+at /Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:47472
+at AsyncLocalStorage.run (node:async_hooks:346:14)
+at Object.wrap (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:38293)
+at /Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:47434
+at AsyncLocalStorage.run (node:async_hooks:346:14)
+at eT.execute (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:46881)
+at eT.handle (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:58771)
+at doRender (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/base-server.js:1366:60)
+at cacheEntry.responseCache.get.routeKind (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/base-server.js:1588:34)
+at ResponseCache.get (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/response-cache/index.js:49:26)
+at DevServer.renderToResponseWithComponentsImpl (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/base-server.js:1496:53)
+GET /api/admin/subscriptions?page=1&limit=20&status=all&plan=all 500 in 78ms
+Error fetching subscriptions: TypeError: supabase.from is not a function
+at GET (webpack-internal:///(rsc)/./app/api/admin/subscriptions/route.ts:20:30)
+at /Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:57234
+at /Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+at NoopContextManager.with (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:7062)
+at ContextAPI.with (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:518)
+at NoopTracer.startActiveSpan (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:18093)
+at ProxyTracer.startActiveSpan (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:18854)
+at /Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/lib/trace/tracer.js:122:103
+at NoopContextManager.with (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:7062)
+at ContextAPI.with (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:518)
+at NextTracerImpl.trace (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/lib/trace/tracer.js:122:28)
+at /Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:48896
+at AsyncLocalStorage.run (node:async_hooks:346:14)
+at Object.wrap (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:40958)
+at /Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:47472
+at AsyncLocalStorage.run (node:async_hooks:346:14)
+at Object.wrap (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:38293)
+at /Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:47434
+at AsyncLocalStorage.run (node:async_hooks:346:14)
+at eT.execute (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:46881)
+at eT.handle (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:58771)
+at doRender (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/base-server.js:1366:60)
+at cacheEntry.responseCache.get.routeKind (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/base-server.js:1588:34)
+at ResponseCache.get (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/response-cache/index.js:49:26)
+at DevServer.renderToResponseWithComponentsImpl (/Users/firasbentaleb/Documents/mvp/courseforger/node_modules/next/dist/server/base-server.js:1496:53)
+GET /api/admin/subscriptions?page=1&limit=20&status=all&plan=all 500 in 29ms
