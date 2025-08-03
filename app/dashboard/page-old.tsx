@@ -335,6 +335,89 @@ export default async function DashboardPage({
         </div>
       </header>
 
+      {/* Live Voice Coach Feature Card */}
+      <section className="px-4 md:px-6">
+        <Card className="relative overflow-hidden bg-gradient-to-r from-orange-500 to-red-600 text-white border-0 shadow-2xl">
+          <div className="absolute inset-0 bg-gradient-to-r from-orange-400/20 to-red-500/20 backdrop-blur-sm"></div>
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl transform translate-x-32 -translate-y-32"></div>
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full blur-2xl transform -translate-x-24 translate-y-24"></div>
+
+          <CardContent className="relative p-8">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                    <Mic className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <Badge className="bg-white/20 text-white border-white/30 mb-2">
+                      NEW FEATURE
+                    </Badge>
+                    <h2 className="text-3xl font-bold">Live Voice Coach</h2>
+                  </div>
+                </div>
+
+                <p className="text-xl text-white/90 mb-6 max-w-2xl">
+                  Practice speaking with our AI-powered voice coach. Get
+                  real-time feedback on pronunciation, fluency, and confidence.
+                  Perfect for presentations, interviews, and language learning.
+                </p>
+
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="flex items-center gap-2">
+                    <Volume2 className="h-5 w-5 text-white/80" />
+                    <span className="text-white/80">Real-time feedback</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Brain className="h-5 w-5 text-white/80" />
+                    <span className="text-white/80">AI-powered analysis</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Award className="h-5 w-5 text-white/80" />
+                    <span className="text-white/80">Progress tracking</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <Link href="/dashboard/voice/new">
+                    <Button
+                      size="lg"
+                      className="bg-white text-orange-600 hover:bg-white/90 font-semibold px-8 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                    >
+                      <Play className="h-5 w-5 mr-2" />
+                      Start Voice Session
+                    </Button>
+                  </Link>
+                  <Link href="/dashboard/voice">
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      className="border-white/30 text-black hover:bg-white/10 font-semibold px-6 py-3 rounded-xl backdrop-blur-sm"
+                    >
+                      View All Sessions
+                      <ArrowRight className="h-4 w-4 ml-2" />
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+
+              <div className="hidden lg:block">
+                <div className="relative">
+                  <div className="w-48 h-48 rounded-3xl bg-white/10 backdrop-blur-sm flex items-center justify-center">
+                    <div className="w-32 h-32 rounded-2xl bg-white/20 flex items-center justify-center">
+                      <Headphones className="h-16 w-16 text-white/80" />
+                    </div>
+                  </div>
+                  <div className="absolute -top-4 -right-4 w-8 h-8 rounded-full bg-green-400 flex items-center justify-center animate-pulse">
+                    <Mic className="h-4 w-4 text-white" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
+
       {/* Enhanced Statistics Cards */}
       <section className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 px-4 md:px-6">
         {/* Total Courses Card */}
@@ -493,6 +576,82 @@ export default async function DashboardPage({
               </div>
             </CardContent>
           </Card>
+
+          {/* Voice Session */}
+          <Card className="relative overflow-hidden bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 shadow-lg hover:shadow-xl transition-all duration-300 group hover:scale-[1.02]">
+            <div className="absolute inset-0 bg-gradient-to-br from-orange-400/10 to-red-400/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <CardContent className="relative p-6">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-r from-orange-500 to-red-600 flex items-center justify-center shadow-lg">
+                  <Mic className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold text-lg">Voice Session</h3>
+                    <Badge className="bg-orange-500 text-white text-xs">
+                      NEW
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                    Practice with AI voice coach
+                  </p>
+                </div>
+              </div>
+              <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+                Improve your speaking skills with real-time AI feedback and
+                personalized coaching.
+              </p>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-sm text-slate-500">
+                  <Clock className="h-4 w-4" />
+                  <span>2 credits/session</span>
+                </div>
+                <Link href="/dashboard/voice/new">
+                  <Button className="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white shadow-lg hover:shadow-xl transition-all duration-300">
+                    <Mic className="h-4 w-4 mr-2" />
+                    Start
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Create Presentation */}
+          <Card className="relative overflow-hidden bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 shadow-lg hover:shadow-xl transition-all duration-300 group hover:scale-[1.02]">
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-400/10 to-pink-400/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <CardContent className="relative p-6">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-r from-purple-500 to-pink-600 flex items-center justify-center shadow-lg">
+                  <Users className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-lg">Presentation</h3>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                    Create slide presentations
+                  </p>
+                </div>
+              </div>
+              <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+                Generate professional presentations with AI-powered content and
+                design.
+              </p>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-sm text-slate-500">
+                  <Calculator className="h-4 w-4" />
+                  <span>{basicPresentationCost} credits</span>
+                </div>
+                <Link href="/dashboard/presentations/new">
+                  <Button
+                    className="bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                    disabled={hasInsufficientCreditsForPresentation}
+                  >
+                    <PlusCircle className="h-4 w-4 mr-2" />
+                    Create
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </section>
 
@@ -557,7 +716,7 @@ export default async function DashboardPage({
       </section>
 
       {/* Credit Cost Information */}
-      <section className="px-4 md:px-6 hidden">
+      <section className="px-4 md:px-6">
         <Card className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 border border-blue-200/50 dark:border-blue-800/50">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">

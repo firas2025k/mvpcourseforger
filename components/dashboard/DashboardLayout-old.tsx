@@ -78,7 +78,14 @@ const navLinks: NavLink[] = [
     gradient: "from-blue-500 to-purple-600",
     description: "Overview & Analytics",
   },
-
+  {
+    href: "/dashboard/voice",
+    label: "Voice Coach",
+    icon: Mic,
+    gradient: "from-orange-500 to-red-600",
+    isNew: true,
+    description: "AI-Powered Speaking Coach",
+  },
   {
     href: "/dashboard/courses",
     label: "My Courses",
@@ -86,7 +93,20 @@ const navLinks: NavLink[] = [
     gradient: "from-green-500 to-blue-600",
     description: "Course Management",
   },
-
+  {
+    href: "/dashboard/presentations",
+    label: "Presentations",
+    icon: Users,
+    gradient: "from-purple-500 to-pink-600",
+    description: "Slide Presentations",
+  },
+  {
+    href: "/dashboard/analytics",
+    label: "Analytics",
+    icon: BarChart3,
+    gradient: "from-emerald-500 to-teal-600",
+    description: "Progress & Insights",
+  },
   {
     href: "/dashboard/credit",
     label: "Credits",
@@ -109,6 +129,18 @@ const quickActions = [
     label: "New Course",
     icon: PlusCircle,
     gradient: "from-blue-500 to-purple-600",
+  },
+  {
+    href: "/dashboard/voice/new",
+    label: "Voice Session",
+    icon: Mic,
+    gradient: "from-orange-500 to-red-600",
+  },
+  {
+    href: "/dashboard/presentations/new",
+    label: "New Presentation",
+    icon: Users,
+    gradient: "from-purple-500 to-pink-600",
   },
 ];
 
