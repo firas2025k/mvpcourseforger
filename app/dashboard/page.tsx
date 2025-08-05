@@ -366,114 +366,6 @@ export default async function DashboardPage({
           </div>
         </div>
       </header>
-
-      {/* Enhanced Statistics Cards */}
-      <section className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 px-4 md:px-6">
-        {/* Total Courses Card */}
-        <Card className="relative overflow-hidden bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 shadow-lg hover:shadow-xl transition-all duration-300 group hover:scale-[1.02]">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-400/10 to-purple-400/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-          <CardHeader className="relative flex flex-row items-center justify-between space-y-0 pb-3">
-            <CardTitle className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-              Total Courses
-            </CardTitle>
-            <div className="relative">
-              <BookOpen className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-              <div className="absolute inset-0 bg-blue-400 rounded-full blur opacity-20 animate-pulse"></div>
-            </div>
-          </CardHeader>
-          <CardContent className="relative">
-            <div className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
-              {courses.length}
-            </div>
-            <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
-              courses available
-            </p>
-            <div className="flex items-center gap-2">
-              <Progress
-                value={(totalCourses / courseLimit) * 100}
-                className="flex-1 h-2"
-              />
-              <span className="text-xs text-slate-500">
-                {totalCourses}/{courseLimit} created
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Average Progress Card */}
-        <Card className="relative overflow-hidden bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 shadow-lg hover:shadow-xl transition-all duration-300 group hover:scale-[1.02]">
-          <div className="absolute inset-0 bg-gradient-to-br from-green-400/10 to-blue-400/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-          <CardHeader className="relative flex flex-row items-center justify-between space-y-0 pb-3">
-            <CardTitle className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-              Learning Progress
-            </CardTitle>
-            <div className="relative">
-              <TrendingUp className="h-5 w-5 text-green-600 dark:text-green-400" />
-              <div className="absolute inset-0 bg-green-400 rounded-full blur opacity-20 animate-pulse"></div>
-            </div>
-          </CardHeader>
-          <CardContent className="relative">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="relative flex-1">
-                <Progress
-                  value={averageProgress}
-                  className="h-3 bg-slate-200 dark:bg-slate-700 rounded-full"
-                />
-                <div
-                  className="absolute inset-0 bg-gradient-to-r from-green-500 to-blue-600 rounded-full opacity-20 blur-sm transition-all duration-500"
-                  style={{ width: `${averageProgress}%` }}
-                ></div>
-              </div>
-              <span className="text-2xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
-                {averageProgress}%
-              </span>
-            </div>
-            <p className="text-sm text-slate-600 dark:text-slate-400">
-              average completion rate
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* Credit Balance Card */}
-        <Card className="relative overflow-hidden bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 shadow-lg hover:shadow-xl transition-all duration-300 group hover:scale-[1.02]">
-          <div className="absolute inset-0 bg-gradient-to-br from-yellow-400/10 to-orange-400/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-          <CardHeader className="relative flex flex-row items-center justify-between space-y-0 pb-3">
-            <CardTitle className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-              Credit Balance
-            </CardTitle>
-            <div className="relative">
-              <Coins className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
-              <div className="absolute inset-0 bg-yellow-400 rounded-full blur opacity-20 animate-pulse"></div>
-            </div>
-          </CardHeader>
-          <CardContent className="relative">
-            <div className="text-3xl font-bold bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent mb-2">
-              {userCredits}
-            </div>
-            <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
-              credits available
-            </p>
-            <Link
-              href="/dashboard/credit/purchase"
-              className="inline-flex items-center gap-2 text-sm font-medium text-yellow-600 dark:text-yellow-400 hover:text-yellow-700 dark:hover:text-yellow-300 transition-colors duration-200 group/link"
-            >
-              Top Up Credits
-              <ArrowRight className="h-4 w-4 group-hover/link:translate-x-1 transition-transform duration-200" />
-            </Link>
-          </CardContent>
-        </Card>
-
-        {/* Enhanced User Plan Card */}
-        <div className="relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-400/20 to-pink-400/20 rounded-2xl blur-xl pointer-events-none"></div>
-          <UserPlanCard
-            userPlan={userPlanForCard}
-            hasActivePaidSubscription={hasActivePaidSubscription}
-            ManageSubscriptionButton={ManageSubscriptionButton}
-          />
-        </div>
-      </section>
-
       {/* Quick Actions Panel */}
       <section className="px-4 md:px-6">
         <div className="flex items-center justify-between mb-6">
@@ -593,6 +485,112 @@ export default async function DashboardPage({
               </div>
             </CardContent>
           </Card>
+        </div>
+      </section>
+      {/* Enhanced Statistics Cards */}
+      <section className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 px-4 md:px-6">
+        {/* Total Courses Card */}
+        <Card className="relative overflow-hidden bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 shadow-lg hover:shadow-xl transition-all duration-300 group hover:scale-[1.02]">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-400/10 to-purple-400/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <CardHeader className="relative flex flex-row items-center justify-between space-y-0 pb-3">
+            <CardTitle className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+              Total Courses
+            </CardTitle>
+            <div className="relative">
+              <BookOpen className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              <div className="absolute inset-0 bg-blue-400 rounded-full blur opacity-20 animate-pulse"></div>
+            </div>
+          </CardHeader>
+          <CardContent className="relative">
+            <div className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
+              {courses.length}
+            </div>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+              courses available
+            </p>
+            <div className="flex items-center gap-2">
+              <Progress
+                value={(totalCourses / courseLimit) * 100}
+                className="flex-1 h-2"
+              />
+              <span className="text-xs text-slate-500">
+                {totalCourses}/{courseLimit} created
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Average Progress Card */}
+        <Card className="relative overflow-hidden bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 shadow-lg hover:shadow-xl transition-all duration-300 group hover:scale-[1.02]">
+          <div className="absolute inset-0 bg-gradient-to-br from-green-400/10 to-blue-400/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <CardHeader className="relative flex flex-row items-center justify-between space-y-0 pb-3">
+            <CardTitle className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+              Learning Progress
+            </CardTitle>
+            <div className="relative">
+              <TrendingUp className="h-5 w-5 text-green-600 dark:text-green-400" />
+              <div className="absolute inset-0 bg-green-400 rounded-full blur opacity-20 animate-pulse"></div>
+            </div>
+          </CardHeader>
+          <CardContent className="relative">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="relative flex-1">
+                <Progress
+                  value={averageProgress}
+                  className="h-3 bg-slate-200 dark:bg-slate-700 rounded-full"
+                />
+                <div
+                  className="absolute inset-0 bg-gradient-to-r from-green-500 to-blue-600 rounded-full opacity-20 blur-sm transition-all duration-500"
+                  style={{ width: `${averageProgress}%` }}
+                ></div>
+              </div>
+              <span className="text-2xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
+                {averageProgress}%
+              </span>
+            </div>
+            <p className="text-sm text-slate-600 dark:text-slate-400">
+              average completion rate
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Credit Balance Card */}
+        <Card className="relative overflow-hidden bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 shadow-lg hover:shadow-xl transition-all duration-300 group hover:scale-[1.02]">
+          <div className="absolute inset-0 bg-gradient-to-br from-yellow-400/10 to-orange-400/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <CardHeader className="relative flex flex-row items-center justify-between space-y-0 pb-3">
+            <CardTitle className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+              Credit Balance
+            </CardTitle>
+            <div className="relative">
+              <Coins className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+              <div className="absolute inset-0 bg-yellow-400 rounded-full blur opacity-20 animate-pulse"></div>
+            </div>
+          </CardHeader>
+          <CardContent className="relative">
+            <div className="text-3xl font-bold bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent mb-2">
+              {userCredits}
+            </div>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+              credits available
+            </p>
+            <Link
+              href="/dashboard/credit/purchase"
+              className="inline-flex items-center gap-2 text-sm font-medium text-yellow-600 dark:text-yellow-400 hover:text-yellow-700 dark:hover:text-yellow-300 transition-colors duration-200 group/link"
+            >
+              Top Up Credits
+              <ArrowRight className="h-4 w-4 group-hover/link:translate-x-1 transition-transform duration-200" />
+            </Link>
+          </CardContent>
+        </Card>
+
+        {/* Enhanced User Plan Card */}
+        <div className="relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-400/20 to-pink-400/20 rounded-2xl blur-xl pointer-events-none"></div>
+          <UserPlanCard
+            userPlan={userPlanForCard}
+            hasActivePaidSubscription={hasActivePaidSubscription}
+            ManageSubscriptionButton={ManageSubscriptionButton}
+          />
         </div>
       </section>
 
