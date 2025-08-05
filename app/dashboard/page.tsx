@@ -40,6 +40,7 @@ import {
   Calendar,
   CheckCircle,
   Circle,
+  UserPlus,
 } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -53,6 +54,7 @@ import CourseCard, {
 import UserPlanCard from "@/components/dashboard/UserPlanCard";
 import ManageSubscriptionButton from "@/components/dashboard/ManageSubscriptionButton";
 import CreditBalance from "@/components/dashboard/CreditBalance";
+import JoinCourseDialog from "@/components/dashboard/JoinCourseDialog";
 
 interface Course {
   id: string;
@@ -187,30 +189,60 @@ export default async function DashboardPage({
     courseLimit = freePlan?.course_limit || 1;
   }
 
-  let courseQuery = supabase
+  // Fetch user's own courses
+  let ownCourseQuery = supabase
     .from("courses")
     .select("id, title, prompt")
     .eq("user_id", user.id);
 
   if (searchQuery) {
-    courseQuery = courseQuery.ilike("title", `%${searchQuery}%`);
+    ownCourseQuery = ownCourseQuery.ilike("title", `%${searchQuery}%`);
   }
 
-  const { data: rawCourses, error: coursesError } = await courseQuery.order(
-    "created_at",
-    { ascending: false }
-  );
+  const { data: rawOwnCourses, error: ownCoursesError } =
+    await ownCourseQuery.order("created_at", { ascending: false });
 
-  const userCourses = (rawCourses as Course[] | null) || [];
-  if (coursesError)
-    console.error("Error fetching courses:", coursesError.message);
+  // Fetch enrolled courses (courses shared by others)
+  let enrolledCourseQuery = supabase
+    .from("enrollments")
+    .select(
+      `
+      courses (
+        id,
+        title,
+        prompt,
+        user_id
+      )
+    `
+    )
+    .eq("user_id", user.id)
+    .neq("courses.user_id", user.id); // Exclude own courses
+
+  const { data: rawEnrolledCourses, error: enrolledCoursesError } =
+    await enrolledCourseQuery;
+
+  const userOwnCourses = (rawOwnCourses as Course[] | null) || [];
+  const userEnrolledCourses = (rawEnrolledCourses || [])
+    .map((enrollment) => enrollment.courses)
+    .filter((course) => course !== null) as Course[];
+
+  // Combine all courses
+  const allUserCourses = [...userOwnCourses, ...userEnrolledCourses];
+
+  if (ownCoursesError)
+    console.error("Error fetching own courses:", ownCoursesError.message);
+  if (enrolledCoursesError)
+    console.error(
+      "Error fetching enrolled courses:",
+      enrolledCoursesError.message
+    );
 
   let courses: CourseForCard[] = [];
   const totalLessonsByCourse: Record<string, number> = {};
   const completedLessonsByCourse: Record<string, number> = {};
 
-  if (userCourses.length > 0) {
-    const courseIds = userCourses.map((c) => c.id);
+  if (allUserCourses.length > 0) {
+    const courseIds = allUserCourses.map((c) => c.id);
 
     const { data: lessonsData, error: lessonsError } = await supabase
       .from("lessons")
@@ -248,7 +280,7 @@ export default async function DashboardPage({
       }
     }
 
-    courses = userCourses.map((course) => {
+    courses = allUserCourses.map((course) => {
       const totalLessons = totalLessonsByCourse[course.id] || 0;
       const completedLessons = completedLessonsByCourse[course.id] || 0;
       return {
@@ -351,10 +383,10 @@ export default async function DashboardPage({
           </CardHeader>
           <CardContent className="relative">
             <div className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
-              {totalCourses}
+              {courses.length}
             </div>
             <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
-              courses created
+              courses available
             </p>
             <div className="flex items-center gap-2">
               <Progress
@@ -362,7 +394,7 @@ export default async function DashboardPage({
                 className="flex-1 h-2"
               />
               <span className="text-xs text-slate-500">
-                {totalCourses}/{courseLimit}
+                {totalCourses}/{courseLimit} created
               </span>
             </div>
           </CardContent>
@@ -493,6 +525,74 @@ export default async function DashboardPage({
               </div>
             </CardContent>
           </Card>
+
+          {/* Join Course */}
+          <Card className="relative overflow-hidden bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 shadow-lg hover:shadow-xl transition-all duration-300 group hover:scale-[1.02]">
+            <div className="absolute inset-0 bg-gradient-to-br from-green-400/10 to-blue-400/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <CardContent className="relative p-6">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-r from-green-500 to-blue-600 flex items-center justify-center shadow-lg">
+                  <Users className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-lg">Join Course</h3>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                    Join courses shared by others
+                  </p>
+                </div>
+              </div>
+              <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+                Enter an access code to join a course that someone has shared
+                with you.
+              </p>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-sm text-slate-500">
+                  <UserPlus className="h-4 w-4" />
+                  <span>Free to join</span>
+                </div>
+                <JoinCourseDialog>
+                  <Button className="bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-300">
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    Join
+                  </Button>
+                </JoinCourseDialog>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Placeholder for third action */}
+          <Card className="relative overflow-hidden bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 shadow-lg hover:shadow-xl transition-all duration-300 group hover:scale-[1.02]">
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-400/10 to-pink-400/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <CardContent className="relative p-6">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-r from-purple-500 to-pink-600 flex items-center justify-center shadow-lg">
+                  <BarChart3 className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-lg">View Analytics</h3>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                    Track your learning progress
+                  </p>
+                </div>
+              </div>
+              <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+                Get insights into your learning journey and course completion
+                rates.
+              </p>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-sm text-slate-500">
+                  <Activity className="h-4 w-4" />
+                  <span>Free feature</span>
+                </div>
+                <Link href="/dashboard/analytics">
+                  <Button className="bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white shadow-lg hover:shadow-xl transition-all duration-300">
+                    <BarChart3 className="h-4 w-4 mr-2" />
+                    View
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </section>
 
@@ -500,21 +600,23 @@ export default async function DashboardPage({
       <section className="px-4 md:px-6">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-blue-900 dark:from-slate-100 dark:to-blue-100 bg-clip-text text-transparent">
-            {searchQuery ? "Search Results" : "Your Courses"}
+            My Courses
           </h2>
-          <div className="flex items-center gap-4">
-            {!searchQuery && (
-              <Badge
+          <div className="flex items-center gap-3">
+            <Badge
+              variant="outline"
+              className="text-slate-600 dark:text-slate-400"
+            >
+              {courses.length} total
+            </Badge>
+            <Link href="/dashboard/courses">
+              <Button
                 variant="outline"
-                className="text-slate-600 dark:text-slate-400"
+                size="sm"
+                className="hover:bg-slate-100 dark:hover:bg-slate-800"
               >
-                {courses.length} total
-              </Badge>
-            )}
-            <Link href="/dashboard/courses/new">
-              <Button className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300">
-                <PlusCircle className="h-4 w-4 mr-2" />
-                New Course
+                View All
+                <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
             </Link>
           </div>
@@ -522,81 +624,54 @@ export default async function DashboardPage({
 
         {courses.length === 0 ? (
           <Card className="relative overflow-hidden bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 shadow-lg">
-            <CardContent className="flex flex-col items-center justify-center py-16">
-              <div className="w-24 h-24 rounded-3xl bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center mb-6 shadow-lg">
-                <BookOpen className="h-12 w-12 text-white" />
+            <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="w-20 h-20 rounded-full bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-900/20 dark:to-purple-900/20 flex items-center justify-center mb-6">
+                <BookOpen className="h-10 w-10 text-blue-600 dark:text-blue-400" />
               </div>
-              <h3 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">
-                {searchQuery ? "No courses found" : "No courses yet"}
+              <h3 className="text-xl font-semibold mb-2 text-slate-900 dark:text-slate-100">
+                No courses yet
               </h3>
-              <p className="text-slate-600 dark:text-slate-400 text-center max-w-md mb-8">
-                {searchQuery
-                  ? `No courses match "${searchQuery}". Try a different search term.`
-                  : "Start your learning journey by creating your first course with AI assistance."}
+              <p className="text-slate-600 dark:text-slate-400 mb-6 max-w-md">
+                Start your learning journey by creating your first course or
+                joining one shared by others.
               </p>
-              {!searchQuery && (
+              <div className="flex gap-3">
                 <Link href="/dashboard/courses/new">
-                  <Button
-                    size="lg"
-                    className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
-                  >
-                    <PlusCircle className="h-5 w-5 mr-2" />
-                    Create Your First Course
+                  <Button className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white">
+                    <PlusCircle className="h-4 w-4 mr-2" />
+                    Create Course
                   </Button>
                 </Link>
-              )}
+                <JoinCourseDialog>
+                  <Button
+                    variant="outline"
+                    className="hover:bg-slate-100 dark:hover:bg-slate-800"
+                  >
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    Join Course
+                  </Button>
+                </JoinCourseDialog>
+              </div>
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {courses.map((course) => (
-              <CourseCard key={course.id} course={course} />
-            ))}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {courses.slice(0, 6).map((course) => {
+              // Check if this course is owned by the current user
+              const isOwner = userOwnCourses.some(
+                (ownCourse) => ownCourse.id === course.id
+              );
+              return (
+                <CourseCard
+                  key={course.id}
+                  course={course}
+                  isFreePlan={isFreePlan}
+                  isOwner={isOwner}
+                />
+              );
+            })}
           </div>
         )}
-      </section>
-
-      {/* Credit Cost Information */}
-      <section className="px-4 md:px-6 hidden">
-        <Card className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 border border-blue-200/50 dark:border-blue-800/50">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Calculator className="h-5 w-5 text-blue-600" />
-              Generation Costs
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="flex items-center gap-3 p-4 rounded-xl bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm">
-                <BookOpen className="h-8 w-8 text-blue-600" />
-                <div>
-                  <p className="font-semibold">Course Generation</p>
-                  <p className="text-sm text-slate-600 dark:text-slate-400">
-                    {basicCourseCost} credits for basic course
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 p-4 rounded-xl bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm">
-                <Users className="h-8 w-8 text-purple-600" />
-                <div>
-                  <p className="font-semibold">Presentation</p>
-                  <p className="text-sm text-slate-600 dark:text-slate-400">
-                    {basicPresentationCost} credits for 10 slides
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 p-4 rounded-xl bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm">
-                <Mic className="h-8 w-8 text-orange-600" />
-                <div>
-                  <p className="font-semibold">Voice Session</p>
-                  <p className="text-sm text-slate-600 dark:text-slate-400">
-                    2 credits per session
-                  </p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </section>
     </div>
   );

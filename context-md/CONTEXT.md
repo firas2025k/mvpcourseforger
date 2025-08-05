@@ -58,11 +58,39 @@ Ultimate → 50 courses, 10 chapters, 6 lessons/chapter
 ├── app
 │ ├── actions
 │ │ └── search.ts
+│ ├── admin
+│ │ ├── auth
+│ │ │ └── page.tsx
+│ │ ├── credits
+│ │ │ └── page.tsx
+│ │ ├── dashboard
+│ │ │ └── page.tsx
+│ │ ├── layout.tsx
+│ │ ├── page.tsx
+│ │ ├── subscriptions
+│ │ │ └── page.tsx
+│ │ └── users
+│ │ └── page.tsx
 │ ├── api
+│ │ ├── admin
+│ │ │ ├── credits
+│ │ │ │ └── route.ts
+│ │ │ ├── dashboard-stats
+│ │ │ │ └── route.ts
+│ │ │ ├── subscriptions
+│ │ │ │ └── route.ts
+│ │ │ └── users
+│ │ │ ├── [userId]
+│ │ │ │ └── route.ts
+│ │ │ └── route.ts
 │ │ ├── complete-course
 │ │ │ └── route.ts
 │ │ ├── course
-│ │ │ └── [courseId]
+│ │ │ ├── [courseId]
+│ │ │ │ ├── generate-access-code
+│ │ │ │ │ └── route.ts
+│ │ │ │ └── route.ts
+│ │ │ └── join-by-code
 │ │ │ └── route.ts
 │ │ ├── course-details
 │ │ │ └── [courseId]
@@ -148,6 +176,7 @@ Ultimate → 50 courses, 10 chapters, 6 lessons/chapter
 │ │ │ └── page.tsx
 │ │ ├── dashboard.css
 │ │ ├── layout.tsx
+│ │ ├── page-old.tsx
 │ │ ├── page.tsx
 │ │ ├── presentations
 │ │ │ ├── [presentationId]
@@ -180,6 +209,16 @@ Ultimate → 50 courses, 10 chapters, 6 lessons/chapter
 │ └── twitter-image.png
 ├── build.log
 ├── components
+│ ├── admin
+│ │ ├── auth
+│ │ ├── credits
+│ │ │ └── CreditSystemManagement.tsx
+│ │ ├── dashboard
+│ │ │ └── DashboardStats.tsx
+│ │ ├── subscriptions
+│ │ │ └── SubscriptionManagement.tsx
+│ │ └── users
+│ │ └── UserManagement.tsx
 │ ├── analytics
 │ │ ├── AnalyticsClient.tsx
 │ │ ├── CompanionUsageChart.tsx
@@ -202,7 +241,9 @@ Ultimate → 50 courses, 10 chapters, 6 lessons/chapter
 │ │ ├── CreditBalance.tsx
 │ │ ├── CreditPurchaseForm.tsx
 │ │ ├── CreditUsageTable.tsx
+│ │ ├── DashboardLayout-old.tsx
 │ │ ├── DashboardLayout.tsx
+│ │ ├── JoinCourseDialog.tsx
 │ │ ├── ManageSubscriptionButton.tsx
 │ │ ├── PresentationCard.tsx
 │ │ ├── SearchInput.tsx

@@ -1,8 +1,8 @@
 "use client";
 
-import Link from 'next/link';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import Link from "next/link";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Card,
   CardContent,
@@ -10,25 +10,28 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { 
-  BookOpen, 
-  Trash2, 
-  FileDown, 
-  Loader2, 
-  Video, 
-  Play, 
-  Star, 
-  Trophy, 
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import {
+  BookOpen,
+  Trash2,
+  FileDown,
+  Loader2,
+  Video,
+  Play,
+  Star,
+  Trophy,
   Target,
   Sparkles,
   CheckCircle,
   Clock,
   TrendingUp,
-  Zap
-} from 'lucide-react';
+  Zap,
+  Share2,
+  Copy,
+  Check,
+} from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -39,8 +42,20 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-import { handleSavePdf } from '@/utils/pdfExport';
+} from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { handleSavePdf } from "@/utils/pdfExport";
 
 interface Lesson {
   id: string;
@@ -73,18 +88,29 @@ export interface CourseForCard {
 interface CourseCardProps {
   course: CourseForCard;
   isFreePlan: boolean;
+  isOwner?: boolean; // New prop to determine if current user owns the course
 }
 
-export default function CourseCard({ course, isFreePlan }: CourseCardProps) {
+export default function CourseCard({
+  course,
+  isFreePlan,
+  isOwner = true,
+}: CourseCardProps) {
   const router = useRouter();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
-  
-  const description = course.prompt 
-    ? (course.prompt.length > 100 ? course.prompt.substring(0, 97) + '...' : course.prompt)
-    : 'No description available.';
+  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
+  const [accessCode, setAccessCode] = useState<string | null>(null);
+  const [isGeneratingCode, setIsGeneratingCode] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
+
+  const description = course.prompt
+    ? course.prompt.length > 100
+      ? course.prompt.substring(0, 97) + "..."
+      : course.prompt
+    : "No description available.";
 
   const progressValue = Math.round(course.progress);
   const lessonsProgressText = `${course.completedLessons} / ${course.totalLessons} lessons`;
@@ -95,17 +121,17 @@ export default function CourseCard({ course, isFreePlan }: CourseCardProps) {
     setIsDeleting(true);
     try {
       const response = await fetch(`/api/course/${course.id}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to delete course');
+        throw new Error(errorData.error || "Failed to delete course");
       }
       setIsDeleteDialogOpen(false);
       router.refresh();
-      console.log('Course deleted successfully');
+      console.log("Course deleted successfully");
     } catch (error) {
-      console.error('Error deleting course:', error);
+      console.error("Error deleting course:", error);
     } finally {
       setIsDeleting(false);
     }
@@ -116,11 +142,55 @@ export default function CourseCard({ course, isFreePlan }: CourseCardProps) {
     try {
       await handleSavePdf({
         courseId: course.id,
-        onSuccess: () => console.log('PDF exported successfully'),
+        onSuccess: () => console.log("PDF exported successfully"),
         onError: (error) => alert(`Failed to export to PDF: ${error}`),
       });
     } finally {
       setIsExportingPdf(false);
+    }
+  };
+
+  const handleGenerateAccessCode = async () => {
+    setIsGeneratingCode(true);
+    try {
+      const response = await fetch(
+        `/api/course/${course.id}/generate-access-code`,
+        {
+          method: "POST",
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to generate access code");
+      }
+
+      const data = await response.json();
+      setAccessCode(data.access_code);
+    } catch (error) {
+      console.error("Error generating access code:", error);
+      alert("Failed to generate access code. Please try again.");
+    } finally {
+      setIsGeneratingCode(false);
+    }
+  };
+
+  const handleCopyAccessCode = async () => {
+    if (accessCode) {
+      try {
+        await navigator.clipboard.writeText(accessCode);
+        setIsCopied(true);
+        setTimeout(() => setIsCopied(false), 2000);
+      } catch (error) {
+        console.error("Failed to copy access code:", error);
+      }
+    }
+  };
+
+  const handleShareClick = () => {
+    setIsShareDialogOpen(true);
+    if (!accessCode) {
+      handleGenerateAccessCode();
     }
   };
 
@@ -166,82 +236,205 @@ export default function CourseCard({ course, isFreePlan }: CourseCardProps) {
   };
 
   return (
-    <Card 
+    <Card
       className="group relative flex flex-col h-full bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:scale-[1.03] hover:-translate-y-2 overflow-hidden"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* Background gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-white/50 to-purple-50/50 dark:from-blue-950/20 dark:via-slate-900/50 dark:to-purple-950/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-      
+
       {/* Animated border */}
       <div className="absolute inset-0 bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 opacity-0 group-hover:opacity-20 blur-sm transition-opacity duration-500"></div>
-      
+
       {/* Status badge */}
       {getStatusBadge()}
-      
+
       {/* Fixed CardHeader with proper padding to avoid overlap */}
       <CardHeader className="relative pb-3 pt-12">
         <div className="flex items-start justify-between">
-          <CardTitle className="text-xl font-bold leading-tight flex items-center gap-3 pr-12 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">
+          <CardTitle className="text-xl font-bold leading-tight flex items-center gap-3 pr-16 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">
             {getCourseTypeIcon()}
             <span className="bg-gradient-to-r from-slate-900 to-blue-900 dark:from-slate-100 dark:to-blue-100 bg-clip-text text-transparent">
               {course.title}
             </span>
           </CardTitle>
-          
-          <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-            <AlertDialogTrigger asChild>
-              <Button 
-                variant="ghost"
-                size="icon"
-                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-all duration-300 text-red-500 hover:text-white hover:bg-red-500 hover:scale-110 rounded-full z-10"
-                onClick={(e) => { e.stopPropagation(); setIsDeleteDialogOpen(true); }}
+
+          <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-all duration-300 z-10">
+            {/* Share button - only show for course owners */}
+            {isOwner && (
+              <Dialog
+                open={isShareDialogOpen}
+                onOpenChange={setIsShareDialogOpen}
               >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/50 dark:border-slate-700/50">
-              <AlertDialogHeader>
-                <AlertDialogTitle className="text-xl font-bold bg-gradient-to-r from-red-600 to-pink-600 bg-clip-text text-transparent">
-                  Are you absolutely sure?
-                </AlertDialogTitle>
-                <AlertDialogDescription className="text-slate-600 dark:text-slate-400">
-                  This action cannot be undone. This will permanently delete the course "<strong className="text-slate-900 dark:text-slate-100">{course.title}</strong>" and all of its associated data (chapters, lessons, quizzes, progress, etc.).
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel 
-                  onClick={() => setIsDeleteDialogOpen(false)} 
-                  disabled={isDeleting}
-                  className="hover:bg-slate-100 dark:hover:bg-slate-800"
-                >
-                  Cancel
-                </AlertDialogCancel>
-                <AlertDialogAction 
-                  onClick={handleDeleteCourse} 
-                  disabled={isDeleting} 
-                  className="bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white"
-                >
-                  {isDeleting ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Deleting...
-                    </>
-                  ) : (
-                    'Delete Course'
-                  )}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+                <DialogTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-blue-500 hover:text-white hover:bg-blue-500 hover:scale-110 rounded-full"
+                    onClick={handleShareClick}
+                  >
+                    <Share2 className="h-4 w-4" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/50 dark:border-slate-700/50">
+                  <DialogHeader>
+                    <DialogTitle className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                      Share Course
+                    </DialogTitle>
+                    <DialogDescription className="text-slate-600 dark:text-slate-400">
+                      Share this course with others using an access code. They
+                      can use this code to join your course.
+                    </DialogDescription>
+                  </DialogHeader>
+
+                  <div className="space-y-4">
+                    <div>
+                      <Label
+                        htmlFor="access-code"
+                        className="text-sm font-medium"
+                      >
+                        Access Code
+                      </Label>
+                      <div className="flex gap-2 mt-2">
+                        <Input
+                          id="access-code"
+                          value={accessCode || ""}
+                          readOnly
+                          placeholder={
+                            isGeneratingCode
+                              ? "Generating..."
+                              : "Click Generate to create code"
+                          }
+                          className="font-mono text-lg"
+                        />
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={handleCopyAccessCode}
+                          disabled={!accessCode || isGeneratingCode}
+                          className="flex-shrink-0"
+                        >
+                          {isCopied ? (
+                            <Check className="h-4 w-4 text-green-500" />
+                          ) : (
+                            <Copy className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+
+                    {!accessCode && (
+                      <Button
+                        onClick={handleGenerateAccessCode}
+                        disabled={isGeneratingCode}
+                        className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                      >
+                        {isGeneratingCode ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Generating...
+                          </>
+                        ) : (
+                          <>
+                            <Share2 className="h-4 w-4 mr-2" />
+                            Generate Access Code
+                          </>
+                        )}
+                      </Button>
+                    )}
+
+                    {accessCode && (
+                      <div className="p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                        <p className="text-sm text-blue-700 dark:text-blue-300">
+                          <strong>How to share:</strong> Send this access code
+                          to others. They can use it on their dashboard to join
+                          your course.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  <DialogFooter>
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsShareDialogOpen(false)}
+                    >
+                      Close
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            )}
+
+            {/* Delete button - only show for course owners */}
+            {isOwner && (
+              <AlertDialog
+                open={isDeleteDialogOpen}
+                onOpenChange={setIsDeleteDialogOpen}
+              >
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-red-500 hover:text-white hover:bg-red-500 hover:scale-110 rounded-full"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsDeleteDialogOpen(true);
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/50 dark:border-slate-700/50">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle className="text-xl font-bold bg-gradient-to-r from-red-600 to-pink-600 bg-clip-text text-transparent">
+                      Are you absolutely sure?
+                    </AlertDialogTitle>
+                    <AlertDialogDescription className="text-slate-600 dark:text-slate-400">
+                      This action cannot be undone. This will permanently delete
+                      the course "
+                      <strong className="text-slate-900 dark:text-slate-100">
+                        {course.title}
+                      </strong>
+                      " and all of its associated data (chapters, lessons,
+                      quizzes, progress, etc.).
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel
+                      onClick={() => setIsDeleteDialogOpen(false)}
+                      disabled={isDeleting}
+                      className="hover:bg-slate-100 dark:hover:bg-slate-800"
+                    >
+                      Cancel
+                    </AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleDeleteCourse}
+                      disabled={isDeleting}
+                      className="bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white"
+                    >
+                      {isDeleting ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Deleting...
+                        </>
+                      ) : (
+                        "Delete Course"
+                      )}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+          </div>
         </div>
-        
+
         <CardDescription className="text-sm text-slate-600 dark:text-slate-400 h-16 overflow-hidden leading-relaxed mt-3">
           {description}
         </CardDescription>
       </CardHeader>
-      
+
       <CardContent className="flex-grow relative">
         <div className="space-y-4">
           {/* Progress section */}
@@ -255,24 +448,30 @@ export default function CourseCard({ course, isFreePlan }: CourseCardProps) {
               </div>
               <div className="flex items-center gap-1">
                 {isCompleted && <Star className="h-4 w-4 text-yellow-500" />}
-                <span className={`text-lg font-bold ${isCompleted ? 'text-green-600 dark:text-green-400' : 'text-blue-600 dark:text-blue-400'}`}>
+                <span
+                  className={`text-lg font-bold ${
+                    isCompleted
+                      ? "text-green-600 dark:text-green-400"
+                      : "text-blue-600 dark:text-blue-400"
+                  }`}
+                >
                   {progressValue}%
                 </span>
               </div>
             </div>
-            
+
             <div className="relative">
-              <Progress 
-                value={progressValue} 
+              <Progress
+                value={progressValue}
                 className="h-3 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden"
               />
-              <div 
+              <div
                 className={`absolute inset-0 bg-gradient-to-r ${getProgressColor()} rounded-full transition-all duration-500 opacity-20 blur-sm`}
                 style={{ width: `${progressValue}%` }}
               ></div>
             </div>
           </div>
-          
+
           {/* Course stats */}
           <div className="grid grid-cols-2 gap-3 pt-2">
             <div className="flex items-center gap-2 p-3 bg-slate-50/80 dark:bg-slate-700/50 rounded-lg">
@@ -300,26 +499,31 @@ export default function CourseCard({ course, isFreePlan }: CourseCardProps) {
           </div>
         </div>
       </CardContent>
-      
+
       <CardFooter className="relative pt-4">
         <div className="flex flex-col sm:flex-row gap-3 w-full">
-          <Button 
-            asChild 
+          <Button
+            asChild
             className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 group/btn"
           >
-            <Link href={`/dashboard/courses/${course.id}`} className="flex items-center justify-center gap-2">
+            <Link
+              href={`/dashboard/courses/${course.id}`}
+              className="flex items-center justify-center gap-2"
+            >
               <Play className="h-4 w-4 group-hover/btn:scale-110 transition-transform duration-200" />
-              {hasStarted ? 'Continue Learning' : 'Start Course'}
-              {isHovered && <Sparkles className="h-3 w-3 text-yellow-300 animate-pulse" />}
+              {hasStarted ? "Continue Learning" : "Start Course"}
+              {isHovered && (
+                <Sparkles className="h-3 w-3 text-yellow-300 animate-pulse" />
+              )}
             </Link>
           </Button>
-          
-          {!isFreePlan && (
-            <Button 
-              variant="outline" 
+
+          {!isFreePlan && isOwner && (
+            <Button
+              variant="outline"
               size="icon"
               className="flex-shrink-0 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 hover:scale-110 transition-all duration-300 group/export"
-              onClick={handleExportToPdf} 
+              onClick={handleExportToPdf}
               disabled={isExportingPdf}
             >
               {isExportingPdf ? (
@@ -331,10 +535,9 @@ export default function CourseCard({ course, isFreePlan }: CourseCardProps) {
           )}
         </div>
       </CardFooter>
-      
+
       {/* Hover effect overlay */}
       <div className="absolute inset-0 bg-gradient-to-r from-blue-400/5 to-purple-400/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
     </Card>
   );
 }
-
