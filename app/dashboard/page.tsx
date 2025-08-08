@@ -7,39 +7,16 @@ import { Database } from "@/types/supabase";
 import {
   BookOpen,
   BarChart3,
-  Crown,
   PlusCircle,
-  LayoutGrid,
-  AlertTriangle,
   ArrowRight,
   TrendingUp,
   Target,
   Sparkles,
-  Star,
-  Trophy,
-  Zap,
   GraduationCap,
-  Brain,
-  Lightbulb,
-  Rocket,
   Coins,
   Calculator,
-  ShoppingCart,
-  Mic,
-  Volume2,
-  MessageSquare,
-  Headphones,
-  Award,
-  Clock,
   Users,
-  Play,
-  Pause,
-  BarChart,
-  TrendingDown,
   Activity,
-  Calendar,
-  CheckCircle,
-  Circle,
   UserPlus,
 } from "lucide-react";
 
@@ -203,7 +180,7 @@ export default async function DashboardPage({
     await ownCourseQuery.order("created_at", { ascending: false });
 
   // Fetch enrolled courses (courses shared by others)
-  let enrolledCourseQuery = supabase
+  const enrolledCourseQuery = supabase
     .from("enrollments")
     .select(
       `
